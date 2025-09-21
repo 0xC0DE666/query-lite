@@ -1,7 +1,16 @@
 [package]
-name = "http-to-sql"
+name = "http_to_sql"
 version = "0.1.0"
 edition = "2024"
+authors = ["D4EM0N"]
+categories = ["http", "sql"]
+description = "Convert http query params to sql queries"
+documentation = "https://docs.rs/http_to_sql"
+keywords = ["http", "sql", "query"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/0xC0DE666/http_to_sql"
+rust-version = "1.88"
 
 [dependencies]
-indexmap = "^2"
+indexmap = { version = "^2" }
+thiserror = { version = "^2", default-features = false }
