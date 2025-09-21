@@ -1,16 +1,72 @@
-// ####################
-// QUERY MODEL
-// ####################
-
+mod error;
 mod utils;
 
+use error::{Error, Result};
 use indexmap::IndexMap;
+use std::str::FromStr;
 use utils::csv;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Order {
     Ascending,
     Descending,
+}
+
+impl Order {
+    pub const ASCENDING: &str = "asc";
+    pub const DESCENDING: &str = "desc";
+}
+
+impl FromStr for Order {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            Order::ASCENDING => Ok(Order::Ascending),
+            Order::DESCENDING => Ok(Order::Descending),
+            val => Err(Error::InvalidOrder(val.into())),
+        }
+    }
+}
+
+pub enum Similarity {
+    Equals,
+    Contains,
+    StartsWith,
+    EndsWith,
+}
+
+impl Similarity {
+    pub const EQUALS: &str = "equals";
+    pub const CONTAINS: &str = "contains";
+    pub const STARTS_WITH: &str = "starts-with";
+    pub const ENDS_WITH: &str = "ends-with";
+}
+
+impl FromStr for Similarity {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            Similarity::EQUALS => Ok(Similarity::Equals),
+            Similarity::CONTAINS => Ok(Similarity::Contains),
+            Similarity::STARTS_WITH => Ok(Similarity::StartsWith),
+            Similarity::ENDS_WITH => Ok(Similarity::EndsWith),
+            val => Err(Error::InvalidSimilaritty(val.into())),
+        }
+    }
+}
+
+pub struct Field {
+    pub similarity: Similarity,
+    pub values: Vec<String>,
+}
+
+impl Field {
+    pub fn init(similarity: Similarity) -> Self {
+        Self {
+            similarity,
+            values: Vec::new(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
