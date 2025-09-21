@@ -71,7 +71,7 @@ impl FromStr for SortField {
         if trimmed.is_empty() {
             return Err(Error::InvalidSortField(s.into()));
         }
-        
+
         let parts: Vec<&str> = trimmed.split(COLON).collect();
         if parts.len() != 2 {
             return Err(Error::InvalidSortField(s.into()));
@@ -79,7 +79,7 @@ impl FromStr for SortField {
 
         let name = parts[0].trim();
         let order_str = parts[1].trim();
-        
+
         if name.is_empty() || order_str.is_empty() {
             return Err(Error::InvalidSortField(s.into()));
         }
@@ -116,7 +116,7 @@ impl FromStr for SortFields {
         if trimmed.is_empty() {
             return Ok(SortFields::new());
         }
-        
+
         let str_fields: Vec<&str> = trimmed.split(COMMA).collect();
         let mut sort_fields: Self = SortFields(vec![]);
 
@@ -208,7 +208,7 @@ impl FromStr for Parameter {
         if trimmed.is_empty() {
             return Err(Error::InvalidParameter(s.into()));
         }
-        
+
         let parts: Vec<&str> = trimmed.split(COLON).collect();
         if parts.len() != 2 {
             return Err(Error::InvalidParameter(s.into()));
@@ -216,7 +216,7 @@ impl FromStr for Parameter {
 
         let similarity_str = parts[0].trim();
         let values_str = parts[1].trim();
-        
+
         if similarity_str.is_empty() {
             return Err(Error::InvalidParameter(s.into()));
         }
@@ -224,7 +224,8 @@ impl FromStr for Parameter {
         let values: Vec<String> = if values_str.is_empty() {
             vec![]
         } else {
-            values_str.split(COMMA)
+            values_str
+                .split(COMMA)
                 .map(|v| v.trim().to_string())
                 .filter(|v| !v.is_empty())
                 .collect()
@@ -273,7 +274,7 @@ impl FromStr for Parameters {
         if trimmed.is_empty() {
             return Ok(Parameters::new());
         }
-        
+
         let str_parameters: Vec<&str> = trimmed.split(AMPERSAND).collect();
         let mut parameters: Self = Parameters(IndexMap::new());
 
@@ -282,14 +283,16 @@ impl FromStr for Parameters {
             if trimmed_param.is_empty() {
                 continue;
             }
-            
+
             let mut parts = trimmed_param.splitn(2, EQUALS);
             if let (Some(key), Some(_)) = (parts.next(), parts.next()) {
                 let trimmed_key = key.trim();
                 if trimmed_key.is_empty() || Parameters::EXCLUDE.contains(&trimmed_key) {
                     continue;
                 }
-                parameters.0.insert(trimmed_key.into(), Parameter::from_str(trimmed_param)?);
+                parameters
+                    .0
+                    .insert(trimmed_key.into(), Parameter::from_str(trimmed_param)?);
             }
         }
 
@@ -388,16 +391,16 @@ impl Query {
             if trimmed_kv.is_empty() {
                 continue;
             }
-            
+
             let mut parts = trimmed_kv.splitn(2, EQUALS);
             if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
                 let trimmed_key = key.trim();
                 let trimmed_value = value.trim();
-                
+
                 if trimmed_key.is_empty() {
                     continue;
                 }
-                
+
                 match trimmed_key {
                     Parameters::ORDER => {
                         if !trimmed_value.is_empty() {
@@ -406,13 +409,15 @@ impl Query {
                     }
                     Parameters::LIMIT => {
                         if !trimmed_value.is_empty() {
-                            let limit: usize = trimmed_value.parse().unwrap_or(Parameters::DEFAULT_LIMIT);
+                            let limit: usize =
+                                trimmed_value.parse().unwrap_or(Parameters::DEFAULT_LIMIT);
                             query.limit = limit.min(Parameters::MAX_LIMIT);
                         }
                     }
                     Parameters::OFFSET => {
                         if !trimmed_value.is_empty() {
-                            query.offset = trimmed_value.parse().unwrap_or(Parameters::DEFAULT_OFFSET);
+                            query.offset =
+                                trimmed_value.parse().unwrap_or(Parameters::DEFAULT_OFFSET);
                         }
                     }
                     k => {
@@ -434,11 +439,14 @@ impl Query {
 
     pub fn keep(&self, keys: Vec<String>) -> Self {
         let mut clone = self.clone();
-        let keys_to_remove: Vec<String> = self.parameters.0.keys()
+        let keys_to_remove: Vec<String> = self
+            .parameters
+            .0
+            .keys()
             .filter(|k| !keys.contains(k))
             .map(|k| k.clone())
             .collect();
-        
+
         for k in keys_to_remove {
             clone.parameters.0.shift_remove(&k);
         }
@@ -448,11 +456,14 @@ impl Query {
 
     pub fn remove(&self, keys: Vec<String>) -> Self {
         let mut clone = self.clone();
-        let keys_to_remove: Vec<String> = self.parameters.0.keys()
+        let keys_to_remove: Vec<String> = self
+            .parameters
+            .0
+            .keys()
             .filter(|k| keys.contains(k))
             .map(|k| k.clone())
             .collect();
-        
+
         for k in keys_to_remove {
             clone.parameters.0.shift_remove(&k);
         }
@@ -460,4 +471,3 @@ impl Query {
         clone
     }
 }
-
