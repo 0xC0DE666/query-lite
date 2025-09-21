@@ -11,8 +11,8 @@ pub enum Error {
     #[error("Error: Invalid Sort Field '{0}'")]
     InvalidSortField(String),
 
-    #[error("Error: Invalid Similaritty '{0}'")]
-    InvalidSimilaritty(String),
+    #[error("Error: Invalid Similarity '{0}'")]
+    InvalidSimilarity(String),
 
     #[error("Error: Invalid Parameter '{0}'")]
     InvalidParameter(String),

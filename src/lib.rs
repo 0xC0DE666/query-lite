@@ -67,14 +67,26 @@ impl FromStr for SortField {
     // name:asc
     // surname:asc
     fn from_str(s: &str) -> Result<Self> {
-        let parts: Vec<&str> = s.split(COLON).collect();
+        let trimmed = s.trim();
+        if trimmed.is_empty() {
+            return Err(Error::InvalidSortField(s.into()));
+        }
+        
+        let parts: Vec<&str> = trimmed.split(COLON).collect();
         if parts.len() != 2 {
             return Err(Error::InvalidSortField(s.into()));
         }
 
+        let name = parts[0].trim();
+        let order_str = parts[1].trim();
+        
+        if name.is_empty() || order_str.is_empty() {
+            return Err(Error::InvalidSortField(s.into()));
+        }
+
         Ok(SortField::init(
-            parts[0].into(),
-            SortOrder::from_str(parts[1])?,
+            name.into(),
+            SortOrder::from_str(order_str)?,
         ))
     }
 }
@@ -88,17 +100,31 @@ impl SortFields {
     }
 }
 
+impl Default for SortFields {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FromStr for SortFields {
     type Err = Error;
 
     // EXAMPLE INPUT
     // date_created:desc,name:asc,surname:asc
     fn from_str(s: &str) -> Result<Self> {
-        let str_fields: Vec<&str> = s.split(COMMA).collect();
+        let trimmed = s.trim();
+        if trimmed.is_empty() {
+            return Ok(SortFields::new());
+        }
+        
+        let str_fields: Vec<&str> = trimmed.split(COMMA).collect();
         let mut sort_fields: Self = SortFields(vec![]);
 
-        for str in str_fields {
-            sort_fields.0.push(SortField::from_str(str)?);
+        for str_field in str_fields {
+            let trimmed_field = str_field.trim();
+            if !trimmed_field.is_empty() {
+                sort_fields.0.push(SortField::from_str(trimmed_field)?);
+            }
         }
 
         Ok(sort_fields)
@@ -134,7 +160,7 @@ impl FromStr for Similarity {
             Similarity::CONTAINS => Ok(Similarity::Contains),
             Similarity::STARTS_WITH => Ok(Similarity::StartsWith),
             Similarity::ENDS_WITH => Ok(Similarity::EndsWith),
-            val => Err(Error::InvalidSimilaritty(val.into())),
+            val => Err(Error::InvalidSimilarity(val.into())),
         }
     }
 }
@@ -173,19 +199,40 @@ impl FromStr for Parameter {
     type Err = Error;
 
     // EXAMPLE INPUT
-    // name=cotains:damian
+    // name=contains:damian
     // name=equals:black,steel,wood
     // name=starts-with:black,steel,wood
     // name=ends-with:black,steel,wood
     fn from_str(s: &str) -> Result<Self> {
-        let parts: Vec<&str> = s.split(COLON).collect();
+        let trimmed = s.trim();
+        if trimmed.is_empty() {
+            return Err(Error::InvalidParameter(s.into()));
+        }
+        
+        let parts: Vec<&str> = trimmed.split(COLON).collect();
         if parts.len() != 2 {
             return Err(Error::InvalidParameter(s.into()));
         }
 
+        let similarity_str = parts[0].trim();
+        let values_str = parts[1].trim();
+        
+        if similarity_str.is_empty() {
+            return Err(Error::InvalidParameter(s.into()));
+        }
+
+        let values: Vec<String> = if values_str.is_empty() {
+            vec![]
+        } else {
+            values_str.split(COMMA)
+                .map(|v| v.trim().to_string())
+                .filter(|v| !v.is_empty())
+                .collect()
+        };
+
         Ok(Parameter::init(
-            Similarity::from_str(parts[0])?,
-            parts[1].split(COMMA).map(String::from).collect(),
+            Similarity::from_str(similarity_str)?,
+            values,
         ))
     }
 }
@@ -210,20 +257,40 @@ impl Parameters {
     }
 }
 
+impl Default for Parameters {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FromStr for Parameters {
     type Err = Error;
 
     // EXAMPLE INPUT
     // name=contains:damian&surname=equals:black,steel,wood&order=date_created:desc&limit=40&offset=0
     fn from_str(s: &str) -> Result<Self> {
-        let str_parameters: Vec<&str> = s.split(AMPERSAND).collect();
+        let trimmed = s.trim();
+        if trimmed.is_empty() {
+            return Ok(Parameters::new());
+        }
+        
+        let str_parameters: Vec<&str> = trimmed.split(AMPERSAND).collect();
         let mut parameters: Self = Parameters(IndexMap::new());
 
-        for str in str_parameters {
-            if Parameters::EXCLUDE.contains(&str) {
+        for str_param in str_parameters {
+            let trimmed_param = str_param.trim();
+            if trimmed_param.is_empty() {
                 continue;
             }
-            parameters.0.insert(str.into(), Parameter::from_str(str)?);
+            
+            let mut parts = trimmed_param.splitn(2, EQUALS);
+            if let (Some(key), Some(_)) = (parts.next(), parts.next()) {
+                let trimmed_key = key.trim();
+                if trimmed_key.is_empty() || Parameters::EXCLUDE.contains(&trimmed_key) {
+                    continue;
+                }
+                parameters.0.insert(trimmed_key.into(), Parameter::from_str(trimmed_param)?);
+            }
         }
 
         Ok(parameters)
@@ -310,26 +377,51 @@ impl Query {
     // name=contains:damian&surname=equals:black,steel,wood&order=date_created:desc&limit=40&offset=0
     pub fn from_http(search: String) -> Result<Self> {
         let mut query = Self::new();
-        let trimmed_search = search.trim_start_matches(QUESTION);
+        let trimmed_search = search.trim_start_matches(QUESTION).trim();
+
+        if trimmed_search.is_empty() {
+            return Ok(query);
+        }
 
         for k_v in trimmed_search.split(AMPERSAND) {
-            let mut parts = k_v.splitn(2, EQUALS);
+            let trimmed_kv = k_v.trim();
+            if trimmed_kv.is_empty() {
+                continue;
+            }
+            
+            let mut parts = trimmed_kv.splitn(2, EQUALS);
             if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
-                match key {
+                let trimmed_key = key.trim();
+                let trimmed_value = value.trim();
+                
+                if trimmed_key.is_empty() {
+                    continue;
+                }
+                
+                match trimmed_key {
                     Parameters::ORDER => {
-                        query.sort_fields = SortFields::from_str(value)?;
+                        if !trimmed_value.is_empty() {
+                            query.sort_fields = SortFields::from_str(trimmed_value)?;
+                        }
                     }
                     Parameters::LIMIT => {
-                        query.limit = value.parse().unwrap_or(Parameters::DEFAULT_LIMIT);
+                        if !trimmed_value.is_empty() {
+                            let limit: usize = trimmed_value.parse().unwrap_or(Parameters::DEFAULT_LIMIT);
+                            query.limit = limit.min(Parameters::MAX_LIMIT);
+                        }
                     }
                     Parameters::OFFSET => {
-                        query.offset = value.parse().unwrap_or(Parameters::DEFAULT_OFFSET)
+                        if !trimmed_value.is_empty() {
+                            query.offset = trimmed_value.parse().unwrap_or(Parameters::DEFAULT_OFFSET);
+                        }
                     }
                     k => {
-                        query
-                            .parameters
-                            .0
-                            .insert(k.into(), Parameter::from_str(value)?);
+                        if !trimmed_value.is_empty() {
+                            query
+                                .parameters
+                                .0
+                                .insert(k.into(), Parameter::from_str(trimmed_kv)?);
+                        }
                     }
                 }
             } else {
@@ -342,10 +434,13 @@ impl Query {
 
     pub fn keep(&self, keys: Vec<String>) -> Self {
         let mut clone = self.clone();
-        for k in self.parameters.0.keys() {
-            if keys.contains(k) == false {
-                clone.parameters.0.shift_remove(k);
-            }
+        let keys_to_remove: Vec<String> = self.parameters.0.keys()
+            .filter(|k| !keys.contains(k))
+            .map(|k| k.clone())
+            .collect();
+        
+        for k in keys_to_remove {
+            clone.parameters.0.shift_remove(&k);
         }
 
         clone
@@ -353,12 +448,16 @@ impl Query {
 
     pub fn remove(&self, keys: Vec<String>) -> Self {
         let mut clone = self.clone();
-        for k in self.parameters.0.keys() {
-            if keys.contains(k) == true {
-                clone.parameters.0.shift_remove(k);
-            }
+        let keys_to_remove: Vec<String> = self.parameters.0.keys()
+            .filter(|k| keys.contains(k))
+            .map(|k| k.clone())
+            .collect();
+        
+        for k in keys_to_remove {
+            clone.parameters.0.shift_remove(&k);
         }
 
         clone
     }
 }
+
