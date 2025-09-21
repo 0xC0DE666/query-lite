@@ -38,6 +38,15 @@ impl FromStr for SortOrder {
     }
 }
 
+impl ToString for SortOrder {
+    fn to_string(&self) -> String {
+        match self {
+            Self::Ascending => SortOrder::ASCENDING.to_string(),
+            Self::Descending => SortOrder::DESCENDING.to_string(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct SortField {
     pub name: String,
@@ -126,6 +135,17 @@ impl FromStr for Similarity {
             Similarity::STARTS_WITH => Ok(Similarity::StartsWith),
             Similarity::ENDS_WITH => Ok(Similarity::EndsWith),
             val => Err(Error::InvalidSimilaritty(val.into())),
+        }
+    }
+}
+
+impl ToString for Similarity {
+    fn to_string(&self) -> String {
+        match self {
+            Self::Equals => Self::EQUALS.to_string(),
+            Self::Contains => Self::CONTAINS.to_string(),
+            Self::StartsWith => Self::STARTS_WITH.to_string(),
+            Self::EndsWith => Self::ENDS_WITH.to_string(),
         }
     }
 }
@@ -228,41 +248,58 @@ impl Query {
         }
     }
 
-    pub fn init(limit: usize, offset: usize) -> Self {
+    pub fn init(
+        parameters: Parameters,
+        sort_fields: SortFields,
+        limit: usize,
+        offset: usize,
+    ) -> Self {
         Self {
-            parameters: Parameters::new(),
-            sort_fields: SortFields::new(),
+            parameters,
+            sort_fields,
             limit,
             offset,
         }
     }
 
-    pub fn default_http() -> String {
-        format!(
-            "{}={}&{}={}",
-            Parameters::LIMIT,
-            Parameters::DEFAULT_LIMIT,
-            Parameters::OFFSET,
-            Parameters::DEFAULT_OFFSET,
-        )
-    }
-
     pub fn to_http(&self) -> String {
-        let mut search = self
+        let mut params = self
             .parameters
             .0
             .iter()
             .filter(|(_, param)| param.values.len() > 0)
-            .map(|(k, param)| format!("{k}={}", param.values.join(&format!("{COMMA}"))))
+            .map(|(key, param)| {
+                let similarity = param.similarity.to_string();
+                let values = param.values.join(&format!("{COMMA}"));
+                format!("{key}{EQUALS}{similarity}{COLON}{values}",)
+            })
             .collect::<Vec<String>>()
             .join("&");
 
-        if search.len() > 0 {
-            search.push_str("&");
+        let order = self
+            .sort_fields
+            .0
+            .iter()
+            .filter(|field| field.name.len() > 0)
+            .map(|field| {
+                let name = field.name.clone();
+                let order = field.order.to_string();
+                format!("{name}{COLON}{order}")
+            })
+            .collect::<Vec<String>>()
+            .join(&format!("{COMMA}"));
+
+        if params.len() > 0 {
+            params.push_str(&format!("{AMPERSAND}"));
+        }
+
+        if order.len() > 0 {
+            params.push_str(&order);
+            params.push_str(&format!("{AMPERSAND}"));
         }
 
         format!(
-            "{search}{}={}&{}={}",
+            "{params}{}{EQUALS}{}{AMPERSAND}{}{EQUALS}{}",
             Parameters::LIMIT,
             self.limit,
             Parameters::OFFSET,
