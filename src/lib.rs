@@ -78,6 +78,10 @@ impl Query {
         )
     }
 
+    // order=date_created:desc,name:asc
+    // name=damian:equal
+    // name=damian:like
+    // name=damian,daemon:equal&
     pub fn from_http(search: String) -> Self {
         let mut query = Self::new();
         let search = search.trim_start_matches('?');
