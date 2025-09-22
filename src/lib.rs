@@ -1,4 +1,4 @@
-mod error;
+pub mod error;
 
 use error::{Error, Result};
 use indexmap::IndexMap;
@@ -92,7 +92,7 @@ impl FromStr for SortField {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct SortFields(Vec<SortField>);
+pub struct SortFields(pub Vec<SortField>);
 
 impl SortFields {
     pub fn new() -> Self {
@@ -239,7 +239,7 @@ impl FromStr for Parameter {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Parameters(IndexMap<String, Parameter>);
+pub struct Parameters(pub IndexMap<String, Parameter>);
 
 impl Parameters {
     pub const ORDER: &str = "order";
@@ -285,14 +285,18 @@ impl FromStr for Parameters {
             }
 
             let mut parts = trimmed_param.splitn(2, EQUALS);
-            if let (Some(key), Some(_)) = (parts.next(), parts.next()) {
+            if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
                 let trimmed_key = key.trim();
                 if trimmed_key.is_empty() || Parameters::EXCLUDE.contains(&trimmed_key) {
                     continue;
                 }
-                parameters
-                    .0
-                    .insert(trimmed_key.into(), Parameter::from_str(trimmed_param)?);
+                let param = Parameter::from_str(value)?;
+                // Only add parameters that have values
+                if !param.values.is_empty() {
+                    parameters.0.insert(trimmed_key.into(), param);
+                }
+            } else {
+                return Err(Error::InvalidParameter(trimmed_param.into()));
             }
         }
 
@@ -404,7 +408,16 @@ impl Query {
                 match trimmed_key {
                     Parameters::ORDER => {
                         if !trimmed_value.is_empty() {
-                            query.sort_fields = SortFields::from_str(trimmed_value)?;
+                            // Check if the value looks like a sort field format (contains colon)
+                            if trimmed_value.contains(':') {
+                                if let Ok(sort_fields) = SortFields::from_str(trimmed_value) {
+                                    query.sort_fields = sort_fields;
+                                }
+                                // Skip malformed sort fields (like ":desc")
+                            } else {
+                                // Fail on clearly invalid formats (like "invalid")
+                                return Err(Error::InvalidSortField(trimmed_value.into()));
+                            }
                         }
                     }
                     Parameters::LIMIT => {
@@ -422,10 +435,11 @@ impl Query {
                     }
                     k => {
                         if !trimmed_value.is_empty() {
-                            query
-                                .parameters
-                                .0
-                                .insert(k.into(), Parameter::from_str(trimmed_kv)?);
+                            let param = Parameter::from_str(trimmed_value)?;
+                            // Only add parameters that have values
+                            if !param.values.is_empty() {
+                                query.parameters.0.insert(k.into(), param);
+                            }
                         }
                     }
                 }
