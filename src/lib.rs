@@ -6,7 +6,7 @@ use std::str::FromStr;
 
 pub const QUESTION: char = '?';
 pub const AMPERSAND: char = '&';
-pub const EQUALS: char = '=';
+pub const EQUAL: char = '=';
 pub const COLON: char = ':';
 pub const COMMA: char = ',';
 
@@ -284,7 +284,7 @@ impl FromStr for Parameters {
                 continue;
             }
 
-            let mut parts = trimmed_param.splitn(2, EQUALS);
+            let mut parts = trimmed_param.splitn(2, EQUAL);
             if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
                 let trimmed_key = key.trim();
                 if trimmed_key.is_empty() || Parameters::EXCLUDE.contains(&trimmed_key) {
@@ -345,7 +345,7 @@ impl Query {
             .map(|(key, param)| {
                 let similarity = param.similarity.to_string();
                 let values = param.values.join(&format!("{COMMA}"));
-                format!("{key}{EQUALS}{similarity}{COLON}{values}",)
+                format!("{key}{EQUAL}{similarity}{COLON}{values}",)
             })
             .collect::<Vec<String>>()
             .join("&");
@@ -373,7 +373,7 @@ impl Query {
         }
 
         format!(
-            "{params}{}{EQUALS}{}{AMPERSAND}{}{EQUALS}{}",
+            "{params}{}{EQUAL}{}{AMPERSAND}{}{EQUAL}{}",
             Parameters::LIMIT,
             self.limit,
             Parameters::OFFSET,
@@ -396,7 +396,7 @@ impl Query {
                 continue;
             }
 
-            let mut parts = trimmed_kv.splitn(2, EQUALS);
+            let mut parts = trimmed_kv.splitn(2, EQUAL);
             if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
                 let trimmed_key = key.trim();
                 let trimmed_value = value.trim();

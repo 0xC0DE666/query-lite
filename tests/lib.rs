@@ -10,7 +10,7 @@ use std::str::FromStr;
 fn test_constants() {
     assert_eq!(QUESTION, '?');
     assert_eq!(AMPERSAND, '&');
-    assert_eq!(EQUALS, '=');
+    assert_eq!(EQUAL, '=');
     assert_eq!(COLON, ':');
     assert_eq!(COMMA, ',');
 }
@@ -502,7 +502,7 @@ fn test_query_to_http_with_params_and_sort() {
 }
 
 #[test]
-fn test_query_to_http_filters_empty_values() {
+fn test_query_to_http_sort_fields_empty_values() {
     let mut query = Query::new();
     let param = Parameter::init(Similarity::Contains, vec![]);
     query.parameters.0.insert("name".to_string(), param);
@@ -513,7 +513,7 @@ fn test_query_to_http_filters_empty_values() {
 }
 
 #[test]
-fn test_query_to_http_filters_empty_sort_fields() {
+fn test_query_to_http_empty_sort_fields() {
     let mut query = Query::new();
     let sort_field = SortField::init("".to_string(), SortOrder::Ascending);
     query.sort_fields.0.push(sort_field);
