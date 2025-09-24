@@ -212,7 +212,7 @@ fn test_similarity_constants() {
 
 #[test]
 fn test_similarity_default() {
-    assert_eq!(Similarity::default(), Similarity::Contains);
+    assert_eq!(Similarity::default(), Similarity::Equals);
 }
 
 #[test]
@@ -256,7 +256,7 @@ fn test_similarity_to_string() {
 #[test]
 fn test_parameter_new() {
     let param = Parameter::new();
-    assert_eq!(param.similarity, Similarity::Contains);
+    assert_eq!(param.similarity, Similarity::Equals);
     assert_eq!(param.values.len(), 0);
 }
 
