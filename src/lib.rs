@@ -106,10 +106,7 @@ impl FromStr for SortField {
             return Err(Error::InvalidSortField(s.into()));
         }
 
-        Ok(SortField::init(
-            name,
-            SortOrder::from_str(order_str)?,
-        ))
+        Ok(SortField::init(name, SortOrder::from_str(order_str)?))
     }
 }
 
@@ -147,7 +144,7 @@ impl FromStr for SortFields {
             if trimmed_field.is_empty() {
                 continue;
             }
-            
+
             sort_fields.0.push(SortField::from_str(trimmed_field)?);
         }
 
@@ -172,7 +169,7 @@ impl Similarity {
 
 impl Default for Similarity {
     fn default() -> Self {
-        Self::Contains
+        Self::Equals
     }
 }
 
@@ -313,18 +310,18 @@ impl FromStr for Parameters {
                 (Some(k), Some(v)) => (k, v),
                 _ => return Err(Error::InvalidParameter(trimmed_param.into())),
             };
-            
+
             let trimmed_key = key.trim();
             if trimmed_key.is_empty() || Parameters::EXCLUDE.contains(&trimmed_key) {
                 continue;
             }
-            
+
             let param = Parameter::from_str(value)?;
             // Only add parameters that have values
             if param.values.is_empty() {
                 continue;
             }
-            
+
             parameters.0.insert(trimmed_key.to_string(), param);
         }
 
@@ -372,7 +369,8 @@ impl Query {
             .filter(|(_, param)| param.values.len() > 0)
             .map(|(key, param)| {
                 let similarity = param.similarity.to_string();
-                let values = param.values
+                let values = param
+                    .values
                     .iter()
                     .map(|v| url_encode(v))
                     .collect::<Vec<String>>()
@@ -442,13 +440,13 @@ impl Query {
                         if trimmed_value.is_empty() {
                             continue;
                         }
-                        
+
                         // Check if the value looks like a sort field format (contains colon)
                         if !trimmed_value.contains(COLON) {
                             // Fail on clearly invalid formats (like "invalid")
                             return Err(Error::InvalidSortField(trimmed_value.into()));
                         }
-                        
+
                         if let Ok(sort_fields) = SortFields::from_str(trimmed_value) {
                             query.sort_fields = sort_fields;
                         }
@@ -458,7 +456,7 @@ impl Query {
                         if trimmed_value.is_empty() {
                             continue;
                         }
-                        
+
                         let limit: usize =
                             trimmed_value.parse().unwrap_or(Parameters::DEFAULT_LIMIT);
                         query.limit = limit.min(Parameters::MAX_LIMIT);
@@ -467,21 +465,20 @@ impl Query {
                         if trimmed_value.is_empty() {
                             continue;
                         }
-                        
-                        query.offset =
-                            trimmed_value.parse().unwrap_or(Parameters::DEFAULT_OFFSET);
+
+                        query.offset = trimmed_value.parse().unwrap_or(Parameters::DEFAULT_OFFSET);
                     }
                     _k => {
                         if trimmed_value.is_empty() {
                             continue;
                         }
-                        
+
                         let param = Parameter::from_str(trimmed_value)?;
                         // Only add parameters that have values
                         if param.values.is_empty() {
                             continue;
                         }
-                        
+
                         query.parameters.0.insert(trimmed_key.to_string(), param);
                     }
                 }
