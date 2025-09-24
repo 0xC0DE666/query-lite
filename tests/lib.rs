@@ -1,6 +1,6 @@
-use http_query::*;
-use http_query::error::Error;
 use std::str::FromStr;
+use xquery::error::Error;
+use xquery::*;
 
 // ============================================================================
 // CONSTANTS TESTS
@@ -92,26 +92,26 @@ fn test_sort_field_from_str_with_whitespace() {
 fn test_sort_field_from_str_invalid() {
     // Empty string
     assert!(SortField::from_str("").is_err());
-    
+
     // Missing colon
     assert!(SortField::from_str("name").is_err());
     assert!(SortField::from_str("nameasc").is_err());
-    
+
     // Multiple colons
     assert!(SortField::from_str("name:asc:extra").is_err());
-    
+
     // Empty name
     assert!(SortField::from_str(":asc").is_err());
-    
+
     // Empty order
     assert!(SortField::from_str("name:").is_err());
-    
+
     // Both empty
     assert!(SortField::from_str(":").is_err());
-    
+
     // Invalid order
     assert!(SortField::from_str("name:invalid").is_err());
-    
+
     // Only whitespace
     assert!(SortField::from_str("   ").is_err());
 }
@@ -136,7 +136,7 @@ fn test_sort_fields_default() {
 fn test_sort_fields_from_str_empty() {
     let fields = SortFields::from_str("").unwrap();
     assert_eq!(fields.0.len(), 0);
-    
+
     let fields = SortFields::from_str("   ").unwrap();
     assert_eq!(fields.0.len(), 0);
 }
@@ -153,20 +153,21 @@ fn test_sort_fields_from_str_single() {
 fn test_sort_fields_from_str_multiple() {
     let fields = SortFields::from_str("date_created:desc,name:asc,surname:asc").unwrap();
     assert_eq!(fields.0.len(), 3);
-    
+
     assert_eq!(fields.0[0].name, "date_created");
     assert_eq!(fields.0[0].order, SortOrder::Descending);
-    
+
     assert_eq!(fields.0[1].name, "name");
     assert_eq!(fields.0[1].order, SortOrder::Ascending);
-    
+
     assert_eq!(fields.0[2].name, "surname");
     assert_eq!(fields.0[2].order, SortOrder::Ascending);
 }
 
 #[test]
 fn test_sort_fields_from_str_with_whitespace() {
-    let fields = SortFields::from_str("  date_created:desc  ,  name:asc  ,  surname:asc  ").unwrap();
+    let fields =
+        SortFields::from_str("  date_created:desc  ,  name:asc  ,  surname:asc  ").unwrap();
     assert_eq!(fields.0.len(), 3);
     assert_eq!(fields.0[0].name, "date_created");
     assert_eq!(fields.0[1].name, "name");
@@ -217,9 +218,18 @@ fn test_similarity_default() {
 #[test]
 fn test_similarity_from_str_valid() {
     assert_eq!(Similarity::from_str("equals").unwrap(), Similarity::Equals);
-    assert_eq!(Similarity::from_str("contains").unwrap(), Similarity::Contains);
-    assert_eq!(Similarity::from_str("starts-with").unwrap(), Similarity::StartsWith);
-    assert_eq!(Similarity::from_str("ends-with").unwrap(), Similarity::EndsWith);
+    assert_eq!(
+        Similarity::from_str("contains").unwrap(),
+        Similarity::Contains
+    );
+    assert_eq!(
+        Similarity::from_str("starts-with").unwrap(),
+        Similarity::StartsWith
+    );
+    assert_eq!(
+        Similarity::from_str("ends-with").unwrap(),
+        Similarity::EndsWith
+    );
 }
 
 #[test]
@@ -277,7 +287,7 @@ fn test_parameter_from_str_with_whitespace() {
     let param = Parameter::from_str("  contains  :  damian  ").unwrap();
     assert_eq!(param.similarity, Similarity::Contains);
     assert_eq!(param.values, vec!["damian"]);
-    
+
     let param = Parameter::from_str("equals: black , steel , wood ").unwrap();
     assert_eq!(param.similarity, Similarity::Equals);
     assert_eq!(param.values, vec!["black", "steel", "wood"]);
@@ -308,20 +318,20 @@ fn test_parameter_from_str_mixed_empty_values() {
 fn test_parameter_from_str_invalid() {
     // Empty string
     assert!(Parameter::from_str("").is_err());
-    
+
     // Missing colon
     assert!(Parameter::from_str("contains").is_err());
     assert!(Parameter::from_str("containsdamian").is_err());
-    
+
     // Multiple colons
     assert!(Parameter::from_str("contains:damian:extra").is_err());
-    
+
     // Empty similarity
     assert!(Parameter::from_str(":damian").is_err());
-    
+
     // Invalid similarity
     assert!(Parameter::from_str("invalid:damian").is_err());
-    
+
     // Only whitespace
     assert!(Parameter::from_str("   ").is_err());
 }
@@ -338,7 +348,7 @@ fn test_parameters_constants() {
     assert_eq!(Parameters::DEFAULT_LIMIT, 50);
     assert_eq!(Parameters::DEFAULT_OFFSET, 0);
     assert_eq!(Parameters::MAX_LIMIT, 100);
-    
+
     assert!(Parameters::EXCLUDE.contains(&"order"));
     assert!(Parameters::EXCLUDE.contains(&"limit"));
     assert!(Parameters::EXCLUDE.contains(&"offset"));
@@ -360,7 +370,7 @@ fn test_parameters_default() {
 fn test_parameters_from_str_empty() {
     let params = Parameters::from_str("").unwrap();
     assert_eq!(params.0.len(), 0);
-    
+
     let params = Parameters::from_str("   ").unwrap();
     assert_eq!(params.0.len(), 0);
 }
@@ -377,14 +387,15 @@ fn test_parameters_from_str_single() {
 
 #[test]
 fn test_parameters_from_str_multiple() {
-    let params = Parameters::from_str("name=contains:damian&surname=equals:black,steel,wood").unwrap();
+    let params =
+        Parameters::from_str("name=contains:damian&surname=equals:black,steel,wood").unwrap();
     assert_eq!(params.0.len(), 2);
-    
+
     assert!(params.0.contains_key("name"));
     let name_param = &params.0["name"];
     assert_eq!(name_param.similarity, Similarity::Contains);
     assert_eq!(name_param.values, vec!["damian"]);
-    
+
     assert!(params.0.contains_key("surname"));
     let surname_param = &params.0["surname"];
     assert_eq!(surname_param.similarity, Similarity::Equals);
@@ -393,7 +404,8 @@ fn test_parameters_from_str_multiple() {
 
 #[test]
 fn test_parameters_from_str_with_whitespace() {
-    let params = Parameters::from_str("  name  =  contains:damian  &  surname  =  equals:black  ").unwrap();
+    let params =
+        Parameters::from_str("  name  =  contains:damian  &  surname  =  equals:black  ").unwrap();
     assert_eq!(params.0.len(), 2);
     assert!(params.0.contains_key("name"));
     assert!(params.0.contains_key("surname"));
@@ -401,7 +413,9 @@ fn test_parameters_from_str_with_whitespace() {
 
 #[test]
 fn test_parameters_from_str_excludes_special_params() {
-    let params = Parameters::from_str("name=contains:damian&order=date_created:desc&limit=40&offset=0").unwrap();
+    let params =
+        Parameters::from_str("name=contains:damian&order=date_created:desc&limit=40&offset=0")
+            .unwrap();
     assert_eq!(params.0.len(), 1);
     assert!(params.0.contains_key("name"));
     assert!(!params.0.contains_key("order"));
@@ -466,7 +480,7 @@ fn test_query_to_http_with_params() {
     let mut query = Query::new();
     let param = Parameter::init(Similarity::Contains, vec!["damian".to_string()]);
     query.parameters.0.insert("name".to_string(), param);
-    
+
     let http = query.to_http();
     assert!(http.contains("name=contains:damian"));
     assert!(http.contains("limit=50"));
@@ -478,7 +492,7 @@ fn test_query_to_http_with_sort() {
     let mut query = Query::new();
     let sort_field = SortField::init("date_created".to_string(), SortOrder::Descending);
     query.sort_fields.0.push(sort_field);
-    
+
     let http = query.to_http();
     assert!(http.contains("date_created:desc"));
     assert!(http.contains("limit=50"));
@@ -490,10 +504,10 @@ fn test_query_to_http_with_params_and_sort() {
     let mut query = Query::new();
     let param = Parameter::init(Similarity::Contains, vec!["damian".to_string()]);
     query.parameters.0.insert("name".to_string(), param);
-    
+
     let sort_field = SortField::init("date_created".to_string(), SortOrder::Descending);
     query.sort_fields.0.push(sort_field);
-    
+
     let http = query.to_http();
     assert!(http.contains("name=contains:damian"));
     assert!(http.contains("date_created:desc"));
@@ -506,7 +520,7 @@ fn test_query_to_http_sort_fields_empty_values() {
     let mut query = Query::new();
     let param = Parameter::init(Similarity::Contains, vec![]);
     query.parameters.0.insert("name".to_string(), param);
-    
+
     let http = query.to_http();
     assert!(!http.contains("name="));
     assert_eq!(http, "limit=50&offset=0");
@@ -517,7 +531,7 @@ fn test_query_to_http_empty_sort_fields() {
     let mut query = Query::new();
     let sort_field = SortField::init("".to_string(), SortOrder::Ascending);
     query.sort_fields.0.push(sort_field);
-    
+
     let http = query.to_http();
     assert!(!http.contains(":asc"));
     assert_eq!(http, "limit=50&offset=0");
@@ -590,22 +604,25 @@ fn test_query_from_http_with_invalid_offset() {
 #[test]
 fn test_query_from_http_complete() {
     let query = Query::from_http("name=contains:damian&surname=equals:black,steel,wood&order=date_created:desc&limit=40&offset=0".to_string()).unwrap();
-    
+
     assert_eq!(query.parameters.0.len(), 2);
     assert!(query.parameters.0.contains_key("name"));
     assert!(query.parameters.0.contains_key("surname"));
-    
+
     assert_eq!(query.sort_fields.0.len(), 1);
     assert_eq!(query.sort_fields.0[0].name, "date_created");
     assert_eq!(query.sort_fields.0[0].order, SortOrder::Descending);
-    
+
     assert_eq!(query.limit, 40);
     assert_eq!(query.offset, 0);
 }
 
 #[test]
 fn test_query_from_http_with_whitespace() {
-    let query = Query::from_http("  name  =  contains:damian  &  order  =  date_created:desc  ".to_string()).unwrap();
+    let query = Query::from_http(
+        "  name  =  contains:damian  &  order  =  date_created:desc  ".to_string(),
+    )
+    .unwrap();
     assert_eq!(query.parameters.0.len(), 1);
     assert!(query.parameters.0.contains_key("name"));
     assert_eq!(query.sort_fields.0.len(), 1);
@@ -625,10 +642,10 @@ fn test_query_from_http_empty_values() {
 fn test_query_from_http_invalid() {
     // Missing value
     assert!(Query::from_http("name".to_string()).is_err());
-    
+
     // Invalid parameter format
     assert!(Query::from_http("name=invalid:damian".to_string()).is_err());
-    
+
     // Invalid order format
     assert!(Query::from_http("order=invalid".to_string()).is_err());
 }
@@ -639,13 +656,13 @@ fn test_query_keep() {
     let param1 = Parameter::init(Similarity::Contains, vec!["value1".to_string()]);
     let param2 = Parameter::init(Similarity::Equals, vec!["value2".to_string()]);
     let param3 = Parameter::init(Similarity::StartsWith, vec!["value3".to_string()]);
-    
+
     query.parameters.0.insert("name".to_string(), param1);
     query.parameters.0.insert("surname".to_string(), param2);
     query.parameters.0.insert("email".to_string(), param3);
-    
+
     let filtered = query.keep(vec!["name".to_string(), "email".to_string()]);
-    
+
     assert_eq!(filtered.parameters.0.len(), 2);
     assert!(filtered.parameters.0.contains_key("name"));
     assert!(!filtered.parameters.0.contains_key("surname"));
@@ -657,7 +674,7 @@ fn test_query_keep_nonexistent_keys() {
     let mut query = Query::new();
     let param = Parameter::init(Similarity::Contains, vec!["value1".to_string()]);
     query.parameters.0.insert("name".to_string(), param);
-    
+
     let filtered = query.keep(vec!["nonexistent".to_string()]);
     assert_eq!(filtered.parameters.0.len(), 0);
 }
@@ -667,7 +684,7 @@ fn test_query_keep_empty_keys() {
     let mut query = Query::new();
     let param = Parameter::init(Similarity::Contains, vec!["value1".to_string()]);
     query.parameters.0.insert("name".to_string(), param);
-    
+
     let filtered = query.keep(vec![]);
     assert_eq!(filtered.parameters.0.len(), 0);
 }
@@ -678,13 +695,13 @@ fn test_query_remove() {
     let param1 = Parameter::init(Similarity::Contains, vec!["value1".to_string()]);
     let param2 = Parameter::init(Similarity::Equals, vec!["value2".to_string()]);
     let param3 = Parameter::init(Similarity::StartsWith, vec!["value3".to_string()]);
-    
+
     query.parameters.0.insert("name".to_string(), param1);
     query.parameters.0.insert("surname".to_string(), param2);
     query.parameters.0.insert("email".to_string(), param3);
-    
+
     let filtered = query.remove(vec!["name".to_string(), "email".to_string()]);
-    
+
     assert_eq!(filtered.parameters.0.len(), 1);
     assert!(!filtered.parameters.0.contains_key("name"));
     assert!(filtered.parameters.0.contains_key("surname"));
@@ -696,7 +713,7 @@ fn test_query_remove_nonexistent_keys() {
     let mut query = Query::new();
     let param = Parameter::init(Similarity::Contains, vec!["value1".to_string()]);
     query.parameters.0.insert("name".to_string(), param);
-    
+
     let filtered = query.remove(vec!["nonexistent".to_string()]);
     assert_eq!(filtered.parameters.0.len(), 1);
     assert!(filtered.parameters.0.contains_key("name"));
@@ -707,7 +724,7 @@ fn test_query_remove_empty_keys() {
     let mut query = Query::new();
     let param = Parameter::init(Similarity::Contains, vec!["value1".to_string()]);
     query.parameters.0.insert("name".to_string(), param);
-    
+
     let filtered = query.remove(vec![]);
     assert_eq!(filtered.parameters.0.len(), 1);
     assert!(filtered.parameters.0.contains_key("name"));
@@ -771,7 +788,7 @@ fn test_roundtrip_simple_query() {
     let original = "name=contains:damian&limit=25&offset=10";
     let query = Query::from_http(original.to_string()).unwrap();
     let reconstructed = query.to_http();
-    
+
     // The reconstructed query should contain the same information
     assert!(reconstructed.contains("name=contains:damian"));
     assert!(reconstructed.contains("limit=25"));
@@ -783,7 +800,7 @@ fn test_roundtrip_complex_query() {
     let original = "name=contains:damian&surname=equals:black,steel,wood&order=date_created:desc,name:asc&limit=40&offset=0";
     let query = Query::from_http(original.to_string()).unwrap();
     let reconstructed = query.to_http();
-    
+
     // Verify all components are preserved
     assert!(reconstructed.contains("name=contains:damian"));
     assert!(reconstructed.contains("surname=equals:black,steel,wood"));
@@ -797,7 +814,7 @@ fn test_roundtrip_complex_query() {
 fn test_complex_sort_fields_parsing() {
     let sort_str = "date_created:desc,name:asc,surname:asc,email:desc";
     let fields = SortFields::from_str(sort_str).unwrap();
-    
+
     assert_eq!(fields.0.len(), 4);
     assert_eq!(fields.0[0].name, "date_created");
     assert_eq!(fields.0[0].order, SortOrder::Descending);
@@ -813,21 +830,21 @@ fn test_complex_sort_fields_parsing() {
 fn test_complex_parameters_parsing() {
     let param_str = "name=contains:damian&surname=equals:black,steel,wood&email=starts-with:test&age=ends-with:25";
     let params = Parameters::from_str(param_str).unwrap();
-    
+
     assert_eq!(params.0.len(), 4);
-    
+
     let name_param = &params.0["name"];
     assert_eq!(name_param.similarity, Similarity::Contains);
     assert_eq!(name_param.values, vec!["damian"]);
-    
+
     let surname_param = &params.0["surname"];
     assert_eq!(surname_param.similarity, Similarity::Equals);
     assert_eq!(surname_param.values, vec!["black", "steel", "wood"]);
-    
+
     let email_param = &params.0["email"];
     assert_eq!(email_param.similarity, Similarity::StartsWith);
     assert_eq!(email_param.values, vec!["test"]);
-    
+
     let age_param = &params.0["age"];
     assert_eq!(age_param.similarity, Similarity::EndsWith);
     assert_eq!(age_param.values, vec!["25"]);
@@ -838,14 +855,14 @@ fn test_edge_case_whitespace_handling() {
     // Test various whitespace scenarios
     let query_str = "  name  =  contains  :  damian  &  order  =  date_created  :  desc  ";
     let query = Query::from_http(query_str.to_string()).unwrap();
-    
+
     assert_eq!(query.parameters.0.len(), 1);
     assert!(query.parameters.0.contains_key("name"));
-    
+
     let name_param = &query.parameters.0["name"];
     assert_eq!(name_param.similarity, Similarity::Contains);
     assert_eq!(name_param.values, vec!["damian"]);
-    
+
     assert_eq!(query.sort_fields.0.len(), 1);
     assert_eq!(query.sort_fields.0[0].name, "date_created");
     assert_eq!(query.sort_fields.0[0].order, SortOrder::Descending);
@@ -855,7 +872,7 @@ fn test_edge_case_whitespace_handling() {
 fn test_edge_case_empty_and_whitespace_values() {
     let query_str = "name=contains:&surname=equals:,,&order=:desc&limit=&offset=";
     let query = Query::from_http(query_str.to_string()).unwrap();
-    
+
     // Empty values should be filtered out
     assert_eq!(query.parameters.0.len(), 0);
     assert_eq!(query.sort_fields.0.len(), 0);
@@ -867,13 +884,12 @@ fn test_edge_case_empty_and_whitespace_values() {
 fn test_edge_case_special_characters_in_values() {
     let query_str = "name=contains:damian%20test&surname=equals:black,steel,wood";
     let query = Query::from_http(query_str.to_string()).unwrap();
-    
-    
+
     assert_eq!(query.parameters.0.len(), 2);
-    
+
     let name_param = &query.parameters.0["name"];
     assert_eq!(name_param.values, vec!["damian test"]);
-    
+
     let surname_param = &query.parameters.0["surname"];
     assert_eq!(surname_param.values, vec!["black", "steel", "wood"]);
 }
@@ -885,7 +901,7 @@ fn test_edge_case_very_long_query() {
         query_str.push_str(&format!("param{}={}:value{}&", i, "contains", i));
     }
     query_str.push_str("order=name:asc&limit=50&offset=0");
-    
+
     let query = Query::from_http(query_str).unwrap();
     assert_eq!(query.parameters.0.len(), 100);
     assert_eq!(query.sort_fields.0.len(), 1);
@@ -897,9 +913,9 @@ fn test_edge_case_very_long_query() {
 fn test_edge_case_unicode_characters() {
     let query_str = "name=contains:damian_测试&surname=equals:black,steel,wood";
     let query = Query::from_http(query_str.to_string()).unwrap();
-    
+
     assert_eq!(query.parameters.0.len(), 2);
-    
+
     let name_param = &query.parameters.0["name"];
     assert_eq!(name_param.values, vec!["damian_测试"]);
 }
@@ -909,10 +925,10 @@ fn test_edge_case_case_sensitivity() {
     // Test that similarity and sort order are case sensitive
     assert!(Similarity::from_str("EQUALS").is_err());
     assert!(Similarity::from_str("Contains").is_err());
-    
+
     assert!(SortOrder::from_str("ASC").is_err());
     assert!(SortOrder::from_str("DESC").is_err());
-    
+
     // But parameter keys should be preserved as-is
     let query_str = "Name=contains:damian&NAME=equals:test";
     let query = Query::from_http(query_str.to_string()).unwrap();
