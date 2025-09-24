@@ -143,9 +143,11 @@ impl FromStr for SortFields {
 
         for str_field in str_fields {
             let trimmed_field = str_field.trim();
-            if !trimmed_field.is_empty() {
-                sort_fields.0.push(SortField::from_str(trimmed_field)?);
+            if trimmed_field.is_empty() {
+                continue;
             }
+            
+            sort_fields.0.push(SortField::from_str(trimmed_field)?);
         }
 
         Ok(sort_fields)
@@ -306,19 +308,23 @@ impl FromStr for Parameters {
             }
 
             let mut parts = trimmed_param.splitn(2, EQUAL);
-            if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
-                let trimmed_key = key.trim();
-                if trimmed_key.is_empty() || Parameters::EXCLUDE.contains(&trimmed_key) {
-                    continue;
-                }
-                let param = Parameter::from_str(value)?;
-                // Only add parameters that have values
-                if !param.values.is_empty() {
-                    parameters.0.insert(trimmed_key.to_string(), param);
-                }
-            } else {
-                return Err(Error::InvalidParameter(trimmed_param.into()));
+            let (key, value) = match (parts.next(), parts.next()) {
+                (Some(k), Some(v)) => (k, v),
+                _ => return Err(Error::InvalidParameter(trimmed_param.into())),
+            };
+            
+            let trimmed_key = key.trim();
+            if trimmed_key.is_empty() || Parameters::EXCLUDE.contains(&trimmed_key) {
+                continue;
             }
+            
+            let param = Parameter::from_str(value)?;
+            // Only add parameters that have values
+            if param.values.is_empty() {
+                continue;
+            }
+            
+            parameters.0.insert(trimmed_key.to_string(), param);
         }
 
         Ok(parameters)
@@ -432,40 +438,50 @@ impl Query {
 
                 match trimmed_key {
                     Parameters::ORDER => {
-                        if !trimmed_value.is_empty() {
-                            // Check if the value looks like a sort field format (contains colon)
-                            if trimmed_value.contains(':') {
-                                if let Ok(sort_fields) = SortFields::from_str(trimmed_value) {
-                                    query.sort_fields = sort_fields;
-                                }
-                                // Skip malformed sort fields (like ":desc")
-                            } else {
-                                // Fail on clearly invalid formats (like "invalid")
-                                return Err(Error::InvalidSortField(trimmed_value.into()));
-                            }
+                        if trimmed_value.is_empty() {
+                            continue;
                         }
+                        
+                        // Check if the value looks like a sort field format (contains colon)
+                        if !trimmed_value.contains(':') {
+                            // Fail on clearly invalid formats (like "invalid")
+                            return Err(Error::InvalidSortField(trimmed_value.into()));
+                        }
+                        
+                        if let Ok(sort_fields) = SortFields::from_str(trimmed_value) {
+                            query.sort_fields = sort_fields;
+                        }
+                        // Skip malformed sort fields (like ":desc")
                     }
                     Parameters::LIMIT => {
-                        if !trimmed_value.is_empty() {
-                            let limit: usize =
-                                trimmed_value.parse().unwrap_or(Parameters::DEFAULT_LIMIT);
-                            query.limit = limit.min(Parameters::MAX_LIMIT);
+                        if trimmed_value.is_empty() {
+                            continue;
                         }
+                        
+                        let limit: usize =
+                            trimmed_value.parse().unwrap_or(Parameters::DEFAULT_LIMIT);
+                        query.limit = limit.min(Parameters::MAX_LIMIT);
                     }
                     Parameters::OFFSET => {
-                        if !trimmed_value.is_empty() {
-                            query.offset =
-                                trimmed_value.parse().unwrap_or(Parameters::DEFAULT_OFFSET);
+                        if trimmed_value.is_empty() {
+                            continue;
                         }
+                        
+                        query.offset =
+                            trimmed_value.parse().unwrap_or(Parameters::DEFAULT_OFFSET);
                     }
                     _k => {
-                        if !trimmed_value.is_empty() {
-                            let param = Parameter::from_str(trimmed_value)?;
-                            // Only add parameters that have values
-                            if !param.values.is_empty() {
-                                query.parameters.0.insert(trimmed_key.to_string(), param);
-                            }
+                        if trimmed_value.is_empty() {
+                            continue;
                         }
+                        
+                        let param = Parameter::from_str(trimmed_value)?;
+                        // Only add parameters that have values
+                        if param.values.is_empty() {
+                            continue;
+                        }
+                        
+                        query.parameters.0.insert(trimmed_key.to_string(), param);
                     }
                 }
             } else {
