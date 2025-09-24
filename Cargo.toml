@@ -12,6 +12,6 @@ repository = "https://github.com/0xC0DE666/http_query"
 rust-version = "1.88"
 
 [dependencies]
+url = { version = "^2" }
 indexmap = { version = "^2" }
 thiserror = { version = "^2", default-features = false }
-url = { version = "^2" }
