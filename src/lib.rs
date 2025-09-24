@@ -553,4 +553,150 @@ impl Query {
 
         clone
     }
+
+    #[cfg(feature = "sql")]
+    pub fn to_sql(&self) -> String {
+        let mut sql_parts = Vec::new();
+
+        // Build WHERE clause from parameters
+        let where_clause = self.build_where_clause();
+        if !where_clause.is_empty() {
+            sql_parts.push(format!("WHERE {}", where_clause));
+        }
+
+        // Build ORDER BY clause from sort fields
+        let order_clause = self.build_order_clause();
+        if !order_clause.is_empty() {
+            sql_parts.push(format!("ORDER BY {}", order_clause));
+        }
+
+        // Add LIMIT and OFFSET
+        sql_parts.push(format!("LIMIT ? OFFSET ?"));
+
+        sql_parts.join(" ")
+    }
+
+    #[cfg(feature = "sql")]
+    fn build_where_clause(&self) -> String {
+        let mut conditions = Vec::new();
+
+        for (key, param) in &self.parameters.0 {
+            if param.values.is_empty() {
+                continue;
+            }
+
+            let condition = match param.similarity {
+                Similarity::Equals => {
+                    if param.values.len() == 1 {
+                        if param.values[0] == "null" {
+                            format!("{} IS ?", key)
+                        } else {
+                            format!("{} = ?", key)
+                        }
+                    } else {
+                        let placeholders = vec!["?"; param.values.len()].join(", ");
+                        format!("{} IN ({})", key, placeholders)
+                    }
+                }
+                Similarity::Contains => {
+                    if param.values.len() == 1 {
+                        format!("{} LIKE ?", key)
+                    } else {
+                        let like_conditions: Vec<String> = param.values.iter()
+                            .map(|_| format!("{} LIKE ?", key))
+                            .collect();
+                        format!("({})", like_conditions.join(" OR "))
+                    }
+                }
+                Similarity::StartsWith => {
+                    if param.values.len() == 1 {
+                        format!("{} LIKE ?", key)
+                    } else {
+                        let like_conditions: Vec<String> = param.values.iter()
+                            .map(|_| format!("{} LIKE ?", key))
+                            .collect();
+                        format!("({})", like_conditions.join(" OR "))
+                    }
+                }
+                Similarity::EndsWith => {
+                    if param.values.len() == 1 {
+                        format!("{} LIKE ?", key)
+                    } else {
+                        let like_conditions: Vec<String> = param.values.iter()
+                            .map(|_| format!("{} LIKE ?", key))
+                            .collect();
+                        format!("({})", like_conditions.join(" OR "))
+                    }
+                }
+                Similarity::Between => {
+                    if param.values.len() >= 2 {
+                        format!("{} BETWEEN ? AND ?", key)
+                    } else {
+                        continue; // Skip invalid between conditions
+                    }
+                }
+                Similarity::Lesser => {
+                    if param.values.len() == 1 {
+                        format!("{} < ?", key)
+                    } else {
+                        let conditions: Vec<String> = param.values.iter()
+                            .map(|_| format!("{} < ?", key))
+                            .collect();
+                        format!("({})", conditions.join(" OR "))
+                    }
+                }
+                Similarity::LesserOrEqual => {
+                    if param.values.len() == 1 {
+                        format!("{} <= ?", key)
+                    } else {
+                        let conditions: Vec<String> = param.values.iter()
+                            .map(|_| format!("{} <= ?", key))
+                            .collect();
+                        format!("({})", conditions.join(" OR "))
+                    }
+                }
+                Similarity::Greater => {
+                    if param.values.len() == 1 {
+                        format!("{} > ?", key)
+                    } else {
+                        let conditions: Vec<String> = param.values.iter()
+                            .map(|_| format!("{} > ?", key))
+                            .collect();
+                        format!("({})", conditions.join(" OR "))
+                    }
+                }
+                Similarity::GreaterOrEqual => {
+                    if param.values.len() == 1 {
+                        format!("{} >= ?", key)
+                    } else {
+                        let conditions: Vec<String> = param.values.iter()
+                            .map(|_| format!("{} >= ?", key))
+                            .collect();
+                        format!("({})", conditions.join(" OR "))
+                    }
+                }
+            };
+
+            conditions.push(condition);
+        }
+
+        conditions.join(" AND ")
+    }
+
+    #[cfg(feature = "sql")]
+    fn build_order_clause(&self) -> String {
+        let mut order_parts = Vec::new();
+
+        for field in &self.sort_fields.0 {
+            if !field.name.is_empty() {
+                let direction = match field.order {
+                    SortOrder::Ascending => "ASC",
+                    SortOrder::Descending => "DESC",
+                };
+                order_parts.push(format!("{} {}", field.name, direction));
+            }
+        }
+
+        order_parts.join(", ")
+    }
 }

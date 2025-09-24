@@ -1369,3 +1369,238 @@ fn test_edge_case_numeric_comparisons_special_characters() {
     assert_eq!(score_param.similarity, Similarity::LesserOrEqual);
     assert_eq!(score_param.values, vec!["85.5"]);
 }
+
+// ============================================================================
+// SQL TESTS
+// ============================================================================
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_empty() {
+    let query = Query::new();
+    let sql = query.to_sql();
+    assert_eq!(sql, "LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_equals() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Equals, vec!["damian".to_string()]);
+    query.parameters.0.insert("name".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE name = ? LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_equals_multiple_values() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Equals, vec!["damian".to_string(), "john".to_string()]);
+    query.parameters.0.insert("name".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE name IN (?, ?) LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_equals_null() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Equals, vec!["null".to_string()]);
+    query.parameters.0.insert("name".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE name IS ? LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_contains() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Contains, vec!["damian".to_string()]);
+    query.parameters.0.insert("name".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE name LIKE ? LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_contains_multiple_values() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Contains, vec!["damian".to_string(), "john".to_string()]);
+    query.parameters.0.insert("name".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE (name LIKE ? OR name LIKE ?) LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_starts_with() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::StartsWith, vec!["damian".to_string()]);
+    query.parameters.0.insert("name".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE name LIKE ? LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_ends_with() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::EndsWith, vec!["damian".to_string()]);
+    query.parameters.0.insert("name".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE name LIKE ? LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_between() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Between, vec!["20".to_string(), "30".to_string()]);
+    query.parameters.0.insert("age".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE age BETWEEN ? AND ? LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_lesser() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Lesser, vec!["100".to_string()]);
+    query.parameters.0.insert("price".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE price < ? LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_lesser_or_equal() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::LesserOrEqual, vec!["100".to_string()]);
+    query.parameters.0.insert("price".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE price <= ? LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_greater() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Greater, vec!["50".to_string()]);
+    query.parameters.0.insert("price".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE price > ? LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_greater_or_equal() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::GreaterOrEqual, vec!["50".to_string()]);
+    query.parameters.0.insert("price".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE price >= ? LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_order_by() {
+    let mut query = Query::new();
+    let sort_field = SortField::init("date_created".to_string(), SortOrder::Descending);
+    query.sort_fields.0.push(sort_field);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "ORDER BY date_created DESC LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_multiple_order_by() {
+    let mut query = Query::new();
+    let sort_field1 = SortField::init("date_created".to_string(), SortOrder::Descending);
+    let sort_field2 = SortField::init("name".to_string(), SortOrder::Ascending);
+    query.sort_fields.0.push(sort_field1);
+    query.sort_fields.0.push(sort_field2);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "ORDER BY date_created DESC, name ASC LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_complex() {
+    let mut query = Query::new();
+    
+    // Add multiple parameters
+    let name_param = Parameter::init(Similarity::Contains, vec!["damian".to_string()]);
+    query.parameters.0.insert("name".to_string(), name_param);
+    
+    let age_param = Parameter::init(Similarity::Between, vec!["20".to_string(), "30".to_string()]);
+    query.parameters.0.insert("age".to_string(), age_param);
+    
+    let price_param = Parameter::init(Similarity::Greater, vec!["100".to_string()]);
+    query.parameters.0.insert("price".to_string(), price_param);
+    
+    // Add sorting
+    let sort_field = SortField::init("date_created".to_string(), SortOrder::Descending);
+    query.sort_fields.0.push(sort_field);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE name LIKE ? AND age BETWEEN ? AND ? AND price > ? ORDER BY date_created DESC LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_empty_parameters() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Contains, vec![]);
+    query.parameters.0.insert("name".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_with_empty_sort_fields() {
+    let mut query = Query::new();
+    let sort_field = SortField::init("".to_string(), SortOrder::Ascending);
+    query.sort_fields.0.push(sort_field);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_numeric_comparisons_multiple_values() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Greater, vec!["50".to_string(), "100".to_string()]);
+    query.parameters.0.insert("price".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE (price > ? OR price > ?) LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_between_invalid_values() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Between, vec!["20".to_string()]);
+    query.parameters.0.insert("age".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "LIMIT ? OFFSET ?");
+}
