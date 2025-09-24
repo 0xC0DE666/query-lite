@@ -1676,3 +1676,203 @@ fn test_query_to_sql_between_complex_with_other_conditions() {
     let sql = query.to_sql();
     assert_eq!(sql, "WHERE (age BETWEEN ? AND ? OR age BETWEEN ? AND ?) AND name LIKE ? LIMIT ? OFFSET ?");
 }
+
+// ============================================================================
+// NORMAL QUERY PARAMETER TESTS
+// ============================================================================
+
+#[test]
+fn test_query_from_http_normal_parameters() {
+    let query = Query::from_http("name=ben&age=20".to_string()).unwrap();
+    
+    assert_eq!(query.parameters.0.len(), 2);
+    
+    assert!(query.parameters.0.contains_key("name"));
+    let name_param = &query.parameters.0["name"];
+    assert_eq!(name_param.similarity, Similarity::Equals);
+    assert_eq!(name_param.values, vec!["ben"]);
+    
+    assert!(query.parameters.0.contains_key("age"));
+    let age_param = &query.parameters.0["age"];
+    assert_eq!(age_param.similarity, Similarity::Equals);
+    assert_eq!(age_param.values, vec!["20"]);
+}
+
+#[test]
+fn test_query_from_http_repeated_parameters() {
+    let query = Query::from_http("name=ben&name=john&name=alice".to_string()).unwrap();
+    
+    assert_eq!(query.parameters.0.len(), 1);
+    
+    assert!(query.parameters.0.contains_key("name"));
+    let name_param = &query.parameters.0["name"];
+    assert_eq!(name_param.similarity, Similarity::Equals);
+    assert_eq!(name_param.values, vec!["ben", "john", "alice"]);
+}
+
+#[test]
+fn test_query_from_http_mixed_normal_and_similarity() {
+    let query = Query::from_http("name=ben&name=john&age=contains:20&status=active".to_string()).unwrap();
+    
+    assert_eq!(query.parameters.0.len(), 3);
+    
+    // Normal parameters (repeated)
+    assert!(query.parameters.0.contains_key("name"));
+    let name_param = &query.parameters.0["name"];
+    assert_eq!(name_param.similarity, Similarity::Equals);
+    assert_eq!(name_param.values, vec!["ben", "john"]);
+    
+    // Similarity-based parameter
+    assert!(query.parameters.0.contains_key("age"));
+    let age_param = &query.parameters.0["age"];
+    assert_eq!(age_param.similarity, Similarity::Contains);
+    assert_eq!(age_param.values, vec!["20"]);
+    
+    // Normal parameter (single)
+    assert!(query.parameters.0.contains_key("status"));
+    let status_param = &query.parameters.0["status"];
+    assert_eq!(status_param.similarity, Similarity::Equals);
+    assert_eq!(status_param.values, vec!["active"]);
+}
+
+#[test]
+fn test_query_from_http_normal_with_special_params() {
+    let query = Query::from_http("name=ben&age=20&order=date_created:desc&limit=25&offset=10".to_string()).unwrap();
+    
+    assert_eq!(query.parameters.0.len(), 2);
+    
+    assert!(query.parameters.0.contains_key("name"));
+    let name_param = &query.parameters.0["name"];
+    assert_eq!(name_param.similarity, Similarity::Equals);
+    assert_eq!(name_param.values, vec!["ben"]);
+    
+    assert!(query.parameters.0.contains_key("age"));
+    let age_param = &query.parameters.0["age"];
+    assert_eq!(age_param.similarity, Similarity::Equals);
+    assert_eq!(age_param.values, vec!["20"]);
+    
+    // Check special parameters are handled correctly
+    assert_eq!(query.sort_fields.0.len(), 1);
+    assert_eq!(query.sort_fields.0[0].name, "date_created");
+    assert_eq!(query.sort_fields.0[0].order, SortOrder::Descending);
+    assert_eq!(query.limit, 25);
+    assert_eq!(query.offset, 10);
+}
+
+#[test]
+fn test_query_from_http_url_encoded_normal_params() {
+    let query = Query::from_http("name=john%20doe&email=test%40example.com".to_string()).unwrap();
+    
+    assert_eq!(query.parameters.0.len(), 2);
+    
+    assert!(query.parameters.0.contains_key("name"));
+    let name_param = &query.parameters.0["name"];
+    assert_eq!(name_param.similarity, Similarity::Equals);
+    assert_eq!(name_param.values, vec!["john doe"]);
+    
+    assert!(query.parameters.0.contains_key("email"));
+    let email_param = &query.parameters.0["email"];
+    assert_eq!(email_param.similarity, Similarity::Equals);
+    assert_eq!(email_param.values, vec!["test@example.com"]);
+}
+
+#[test]
+fn test_query_from_http_repeated_mixed_similarity() {
+    let query = Query::from_http("name=ben&name=contains:john&name=alice".to_string()).unwrap();
+    
+    assert_eq!(query.parameters.0.len(), 1);
+    
+    assert!(query.parameters.0.contains_key("name"));
+    let name_param = &query.parameters.0["name"];
+    // The similarity-based parameter takes precedence
+    assert_eq!(name_param.similarity, Similarity::Contains);
+    assert_eq!(name_param.values, vec!["john"]);
+}
+
+#[test]
+fn test_query_from_http_empty_normal_values() {
+    let query = Query::from_http("name=&age=20&status=".to_string()).unwrap();
+    
+    assert_eq!(query.parameters.0.len(), 1);
+    
+    assert!(query.parameters.0.contains_key("age"));
+    let age_param = &query.parameters.0["age"];
+    assert_eq!(age_param.similarity, Similarity::Equals);
+    assert_eq!(age_param.values, vec!["20"]);
+}
+
+#[test]
+fn test_query_to_http_normal_parameters() {
+    let mut query = Query::new();
+    
+    let name_param = Parameter::init(Similarity::Equals, vec!["ben".to_string(), "john".to_string()]);
+    query.parameters.0.insert("name".to_string(), name_param);
+    
+    let age_param = Parameter::init(Similarity::Equals, vec!["20".to_string()]);
+    query.parameters.0.insert("age".to_string(), age_param);
+    
+    let http = query.to_http();
+    
+    assert!(http.contains("name=equals:ben,john"));
+    assert!(http.contains("age=equals:20"));
+    assert!(http.contains("limit=50"));
+    assert!(http.contains("offset=0"));
+}
+
+#[test]
+fn test_query_roundtrip_normal_parameters() {
+    let original = "name=ben&name=john&age=20&status=active";
+    let query = Query::from_http(original.to_string()).unwrap();
+    let reconstructed = query.to_http();
+    
+    // The reconstructed query should contain the same information
+    assert!(reconstructed.contains("name=equals:ben,john"));
+    assert!(reconstructed.contains("age=equals:20"));
+    assert!(reconstructed.contains("status=equals:active"));
+    assert!(reconstructed.contains("limit=50"));
+    assert!(reconstructed.contains("offset=0"));
+}
+
+#[test]
+fn test_query_roundtrip_mixed_normal_and_similarity() {
+    let original = "name=ben&name=john&age=contains:20&status=active";
+    let query = Query::from_http(original.to_string()).unwrap();
+    let reconstructed = query.to_http();
+    
+    // The reconstructed query should contain the same information
+    assert!(reconstructed.contains("name=equals:ben,john"));
+    assert!(reconstructed.contains("age=contains:20"));
+    assert!(reconstructed.contains("status=equals:active"));
+    assert!(reconstructed.contains("limit=50"));
+    assert!(reconstructed.contains("offset=0"));
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_normal_parameters() {
+    let mut query = Query::new();
+    
+    let name_param = Parameter::init(Similarity::Equals, vec!["ben".to_string(), "john".to_string()]);
+    query.parameters.0.insert("name".to_string(), name_param);
+    
+    let age_param = Parameter::init(Similarity::Equals, vec!["20".to_string()]);
+    query.parameters.0.insert("age".to_string(), age_param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE name IN (?, ?) AND age = ? LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_mixed_normal_and_similarity() {
+    let mut query = Query::new();
+    
+    let name_param = Parameter::init(Similarity::Equals, vec!["ben".to_string(), "john".to_string()]);
+    query.parameters.0.insert("name".to_string(), name_param);
+    
+    let age_param = Parameter::init(Similarity::Contains, vec!["20".to_string()]);
+    query.parameters.0.insert("age".to_string(), age_param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE name IN (?, ?) AND age LIKE ? LIMIT ? OFFSET ?");
+}

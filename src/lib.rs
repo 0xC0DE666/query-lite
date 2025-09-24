@@ -503,13 +503,33 @@ impl Query {
                             continue;
                         }
 
-                        let param = Parameter::from_str(trimmed_value)?;
-                        // Only add parameters that have values
-                        if param.values.is_empty() {
-                            continue;
+                        // Check if this is a similarity-based parameter (contains colon)
+                        if trimmed_value.contains(COLON) {
+                            // Parse as similarity-based parameter
+                            let param = Parameter::from_str(trimmed_value)?;
+                            // Only add parameters that have values
+                            if param.values.is_empty() {
+                                continue;
+                            }
+                            // Replace any existing parameter (similarity-based takes precedence)
+                            query.parameters.0.insert(trimmed_key.to_string(), param);
+                        } else {
+                            // Handle as normal query parameter (default to equals similarity)
+                            let decoded_value = url_decode(trimmed_value);
+                            
+                            // Check if parameter already exists and is not similarity-based
+                            if let Some(existing_param) = query.parameters.0.get_mut(&trimmed_key.to_string()) {
+                                // Only append if the existing parameter is also equals similarity
+                                if existing_param.similarity == Similarity::Equals {
+                                    existing_param.values.push(decoded_value);
+                                }
+                                // If existing parameter is similarity-based, ignore this normal parameter
+                            } else {
+                                // Create new parameter with equals similarity
+                                let param = Parameter::init(Similarity::Equals, vec![decoded_value]);
+                                query.parameters.0.insert(trimmed_key.to_string(), param);
+                            }
                         }
-
-                        query.parameters.0.insert(trimmed_key.to_string(), param);
                     }
                 }
             } else {
