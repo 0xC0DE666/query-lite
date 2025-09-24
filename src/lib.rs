@@ -158,6 +158,12 @@ pub enum Similarity {
     Contains,
     StartsWith,
     EndsWith,
+
+    Between,
+    Lesser,
+    LesserOrEqual,
+    Greater,
+    GreaterOrEqual,
 }
 
 impl Similarity {
@@ -165,6 +171,12 @@ impl Similarity {
     pub const CONTAINS: &str = "contains";
     pub const STARTS_WITH: &str = "starts-with";
     pub const ENDS_WITH: &str = "ends-with";
+
+    pub const BETWEEN: &str = "between";
+    pub const LESSER: &str = "lesser";
+    pub const LESSER_OR_EQUAL: &str = "lesser-or-equal";
+    pub const GREATER: &str = "greater";
+    pub const GREATER_OR_EQUAL: &str = "greater-or-equal";
 }
 
 impl Default for Similarity {
@@ -181,6 +193,13 @@ impl FromStr for Similarity {
             Similarity::CONTAINS => Ok(Similarity::Contains),
             Similarity::STARTS_WITH => Ok(Similarity::StartsWith),
             Similarity::ENDS_WITH => Ok(Similarity::EndsWith),
+
+            Similarity::BETWEEN => Ok(Similarity::Between),
+            Similarity::LESSER => Ok(Similarity::Lesser),
+            Similarity::LESSER_OR_EQUAL => Ok(Similarity::LesserOrEqual),
+            Similarity::GREATER => Ok(Similarity::Greater),
+            Similarity::GREATER_OR_EQUAL => Ok(Similarity::GreaterOrEqual),
+
             val => Err(Error::InvalidSimilarity(val.into())),
         }
     }
@@ -193,6 +212,12 @@ impl ToString for Similarity {
             Self::Contains => Self::CONTAINS.to_string(),
             Self::StartsWith => Self::STARTS_WITH.to_string(),
             Self::EndsWith => Self::ENDS_WITH.to_string(),
+
+            Self::Between => Self::BETWEEN.to_string(),
+            Self::Lesser => Self::LESSER.to_string(),
+            Self::LesserOrEqual => Self::LESSER_OR_EQUAL.to_string(),
+            Self::Greater => Self::GREATER.to_string(),
+            Self::GreaterOrEqual => Self::GREATER_OR_EQUAL.to_string(),
         }
     }
 }
@@ -224,6 +249,11 @@ impl FromStr for Parameter {
     // name=equals:black,steel,wood
     // name=starts-with:black,steel,wood
     // name=ends-with:black,steel,wood
+    // age=between:20,30
+    // age=lesser:18
+    // age=greater:18
+    // age=lesser-or-equal:18
+    // age=greater-or-equal:18
     fn from_str(s: &str) -> Result<Self> {
         let trimmed = s.trim();
         if trimmed.is_empty() {

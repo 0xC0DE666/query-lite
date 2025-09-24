@@ -200,6 +200,11 @@ fn test_similarity_variants() {
     assert_eq!(Similarity::Contains, Similarity::Contains);
     assert_eq!(Similarity::StartsWith, Similarity::StartsWith);
     assert_eq!(Similarity::EndsWith, Similarity::EndsWith);
+    assert_eq!(Similarity::Between, Similarity::Between);
+    assert_eq!(Similarity::Lesser, Similarity::Lesser);
+    assert_eq!(Similarity::LesserOrEqual, Similarity::LesserOrEqual);
+    assert_eq!(Similarity::Greater, Similarity::Greater);
+    assert_eq!(Similarity::GreaterOrEqual, Similarity::GreaterOrEqual);
 }
 
 #[test]
@@ -208,6 +213,11 @@ fn test_similarity_constants() {
     assert_eq!(Similarity::CONTAINS, "contains");
     assert_eq!(Similarity::STARTS_WITH, "starts-with");
     assert_eq!(Similarity::ENDS_WITH, "ends-with");
+    assert_eq!(Similarity::BETWEEN, "between");
+    assert_eq!(Similarity::LESSER, "lesser");
+    assert_eq!(Similarity::LESSER_OR_EQUAL, "lesser-or-equal");
+    assert_eq!(Similarity::GREATER, "greater");
+    assert_eq!(Similarity::GREATER_OR_EQUAL, "greater-or-equal");
 }
 
 #[test]
@@ -230,6 +240,26 @@ fn test_similarity_from_str_valid() {
         Similarity::from_str("ends-with").unwrap(),
         Similarity::EndsWith
     );
+    assert_eq!(
+        Similarity::from_str("between").unwrap(),
+        Similarity::Between
+    );
+    assert_eq!(
+        Similarity::from_str("lesser").unwrap(),
+        Similarity::Lesser
+    );
+    assert_eq!(
+        Similarity::from_str("lesser-or-equal").unwrap(),
+        Similarity::LesserOrEqual
+    );
+    assert_eq!(
+        Similarity::from_str("greater").unwrap(),
+        Similarity::Greater
+    );
+    assert_eq!(
+        Similarity::from_str("greater-or-equal").unwrap(),
+        Similarity::GreaterOrEqual
+    );
 }
 
 #[test]
@@ -239,6 +269,11 @@ fn test_similarity_from_str_invalid() {
     assert!(Similarity::from_str("EQUALS").is_err());
     assert!(Similarity::from_str("starts_with").is_err());
     assert!(Similarity::from_str("ends_with").is_err());
+    assert!(Similarity::from_str("BETWEEN").is_err());
+    assert!(Similarity::from_str("lesser_than").is_err());
+    assert!(Similarity::from_str("greater_than").is_err());
+    assert!(Similarity::from_str("lesser_or_equal").is_err());
+    assert!(Similarity::from_str("greater_or_equal").is_err());
 }
 
 #[test]
@@ -247,6 +282,11 @@ fn test_similarity_to_string() {
     assert_eq!(Similarity::Contains.to_string(), "contains");
     assert_eq!(Similarity::StartsWith.to_string(), "starts-with");
     assert_eq!(Similarity::EndsWith.to_string(), "ends-with");
+    assert_eq!(Similarity::Between.to_string(), "between");
+    assert_eq!(Similarity::Lesser.to_string(), "lesser");
+    assert_eq!(Similarity::LesserOrEqual.to_string(), "lesser-or-equal");
+    assert_eq!(Similarity::Greater.to_string(), "greater");
+    assert_eq!(Similarity::GreaterOrEqual.to_string(), "greater-or-equal");
 }
 
 // ============================================================================
@@ -334,6 +374,85 @@ fn test_parameter_from_str_invalid() {
 
     // Only whitespace
     assert!(Parameter::from_str("   ").is_err());
+}
+
+#[test]
+fn test_parameter_from_str_between_single_range() {
+    let param = Parameter::from_str("between:20,30").unwrap();
+    assert_eq!(param.similarity, Similarity::Between);
+    assert_eq!(param.values, vec!["20", "30"]);
+}
+
+#[test]
+fn test_parameter_from_str_between_with_whitespace() {
+    let param = Parameter::from_str("  between  :  20  ,  30  ").unwrap();
+    assert_eq!(param.similarity, Similarity::Between);
+    assert_eq!(param.values, vec!["20", "30"]);
+}
+
+#[test]
+fn test_parameter_from_str_lesser() {
+    let param = Parameter::from_str("lesser:100").unwrap();
+    assert_eq!(param.similarity, Similarity::Lesser);
+    assert_eq!(param.values, vec!["100"]);
+}
+
+#[test]
+fn test_parameter_from_str_lesser_or_equal() {
+    let param = Parameter::from_str("lesser-or-equal:100").unwrap();
+    assert_eq!(param.similarity, Similarity::LesserOrEqual);
+    assert_eq!(param.values, vec!["100"]);
+}
+
+#[test]
+fn test_parameter_from_str_greater() {
+    let param = Parameter::from_str("greater:50").unwrap();
+    assert_eq!(param.similarity, Similarity::Greater);
+    assert_eq!(param.values, vec!["50"]);
+}
+
+#[test]
+fn test_parameter_from_str_greater_or_equal() {
+    let param = Parameter::from_str("greater-or-equal:50").unwrap();
+    assert_eq!(param.similarity, Similarity::GreaterOrEqual);
+    assert_eq!(param.values, vec!["50"]);
+}
+
+#[test]
+fn test_parameter_from_str_numeric_comparisons_with_whitespace() {
+    let param1 = Parameter::from_str("  lesser  :  100  ").unwrap();
+    assert_eq!(param1.similarity, Similarity::Lesser);
+    assert_eq!(param1.values, vec!["100"]);
+
+    let param2 = Parameter::from_str("  greater-or-equal  :  25  ").unwrap();
+    assert_eq!(param2.similarity, Similarity::GreaterOrEqual);
+    assert_eq!(param2.values, vec!["25"]);
+}
+
+#[test]
+fn test_parameter_from_str_between_multiple_values() {
+    // Test that between can handle multiple values (though typically it should be exactly 2)
+    let param = Parameter::from_str("between:10,20,30").unwrap();
+    assert_eq!(param.similarity, Similarity::Between);
+    assert_eq!(param.values, vec!["10", "20", "30"]);
+}
+
+#[test]
+fn test_parameter_from_str_numeric_comparisons_empty_values() {
+    let param = Parameter::from_str("lesser:").unwrap();
+    assert_eq!(param.similarity, Similarity::Lesser);
+    assert_eq!(param.values.len(), 0);
+
+    let param2 = Parameter::from_str("greater:").unwrap();
+    assert_eq!(param2.similarity, Similarity::Greater);
+    assert_eq!(param2.values.len(), 0);
+}
+
+#[test]
+fn test_parameter_from_str_between_empty_values() {
+    let param = Parameter::from_str("between:").unwrap();
+    assert_eq!(param.similarity, Similarity::Between);
+    assert_eq!(param.values.len(), 0);
 }
 
 // ============================================================================
@@ -442,6 +561,61 @@ fn test_parameters_from_str_invalid() {
     // Invalid parameter format
     assert!(Parameters::from_str("name").is_err());
     assert!(Parameters::from_str("name=invalid:damian").is_err());
+}
+
+#[test]
+fn test_parameters_from_str_with_numeric_comparisons() {
+    let params = Parameters::from_str("age=between:20,30&price=greater:100&score=lesser-or-equal:85").unwrap();
+    assert_eq!(params.0.len(), 3);
+
+    assert!(params.0.contains_key("age"));
+    let age_param = &params.0["age"];
+    assert_eq!(age_param.similarity, Similarity::Between);
+    assert_eq!(age_param.values, vec!["20", "30"]);
+
+    assert!(params.0.contains_key("price"));
+    let price_param = &params.0["price"];
+    assert_eq!(price_param.similarity, Similarity::Greater);
+    assert_eq!(price_param.values, vec!["100"]);
+
+    assert!(params.0.contains_key("score"));
+    let score_param = &params.0["score"];
+    assert_eq!(score_param.similarity, Similarity::LesserOrEqual);
+    assert_eq!(score_param.values, vec!["85"]);
+}
+
+#[test]
+fn test_parameters_from_str_mixed_similarity_types() {
+    let params = Parameters::from_str("name=contains:damian&age=between:25,35&price=greater-or-equal:50&status=equals:active").unwrap();
+    assert_eq!(params.0.len(), 4);
+
+    assert!(params.0.contains_key("name"));
+    let name_param = &params.0["name"];
+    assert_eq!(name_param.similarity, Similarity::Contains);
+    assert_eq!(name_param.values, vec!["damian"]);
+
+    assert!(params.0.contains_key("age"));
+    let age_param = &params.0["age"];
+    assert_eq!(age_param.similarity, Similarity::Between);
+    assert_eq!(age_param.values, vec!["25", "35"]);
+
+    assert!(params.0.contains_key("price"));
+    let price_param = &params.0["price"];
+    assert_eq!(price_param.similarity, Similarity::GreaterOrEqual);
+    assert_eq!(price_param.values, vec!["50"]);
+
+    assert!(params.0.contains_key("status"));
+    let status_param = &params.0["status"];
+    assert_eq!(status_param.similarity, Similarity::Equals);
+    assert_eq!(status_param.values, vec!["active"]);
+}
+
+#[test]
+fn test_parameters_from_str_numeric_with_whitespace() {
+    let params = Parameters::from_str("  age  =  between:20,30  &  price  =  lesser:100  ").unwrap();
+    assert_eq!(params.0.len(), 2);
+    assert!(params.0.contains_key("age"));
+    assert!(params.0.contains_key("price"));
 }
 
 // ============================================================================
@@ -730,6 +904,145 @@ fn test_query_remove_empty_keys() {
     assert!(filtered.parameters.0.contains_key("name"));
 }
 
+#[test]
+fn test_query_from_http_with_numeric_comparisons() {
+    let query = Query::from_http("age=between:20,30&price=greater:100&score=lesser-or-equal:85&order=date_created:desc&limit=25&offset=10".to_string()).unwrap();
+    
+    assert_eq!(query.parameters.0.len(), 3);
+    
+    assert!(query.parameters.0.contains_key("age"));
+    let age_param = &query.parameters.0["age"];
+    assert_eq!(age_param.similarity, Similarity::Between);
+    assert_eq!(age_param.values, vec!["20", "30"]);
+    
+    assert!(query.parameters.0.contains_key("price"));
+    let price_param = &query.parameters.0["price"];
+    assert_eq!(price_param.similarity, Similarity::Greater);
+    assert_eq!(price_param.values, vec!["100"]);
+    
+    assert!(query.parameters.0.contains_key("score"));
+    let score_param = &query.parameters.0["score"];
+    assert_eq!(score_param.similarity, Similarity::LesserOrEqual);
+    assert_eq!(score_param.values, vec!["85"]);
+    
+    assert_eq!(query.sort_fields.0.len(), 1);
+    assert_eq!(query.sort_fields.0[0].name, "date_created");
+    assert_eq!(query.sort_fields.0[0].order, SortOrder::Descending);
+    
+    assert_eq!(query.limit, 25);
+    assert_eq!(query.offset, 10);
+}
+
+#[test]
+fn test_query_from_http_mixed_similarity_types() {
+    let query = Query::from_http("name=contains:damian&age=between:25,35&price=greater-or-equal:50&status=equals:active&order=name:asc&limit=20".to_string()).unwrap();
+    
+    assert_eq!(query.parameters.0.len(), 4);
+    
+    assert!(query.parameters.0.contains_key("name"));
+    let name_param = &query.parameters.0["name"];
+    assert_eq!(name_param.similarity, Similarity::Contains);
+    assert_eq!(name_param.values, vec!["damian"]);
+    
+    assert!(query.parameters.0.contains_key("age"));
+    let age_param = &query.parameters.0["age"];
+    assert_eq!(age_param.similarity, Similarity::Between);
+    assert_eq!(age_param.values, vec!["25", "35"]);
+    
+    assert!(query.parameters.0.contains_key("price"));
+    let price_param = &query.parameters.0["price"];
+    assert_eq!(price_param.similarity, Similarity::GreaterOrEqual);
+    assert_eq!(price_param.values, vec!["50"]);
+    
+    assert!(query.parameters.0.contains_key("status"));
+    let status_param = &query.parameters.0["status"];
+    assert_eq!(status_param.similarity, Similarity::Equals);
+    assert_eq!(status_param.values, vec!["active"]);
+    
+    assert_eq!(query.sort_fields.0.len(), 1);
+    assert_eq!(query.sort_fields.0[0].name, "name");
+    assert_eq!(query.sort_fields.0[0].order, SortOrder::Ascending);
+    
+    assert_eq!(query.limit, 20);
+}
+
+#[test]
+fn test_query_to_http_with_numeric_comparisons() {
+    let mut query = Query::new();
+    
+    let age_param = Parameter::init(Similarity::Between, vec!["20".to_string(), "30".to_string()]);
+    query.parameters.0.insert("age".to_string(), age_param);
+    
+    let price_param = Parameter::init(Similarity::Greater, vec!["100".to_string()]);
+    query.parameters.0.insert("price".to_string(), price_param);
+    
+    let score_param = Parameter::init(Similarity::LesserOrEqual, vec!["85".to_string()]);
+    query.parameters.0.insert("score".to_string(), score_param);
+    
+    let sort_field = SortField::init("date_created".to_string(), SortOrder::Descending);
+    query.sort_fields.0.push(sort_field);
+    
+    query.limit = 25;
+    query.offset = 10;
+    
+    let http = query.to_http();
+    
+    assert!(http.contains("age=between:20,30"));
+    assert!(http.contains("price=greater:100"));
+    assert!(http.contains("score=lesser-or-equal:85"));
+    assert!(http.contains("date_created:desc"));
+    assert!(http.contains("limit=25"));
+    assert!(http.contains("offset=10"));
+}
+
+#[test]
+fn test_query_keep_with_numeric_comparisons() {
+    let mut query = Query::new();
+    
+    let age_param = Parameter::init(Similarity::Between, vec!["20".to_string(), "30".to_string()]);
+    let price_param = Parameter::init(Similarity::Greater, vec!["100".to_string()]);
+    let name_param = Parameter::init(Similarity::Contains, vec!["damian".to_string()]);
+    
+    query.parameters.0.insert("age".to_string(), age_param);
+    query.parameters.0.insert("price".to_string(), price_param);
+    query.parameters.0.insert("name".to_string(), name_param);
+    
+    let filtered = query.keep(vec!["age".to_string(), "name".to_string()]);
+    
+    assert_eq!(filtered.parameters.0.len(), 2);
+    assert!(filtered.parameters.0.contains_key("age"));
+    assert!(!filtered.parameters.0.contains_key("price"));
+    assert!(filtered.parameters.0.contains_key("name"));
+    
+    let age_param = &filtered.parameters.0["age"];
+    assert_eq!(age_param.similarity, Similarity::Between);
+    assert_eq!(age_param.values, vec!["20", "30"]);
+}
+
+#[test]
+fn test_query_remove_with_numeric_comparisons() {
+    let mut query = Query::new();
+    
+    let age_param = Parameter::init(Similarity::Between, vec!["20".to_string(), "30".to_string()]);
+    let price_param = Parameter::init(Similarity::Greater, vec!["100".to_string()]);
+    let name_param = Parameter::init(Similarity::Contains, vec!["damian".to_string()]);
+    
+    query.parameters.0.insert("age".to_string(), age_param);
+    query.parameters.0.insert("price".to_string(), price_param);
+    query.parameters.0.insert("name".to_string(), name_param);
+    
+    let filtered = query.remove(vec!["age".to_string(), "name".to_string()]);
+    
+    assert_eq!(filtered.parameters.0.len(), 1);
+    assert!(!filtered.parameters.0.contains_key("age"));
+    assert!(filtered.parameters.0.contains_key("price"));
+    assert!(!filtered.parameters.0.contains_key("name"));
+    
+    let price_param = &filtered.parameters.0["price"];
+    assert_eq!(price_param.similarity, Similarity::Greater);
+    assert_eq!(price_param.values, vec!["100"]);
+}
+
 // ============================================================================
 // ERROR HANDLING TESTS
 // ============================================================================
@@ -935,4 +1248,124 @@ fn test_edge_case_case_sensitivity() {
     assert_eq!(query.parameters.0.len(), 2);
     assert!(query.parameters.0.contains_key("Name"));
     assert!(query.parameters.0.contains_key("NAME"));
+}
+
+#[test]
+fn test_roundtrip_numeric_comparisons() {
+    let original = "age=between:20,30&price=greater:100&score=lesser-or-equal:85&order=date_created:desc&limit=25&offset=10";
+    let query = Query::from_http(original.to_string()).unwrap();
+    let reconstructed = query.to_http();
+
+    // Verify all numeric comparison components are preserved
+    assert!(reconstructed.contains("age=between:20,30"));
+    assert!(reconstructed.contains("price=greater:100"));
+    assert!(reconstructed.contains("score=lesser-or-equal:85"));
+    assert!(reconstructed.contains("date_created:desc"));
+    assert!(reconstructed.contains("limit=25"));
+    assert!(reconstructed.contains("offset=10"));
+}
+
+#[test]
+fn test_roundtrip_mixed_similarity_types() {
+    let original = "name=contains:damian&age=between:25,35&price=greater-or-equal:50&status=equals:active&order=name:asc&limit=20";
+    let query = Query::from_http(original.to_string()).unwrap();
+    let reconstructed = query.to_http();
+
+    // Verify all mixed similarity types are preserved
+    assert!(reconstructed.contains("name=contains:damian"));
+    assert!(reconstructed.contains("age=between:25,35"));
+    assert!(reconstructed.contains("price=greater-or-equal:50"));
+    assert!(reconstructed.contains("status=equals:active"));
+    assert!(reconstructed.contains("name:asc"));
+    assert!(reconstructed.contains("limit=20"));
+}
+
+#[test]
+fn test_complex_numeric_parameters_parsing() {
+    let param_str = "age=between:20,30&price=greater:100&score=lesser-or-equal:85&rating=greater-or-equal:4.5&discount=lesser:10";
+    let params = Parameters::from_str(param_str).unwrap();
+
+    assert_eq!(params.0.len(), 5);
+
+    let age_param = &params.0["age"];
+    assert_eq!(age_param.similarity, Similarity::Between);
+    assert_eq!(age_param.values, vec!["20", "30"]);
+
+    let price_param = &params.0["price"];
+    assert_eq!(price_param.similarity, Similarity::Greater);
+    assert_eq!(price_param.values, vec!["100"]);
+
+    let score_param = &params.0["score"];
+    assert_eq!(score_param.similarity, Similarity::LesserOrEqual);
+    assert_eq!(score_param.values, vec!["85"]);
+
+    let rating_param = &params.0["rating"];
+    assert_eq!(rating_param.similarity, Similarity::GreaterOrEqual);
+    assert_eq!(rating_param.values, vec!["4.5"]);
+
+    let discount_param = &params.0["discount"];
+    assert_eq!(discount_param.similarity, Similarity::Lesser);
+    assert_eq!(discount_param.values, vec!["10"]);
+}
+
+#[test]
+fn test_edge_case_numeric_comparisons_with_whitespace() {
+    let query_str = "  age  =  between:20,30  &  price  =  greater:100  &  score  =  lesser-or-equal:85  ";
+    let query = Query::from_http(query_str.to_string()).unwrap();
+
+    assert_eq!(query.parameters.0.len(), 3);
+
+    let age_param = &query.parameters.0["age"];
+    assert_eq!(age_param.similarity, Similarity::Between);
+    assert_eq!(age_param.values, vec!["20", "30"]);
+
+    let price_param = &query.parameters.0["price"];
+    assert_eq!(price_param.similarity, Similarity::Greater);
+    assert_eq!(price_param.values, vec!["100"]);
+
+    let score_param = &query.parameters.0["score"];
+    assert_eq!(score_param.similarity, Similarity::LesserOrEqual);
+    assert_eq!(score_param.values, vec!["85"]);
+}
+
+#[test]
+fn test_edge_case_numeric_comparisons_empty_values() {
+    let query_str = "age=between:&price=greater:&score=lesser-or-equal:";
+    let query = Query::from_http(query_str.to_string()).unwrap();
+
+    // Empty values should be filtered out
+    assert_eq!(query.parameters.0.len(), 0);
+}
+
+#[test]
+fn test_edge_case_numeric_comparisons_mixed_empty_values() {
+    let query_str = "age=between:20,30&price=greater:&score=lesser-or-equal:85&name=contains:";
+    let query = Query::from_http(query_str.to_string()).unwrap();
+
+    // Only parameters with values should be included
+    assert_eq!(query.parameters.0.len(), 2);
+    assert!(query.parameters.0.contains_key("age"));
+    assert!(query.parameters.0.contains_key("score"));
+    assert!(!query.parameters.0.contains_key("price"));
+    assert!(!query.parameters.0.contains_key("name"));
+}
+
+#[test]
+fn test_edge_case_numeric_comparisons_special_characters() {
+    let query_str = "price=between:100.50,200.75&discount=greater:10%&score=lesser-or-equal:85.5";
+    let query = Query::from_http(query_str.to_string()).unwrap();
+
+    assert_eq!(query.parameters.0.len(), 3);
+
+    let price_param = &query.parameters.0["price"];
+    assert_eq!(price_param.similarity, Similarity::Between);
+    assert_eq!(price_param.values, vec!["100.50", "200.75"]);
+
+    let discount_param = &query.parameters.0["discount"];
+    assert_eq!(discount_param.similarity, Similarity::Greater);
+    assert_eq!(discount_param.values, vec!["10%"]);
+
+    let score_param = &query.parameters.0["score"];
+    assert_eq!(score_param.similarity, Similarity::LesserOrEqual);
+    assert_eq!(score_param.values, vec!["85.5"]);
 }
