@@ -3,12 +3,33 @@ pub mod error;
 use error::{Error, Result};
 use indexmap::IndexMap;
 use std::str::FromStr;
+use url::form_urlencoded;
 
 pub const QUESTION: char = '?';
 pub const AMPERSAND: char = '&';
 pub const EQUAL: char = '=';
 pub const COLON: char = ':';
 pub const COMMA: char = ',';
+
+/// URL decode a string, handling percent-encoded characters
+pub fn url_decode(input: &str) -> String {
+    // Only decode if the string contains percent-encoded characters
+    if input.contains('%') {
+        // Use form_urlencoded to decode individual values by treating it as a query parameter
+        let query_str = format!("key={}", input);
+        form_urlencoded::parse(query_str.as_bytes())
+            .next()
+            .map(|(_, v)| v.to_string())
+            .unwrap_or_else(|| input.to_string())
+    } else {
+        input.to_string()
+    }
+}
+
+/// URL encode a string, converting special characters to percent-encoded format
+pub fn url_encode(input: &str) -> String {
+    form_urlencoded::byte_serialize(input.as_bytes()).collect()
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum SortOrder {
@@ -77,7 +98,7 @@ impl FromStr for SortField {
             return Err(Error::InvalidSortField(s.into()));
         }
 
-        let name = parts[0].trim();
+        let name = url_decode(parts[0].trim());
         let order_str = parts[1].trim();
 
         if name.is_empty() || order_str.is_empty() {
@@ -85,7 +106,7 @@ impl FromStr for SortField {
         }
 
         Ok(SortField::init(
-            name.into(),
+            name,
             SortOrder::from_str(order_str)?,
         ))
     }
@@ -226,7 +247,7 @@ impl FromStr for Parameter {
         } else {
             values_str
                 .split(COMMA)
-                .map(|v| v.trim().to_string())
+                .map(|v| url_decode(v.trim()))
                 .filter(|v| !v.is_empty())
                 .collect()
         };
@@ -293,7 +314,7 @@ impl FromStr for Parameters {
                 let param = Parameter::from_str(value)?;
                 // Only add parameters that have values
                 if !param.values.is_empty() {
-                    parameters.0.insert(trimmed_key.into(), param);
+                    parameters.0.insert(trimmed_key.to_string(), param);
                 }
             } else {
                 return Err(Error::InvalidParameter(trimmed_param.into()));
@@ -344,7 +365,11 @@ impl Query {
             .filter(|(_, param)| param.values.len() > 0)
             .map(|(key, param)| {
                 let similarity = param.similarity.to_string();
-                let values = param.values.join(&format!("{COMMA}"));
+                let values = param.values
+                    .iter()
+                    .map(|v| url_encode(v))
+                    .collect::<Vec<String>>()
+                    .join(&format!("{COMMA}"));
                 format!("{key}{EQUAL}{similarity}{COLON}{values}",)
             })
             .collect::<Vec<String>>()
@@ -433,12 +458,12 @@ impl Query {
                                 trimmed_value.parse().unwrap_or(Parameters::DEFAULT_OFFSET);
                         }
                     }
-                    k => {
+                    _k => {
                         if !trimmed_value.is_empty() {
                             let param = Parameter::from_str(trimmed_value)?;
                             // Only add parameters that have values
                             if !param.values.is_empty() {
-                                query.parameters.0.insert(k.into(), param);
+                                query.parameters.0.insert(trimmed_key.to_string(), param);
                             }
                         }
                     }

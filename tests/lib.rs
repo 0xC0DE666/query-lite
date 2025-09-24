@@ -868,10 +868,11 @@ fn test_edge_case_special_characters_in_values() {
     let query_str = "name=contains:damian%20test&surname=equals:black,steel,wood";
     let query = Query::from_http(query_str.to_string()).unwrap();
     
+    
     assert_eq!(query.parameters.0.len(), 2);
     
     let name_param = &query.parameters.0["name"];
-    assert_eq!(name_param.values, vec!["damian%20test"]);
+    assert_eq!(name_param.values, vec!["damian test"]);
     
     let surname_param = &query.parameters.0["surname"];
     assert_eq!(surname_param.values, vec!["black", "steel", "wood"]);
