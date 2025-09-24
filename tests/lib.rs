@@ -1604,3 +1604,75 @@ fn test_query_to_sql_between_invalid_values() {
     let sql = query.to_sql();
     assert_eq!(sql, "LIMIT ? OFFSET ?");
 }
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_between_multiple_pairs() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Between, vec!["10".to_string(), "20".to_string(), "30".to_string(), "40".to_string()]);
+    query.parameters.0.insert("age".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE (age BETWEEN ? AND ? OR age BETWEEN ? AND ?) LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_between_odd_values_ignored() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Between, vec!["10".to_string(), "20".to_string(), "30".to_string(), "40".to_string(), "50".to_string()]);
+    query.parameters.0.insert("age".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE (age BETWEEN ? AND ? OR age BETWEEN ? AND ?) LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_between_three_pairs() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Between, vec!["10".to_string(), "20".to_string(), "30".to_string(), "40".to_string(), "50".to_string(), "60".to_string()]);
+    query.parameters.0.insert("age".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE (age BETWEEN ? AND ? OR age BETWEEN ? AND ? OR age BETWEEN ? AND ?) LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_between_single_pair() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Between, vec!["20".to_string(), "30".to_string()]);
+    query.parameters.0.insert("age".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE age BETWEEN ? AND ? LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_between_empty_values() {
+    let mut query = Query::new();
+    let param = Parameter::init(Similarity::Between, vec![]);
+    query.parameters.0.insert("age".to_string(), param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "LIMIT ? OFFSET ?");
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_sql_between_complex_with_other_conditions() {
+    let mut query = Query::new();
+    
+    // Add between with multiple pairs
+    let age_param = Parameter::init(Similarity::Between, vec!["10".to_string(), "20".to_string(), "30".to_string(), "40".to_string(), "50".to_string()]);
+    query.parameters.0.insert("age".to_string(), age_param);
+    
+    // Add other condition
+    let name_param = Parameter::init(Similarity::Contains, vec!["damian".to_string()]);
+    query.parameters.0.insert("name".to_string(), name_param);
+    
+    let sql = query.to_sql();
+    assert_eq!(sql, "WHERE (age BETWEEN ? AND ? OR age BETWEEN ? AND ?) AND name LIKE ? LIMIT ? OFFSET ?");
+}

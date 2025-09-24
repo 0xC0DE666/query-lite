@@ -630,7 +630,26 @@ impl Query {
                 }
                 Similarity::Between => {
                     if param.values.len() >= 2 {
-                        format!("{} BETWEEN ? AND ?", key)
+                        // Group values into pairs, ignoring any odd value
+                        let pairs: Vec<&[String]> = param.values.chunks(2).collect();
+                        let between_conditions: Vec<String> = pairs.iter()
+                            .map(|pair| {
+                                if pair.len() == 2 {
+                                    format!("{} BETWEEN ? AND ?", key)
+                                } else {
+                                    String::new() // Skip incomplete pairs
+                                }
+                            })
+                            .filter(|condition| !condition.is_empty())
+                            .collect();
+                        
+                        if between_conditions.is_empty() {
+                            continue; // Skip if no valid pairs
+                        } else if between_conditions.len() == 1 {
+                            between_conditions[0].clone()
+                        } else {
+                            format!("({})", between_conditions.join(" OR "))
+                        }
                     } else {
                         continue; // Skip invalid between conditions
                     }
