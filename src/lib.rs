@@ -10,11 +10,12 @@ pub const AMPERSAND: char = '&';
 pub const EQUAL: char = '=';
 pub const COLON: char = ':';
 pub const COMMA: char = ',';
+pub const PERCENT: char = '%';
 
 /// URL decode a string, handling percent-encoded characters
 pub fn url_decode(input: &str) -> String {
     // Only decode if the string contains percent-encoded characters
-    if input.contains('%') {
+    if input.contains(PERCENT) {
         // Use form_urlencoded to decode individual values by treating it as a query parameter
         let query_str = format!("key={}", input);
         form_urlencoded::parse(query_str.as_bytes())
@@ -443,7 +444,7 @@ impl Query {
                         }
                         
                         // Check if the value looks like a sort field format (contains colon)
-                        if !trimmed_value.contains(':') {
+                        if !trimmed_value.contains(COLON) {
                             // Fail on clearly invalid formats (like "invalid")
                             return Err(Error::InvalidSortField(trimmed_value.into()));
                         }
