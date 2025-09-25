@@ -69,7 +69,6 @@ impl ToString for SortOrder {
     }
 }
 
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct SortFields(pub IndexMap<String, SortOrder>);
 
@@ -460,9 +459,7 @@ impl Query {
             .0
             .iter()
             .filter(|(name, _)| name.len() > 0)
-            .map(|(name, order)| {
-                format!("{name}{COLON}{}", order.to_string())
-            })
+            .map(|(name, order)| format!("{name}{COLON}{}", order.to_string()))
             .collect::<Vec<String>>()
             .join(&format!("{COMMA}"));
 
