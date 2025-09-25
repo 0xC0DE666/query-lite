@@ -22,10 +22,10 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-query-x = "0.2.1"
+query-x = "0.3.0"
 
 # Optional: Enable SQL generation (enabled by default)
-# query-x = { version = "0.2.1", default-features = false }
+# query-x = { version = "0.3.0", default-features = false }
 ```
 
 ## Basic Usage
@@ -377,13 +377,13 @@ The library supports feature flags for optional functionality:
 ```toml
 [dependencies]
 # Default: includes SQL generation
-query-x = "0.2.1"
+query-x = "0.3.0"
 
 # Without SQL generation (smaller binary)
-query-x = { version = "0.2.1", default-features = false }
+query-x = { version = "0.3.0", default-features = false }
 
 # With specific features
-query-x = { version = "0.2.1", features = ["sql"] }
+query-x = { version = "0.3.0", features = ["sql"] }
 ```
 
 ## API Reference
