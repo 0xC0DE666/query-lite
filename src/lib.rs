@@ -32,6 +32,71 @@ pub fn url_encode(input: &str) -> String {
     form_urlencoded::byte_serialize(input.as_bytes()).collect()
 }
 
+/// Parse a parameter string into similarity and values
+/// 
+/// # Examples
+/// - "contains:damian" -> (Similarity::Contains, vec!["damian"])
+/// - "equals:black,steel,wood" -> (Similarity::Equals, vec!["black", "steel", "wood"])
+/// - "between:20,30" -> (Similarity::Between, vec!["20", "30"])
+pub fn parse_parameter(s: &str) -> Result<(Similarity, Vec<String>)> {
+    let trimmed = s.trim();
+    if trimmed.is_empty() {
+        return Err(Error::InvalidParameter(s.into()));
+    }
+
+    let parts: Vec<&str> = trimmed.split(COLON).collect();
+    if parts.len() != 2 {
+        return Err(Error::InvalidParameter(s.into()));
+    }
+
+    let similarity_str = parts[0].trim();
+    let values_str = parts[1].trim();
+
+    if similarity_str.is_empty() {
+        return Err(Error::InvalidParameter(s.into()));
+    }
+
+    let values: Vec<String> = if values_str.is_empty() {
+        vec![]
+    } else {
+        values_str
+            .split(COMMA)
+            .map(|v| url_decode(v.trim()))
+            .filter(|v| !v.is_empty())
+            .collect()
+    };
+
+    let similarity = Similarity::from_str(similarity_str)?;
+    Ok((similarity, values))
+}
+
+/// Parse a sort field string into name and order
+/// 
+/// # Examples
+/// - "name:asc" -> ("name", SortOrder::Ascending)
+/// - "date_created:desc" -> ("date_created", SortOrder::Descending)
+pub fn parse_sort_field(s: &str) -> Result<(String, SortOrder)> {
+    let trimmed = s.trim();
+    if trimmed.is_empty() {
+        return Err(Error::InvalidSortField(s.into()));
+    }
+
+    let parts: Vec<&str> = trimmed.split(COLON).collect();
+    if parts.len() != 2 {
+        return Err(Error::InvalidSortField(s.into()));
+    }
+
+    let name = url_decode(parts[0].trim());
+    let order_str = parts[1].trim();
+
+    if name.is_empty() || order_str.is_empty() {
+        return Err(Error::InvalidSortField(s.into()));
+    }
+
+    let order = SortOrder::from_str(order_str)?;
+    Ok((name, order))
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum SortOrder {
     Ascending,
@@ -114,20 +179,7 @@ impl FromStr for SortFields {
                 continue;
             }
 
-            // Parse directly without SortField
-            let parts: Vec<&str> = trimmed_field.split(COLON).collect();
-            if parts.len() != 2 {
-                return Err(Error::InvalidSortField(trimmed_field.into()));
-            }
-
-            let name = url_decode(parts[0].trim());
-            let order_str = parts[1].trim();
-
-            if name.is_empty() || order_str.is_empty() {
-                return Err(Error::InvalidSortField(trimmed_field.into()));
-            }
-
-            let order = SortOrder::from_str(order_str)?;
+            let (name, order) = parse_sort_field(trimmed_field)?;
             sort_fields.0.insert(name, order);
         }
 
@@ -205,138 +257,9 @@ impl ToString for Similarity {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct Parameter {
-    pub similarity: Similarity,
-    pub values: Vec<String>,
-}
-
-impl Parameter {
-    pub fn new() -> Self {
-        Self {
-            similarity: Similarity::default(),
-            values: vec![],
-        }
-    }
-
-    pub fn init(similarity: Similarity, values: Vec<String>) -> Self {
-        Self { similarity, values }
-    }
-
-    pub fn equals(values: Vec<String>) -> Self {
-        Self {
-            similarity: Similarity::Equals,
-            values,
-        }
-    }
-
-    pub fn contains(values: Vec<String>) -> Self {
-        Self {
-            similarity: Similarity::Contains,
-            values,
-        }
-    }
-
-    pub fn starts_with(values: Vec<String>) -> Self {
-        Self {
-            similarity: Similarity::StartsWith,
-            values,
-        }
-    }
-
-    pub fn ends_with(values: Vec<String>) -> Self {
-        Self {
-            similarity: Similarity::EndsWith,
-            values,
-        }
-    }
-
-    pub fn between(values: Vec<String>) -> Self {
-        Self {
-            similarity: Similarity::Between,
-            values,
-        }
-    }
-
-    pub fn lesser(values: Vec<String>) -> Self {
-        Self {
-            similarity: Similarity::Lesser,
-            values,
-        }
-    }
-
-    pub fn lesser_or_equal(values: Vec<String>) -> Self {
-        Self {
-            similarity: Similarity::LesserOrEqual,
-            values,
-        }
-    }
-
-    pub fn greater(values: Vec<String>) -> Self {
-        Self {
-            similarity: Similarity::Greater,
-            values,
-        }
-    }
-
-    pub fn greater_or_equal(values: Vec<String>) -> Self {
-        Self {
-            similarity: Similarity::GreaterOrEqual,
-            values,
-        }
-    }
-}
-
-impl FromStr for Parameter {
-    type Err = Error;
-
-    // EXAMPLE INPUT
-    // name=contains:damian
-    // name=equals:black,steel,wood
-    // name=starts-with:black,steel,wood
-    // name=ends-with:black,steel,wood
-    // age=between:20,30
-    // age=lesser:18
-    // age=greater:18
-    // age=lesser-or-equal:18
-    // age=greater-or-equal:18
-    fn from_str(s: &str) -> Result<Self> {
-        let trimmed = s.trim();
-        if trimmed.is_empty() {
-            return Err(Error::InvalidParameter(s.into()));
-        }
-
-        let parts: Vec<&str> = trimmed.split(COLON).collect();
-        if parts.len() != 2 {
-            return Err(Error::InvalidParameter(s.into()));
-        }
-
-        let similarity_str = parts[0].trim();
-        let values_str = parts[1].trim();
-
-        if similarity_str.is_empty() {
-            return Err(Error::InvalidParameter(s.into()));
-        }
-
-        let values: Vec<String> = if values_str.is_empty() {
-            vec![]
-        } else {
-            values_str
-                .split(COMMA)
-                .map(|v| url_decode(v.trim()))
-                .filter(|v| !v.is_empty())
-                .collect()
-        };
-
-        Ok(Parameter::init(
-            Similarity::from_str(similarity_str)?,
-            values,
-        ))
-    }
-}
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Parameters(pub IndexMap<String, Parameter>);
+pub struct Parameters(pub IndexMap<String, (Similarity, Vec<String>)>);
 
 impl Parameters {
     pub const ORDER: &str = "order";
@@ -350,6 +273,51 @@ impl Parameters {
 
     pub fn new() -> Self {
         Self(IndexMap::new())
+    }
+
+    pub fn equals(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0.insert(key, (Similarity::Equals, values));
+        self
+    }
+
+    pub fn contains(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0.insert(key, (Similarity::Contains, values));
+        self
+    }
+
+    pub fn starts_with(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0.insert(key, (Similarity::StartsWith, values));
+        self
+    }
+
+    pub fn ends_with(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0.insert(key, (Similarity::EndsWith, values));
+        self
+    }
+
+    pub fn between(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0.insert(key, (Similarity::Between, values));
+        self
+    }
+
+    pub fn lesser(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0.insert(key, (Similarity::Lesser, values));
+        self
+    }
+
+    pub fn lesser_or_equal(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0.insert(key, (Similarity::LesserOrEqual, values));
+        self
+    }
+
+    pub fn greater(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0.insert(key, (Similarity::Greater, values));
+        self
+    }
+
+    pub fn greater_or_equal(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0.insert(key, (Similarity::GreaterOrEqual, values));
+        self
     }
 }
 
@@ -390,13 +358,13 @@ impl FromStr for Parameters {
                 continue;
             }
 
-            let param = Parameter::from_str(value)?;
+            let (similarity, values) = parse_parameter(value)?;
             // Only add parameters that have values
-            if param.values.is_empty() {
+            if values.is_empty() {
                 continue;
             }
 
-            parameters.0.insert(trimmed_key.to_string(), param);
+            parameters.0.insert(trimmed_key.to_string(), (similarity, values));
         }
 
         Ok(parameters)
@@ -440,16 +408,15 @@ impl Query {
             .parameters
             .0
             .iter()
-            .filter(|(_, param)| param.values.len() > 0)
-            .map(|(key, param)| {
-                let similarity = param.similarity.to_string();
-                let values = param
-                    .values
+            .filter(|(_, (_, values))| values.len() > 0)
+            .map(|(key, (similarity, values))| {
+                let similarity_str = similarity.to_string();
+                let values_str = values
                     .iter()
                     .map(|v| url_encode(v))
                     .collect::<Vec<String>>()
                     .join(&format!("{COMMA}"));
-                format!("{key}{EQUAL}{similarity}{COLON}{values}",)
+                format!("{key}{EQUAL}{similarity_str}{COLON}{values_str}",)
             })
             .collect::<Vec<String>>()
             .join("&");
@@ -544,31 +511,29 @@ impl Query {
                         // Check if this is a similarity-based parameter (contains colon)
                         if trimmed_value.contains(COLON) {
                             // Parse as similarity-based parameter
-                            let param = Parameter::from_str(trimmed_value)?;
+                            let (similarity, values) = parse_parameter(trimmed_value)?;
                             // Only add parameters that have values
-                            if param.values.is_empty() {
+                            if values.is_empty() {
                                 continue;
                             }
                             // Replace any existing parameter (similarity-based takes precedence)
-                            query.parameters.0.insert(trimmed_key.to_string(), param);
+                            query.parameters.0.insert(trimmed_key.to_string(), (similarity, values));
                         } else {
                             // Handle as normal query parameter (default to equals similarity)
                             let decoded_value = url_decode(trimmed_value);
 
                             // Check if parameter already exists and is not similarity-based
-                            if let Some(existing_param) =
+                            if let Some((existing_similarity, existing_values)) =
                                 query.parameters.0.get_mut(&trimmed_key.to_string())
                             {
                                 // Only append if the existing parameter is also equals similarity
-                                if existing_param.similarity == Similarity::Equals {
-                                    existing_param.values.push(decoded_value);
+                                if *existing_similarity == Similarity::Equals {
+                                    existing_values.push(decoded_value);
                                 }
                                 // If existing parameter is similarity-based, ignore this normal parameter
                             } else {
                                 // Create new parameter with equals similarity
-                                let param =
-                                    Parameter::init(Similarity::Equals, vec![decoded_value]);
-                                query.parameters.0.insert(trimmed_key.to_string(), param);
+                                query.parameters.0.insert(trimmed_key.to_string(), (Similarity::Equals, vec![decoded_value]));
                             }
                         }
                     }
@@ -641,30 +606,29 @@ impl Query {
     fn build_where_clause(&self) -> String {
         let mut conditions = Vec::new();
 
-        for (key, param) in &self.parameters.0 {
-            if param.values.is_empty() {
+        for (key, (similarity, values)) in &self.parameters.0 {
+            if values.is_empty() {
                 continue;
             }
 
-            let condition = match param.similarity {
+            let condition = match similarity {
                 Similarity::Equals => {
-                    if param.values.len() == 1 {
-                        if param.values[0] == "null" {
+                    if values.len() == 1 {
+                        if values[0] == "null" {
                             format!("{} IS ?", key)
                         } else {
                             format!("{} = ?", key)
                         }
                     } else {
-                        let placeholders = vec!["?"; param.values.len()].join(", ");
+                        let placeholders = vec!["?"; values.len()].join(", ");
                         format!("{} IN ({})", key, placeholders)
                     }
                 }
                 Similarity::Contains => {
-                    if param.values.len() == 1 {
+                    if values.len() == 1 {
                         format!("{} LIKE ?", key)
                     } else {
-                        let like_conditions: Vec<String> = param
-                            .values
+                        let like_conditions: Vec<String> = values
                             .iter()
                             .map(|_| format!("{} LIKE ?", key))
                             .collect();
@@ -672,11 +636,10 @@ impl Query {
                     }
                 }
                 Similarity::StartsWith => {
-                    if param.values.len() == 1 {
+                    if values.len() == 1 {
                         format!("{} LIKE ?", key)
                     } else {
-                        let like_conditions: Vec<String> = param
-                            .values
+                        let like_conditions: Vec<String> = values
                             .iter()
                             .map(|_| format!("{} LIKE ?", key))
                             .collect();
@@ -684,11 +647,10 @@ impl Query {
                     }
                 }
                 Similarity::EndsWith => {
-                    if param.values.len() == 1 {
+                    if values.len() == 1 {
                         format!("{} LIKE ?", key)
                     } else {
-                        let like_conditions: Vec<String> = param
-                            .values
+                        let like_conditions: Vec<String> = values
                             .iter()
                             .map(|_| format!("{} LIKE ?", key))
                             .collect();
@@ -696,9 +658,9 @@ impl Query {
                     }
                 }
                 Similarity::Between => {
-                    if param.values.len() >= 2 {
+                    if values.len() >= 2 {
                         // Group values into pairs, ignoring any odd value
-                        let pairs: Vec<&[String]> = param.values.chunks(2).collect();
+                        let pairs: Vec<&[String]> = values.chunks(2).collect();
                         let between_conditions: Vec<String> = pairs
                             .iter()
                             .map(|pair| {
@@ -723,11 +685,10 @@ impl Query {
                     }
                 }
                 Similarity::Lesser => {
-                    if param.values.len() == 1 {
+                    if values.len() == 1 {
                         format!("{} < ?", key)
                     } else {
-                        let conditions: Vec<String> = param
-                            .values
+                        let conditions: Vec<String> = values
                             .iter()
                             .map(|_| format!("{} < ?", key))
                             .collect();
@@ -735,11 +696,10 @@ impl Query {
                     }
                 }
                 Similarity::LesserOrEqual => {
-                    if param.values.len() == 1 {
+                    if values.len() == 1 {
                         format!("{} <= ?", key)
                     } else {
-                        let conditions: Vec<String> = param
-                            .values
+                        let conditions: Vec<String> = values
                             .iter()
                             .map(|_| format!("{} <= ?", key))
                             .collect();
@@ -747,11 +707,10 @@ impl Query {
                     }
                 }
                 Similarity::Greater => {
-                    if param.values.len() == 1 {
+                    if values.len() == 1 {
                         format!("{} > ?", key)
                     } else {
-                        let conditions: Vec<String> = param
-                            .values
+                        let conditions: Vec<String> = values
                             .iter()
                             .map(|_| format!("{} > ?", key))
                             .collect();
@@ -759,11 +718,10 @@ impl Query {
                     }
                 }
                 Similarity::GreaterOrEqual => {
-                    if param.values.len() == 1 {
+                    if values.len() == 1 {
                         format!("{} >= ?", key)
                     } else {
-                        let conditions: Vec<String> = param
-                            .values
+                        let conditions: Vec<String> = values
                             .iter()
                             .map(|_| format!("{} >= ?", key))
                             .collect();
