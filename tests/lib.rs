@@ -1,6 +1,6 @@
 use std::str::FromStr;
-use xquery::error::Error;
-use xquery::*;
+use query_x::error::Error;
+use query_x::*;
 
 // ============================================================================
 // CONSTANTS TESTS

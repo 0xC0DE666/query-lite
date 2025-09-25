@@ -1,8 +1,8 @@
-# xquery
+# query-x
 
-[![Crates.io](https://img.shields.io/crates/v/xquery.svg)](https://crates.io/crates/xquery)
-[![Documentation](https://docs.rs/xquery/badge.svg)](https://docs.rs/xquery)
-[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/0xC0DE666/xquery#license)
+[![Crates.io](https://img.shields.io/crates/v/query-x.svg)](https://crates.io/crates/query-x)
+[![Documentation](https://docs.rs/query-x/badge.svg)](https://docs.rs/query-x)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/0xC0DE666/query-x#license)
 
 A powerful Rust library for parsing HTTP query parameters into structured queries with support for both traditional and advanced similarity-based filtering, plus optional SQL generation.
 
@@ -22,10 +22,10 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-xquery = "0.1.0"
+query-x = "0.1.0"
 
 # Optional: Enable SQL generation (enabled by default)
-# xquery = { version = "0.1.0", default-features = false }
+# query-x = { version = "0.1.0", default-features = false }
 ```
 
 ## Basic Usage
@@ -33,14 +33,14 @@ xquery = "0.1.0"
 ### Traditional Query Parameters
 
 ```rust
-use xquery::Query;
+use query_x::Query;
 
 // Parse traditional HTTP query parameters
 let query = Query::from_http("name=john&age=25&city=london".to_string())?;
 
 // Access parameters
 let name_param = query.parameters.0.get("name").unwrap();
-assert_eq!(name_param.similarity, xquery::Similarity::Equals);
+assert_eq!(name_param.similarity, query_x::Similarity::Equals);
 assert_eq!(name_param.values, vec!["john"]);
 
 // Convert back to HTTP
@@ -51,37 +51,37 @@ let http_string = query.to_http();
 ### Advanced Similarity-based Parameters
 
 ```rust
-use xquery::Query;
+use query_x::Query;
 
 // Parse advanced query parameters
 let query = Query::from_http("name=contains:john&age=between:20,30&price=greater:100".to_string())?;
 
 // Access parameters with different similarity types
 let name_param = query.parameters.0.get("name").unwrap();
-assert_eq!(name_param.similarity, xquery::Similarity::Contains);
+assert_eq!(name_param.similarity, query_x::Similarity::Contains);
 assert_eq!(name_param.values, vec!["john"]);
 
 let age_param = query.parameters.0.get("age").unwrap();
-assert_eq!(age_param.similarity, xquery::Similarity::Between);
+assert_eq!(age_param.similarity, query_x::Similarity::Between);
 assert_eq!(age_param.values, vec!["20", "30"]);
 ```
 
 ### Mixed Traditional and Advanced
 
 ```rust
-use xquery::Query;
+use query_x::Query;
 
 // Mix traditional and advanced parameters
 let query = Query::from_http("name=john&name=jane&age=contains:25&status=active".to_string())?;
 
 // Traditional parameters (repeated values)
 let name_param = query.parameters.0.get("name").unwrap();
-assert_eq!(name_param.similarity, xquery::Similarity::Equals);
+assert_eq!(name_param.similarity, query_x::Similarity::Equals);
 assert_eq!(name_param.values, vec!["john", "jane"]);
 
 // Advanced parameters
 let age_param = query.parameters.0.get("age").unwrap();
-assert_eq!(age_param.similarity, xquery::Similarity::Contains);
+assert_eq!(age_param.similarity, query_x::Similarity::Contains);
 assert_eq!(age_param.values, vec!["25"]);
 ```
 
@@ -117,14 +117,14 @@ The library supports various similarity types for advanced filtering:
 ## Sorting and Pagination
 
 ```rust
-use xquery::Query;
+use query_x::Query;
 
 let query = Query::from_http("name=john&order=date_created:desc,name:asc&limit=25&offset=10".to_string())?;
 
 // Access sorting
 assert_eq!(query.sort_fields.0.len(), 2);
 assert_eq!(query.sort_fields.0[0].name, "date_created");
-assert_eq!(query.sort_fields.0[0].order, xquery::SortOrder::Descending);
+assert_eq!(query.sort_fields.0[0].order, query_x::SortOrder::Descending);
 
 // Access pagination
 assert_eq!(query.limit, 25);
@@ -136,7 +136,7 @@ assert_eq!(query.offset, 10);
 Enable the `sql` feature (enabled by default) to generate SQL queries:
 
 ```rust
-use xquery::Query;
+use query_x::Query;
 
 let query = Query::from_http("name=contains:john&age=between:20,30&order=date_created:desc&limit=10".to_string())?;
 
@@ -170,7 +170,7 @@ let sql = query.to_sql();
 The library automatically handles URL encoding and decoding:
 
 ```rust
-use xquery::Query;
+use query_x::Query;
 
 // URL encoded parameters
 let query = Query::from_http("name=john%20doe&email=test%40example.com".to_string())?;
@@ -185,7 +185,7 @@ assert_eq!(email_param.values, vec!["test@example.com"]); // Automatically decod
 ## Query Manipulation
 
 ```rust
-use xquery::Query;
+use query_x::Query;
 
 let mut query = Query::from_http("name=john&age=25&email=john@example.com".to_string())?;
 
@@ -201,7 +201,7 @@ let filtered = query.remove(vec!["email".to_string()]);
 ## Error Handling
 
 ```rust
-use xquery::{Query, error::Error};
+use query_x::{Query, error::Error};
 
 match Query::from_http("invalid=query".to_string()) {
     Ok(query) => {
@@ -228,7 +228,7 @@ match Query::from_http("invalid=query".to_string()) {
 ### E-commerce Product Search
 
 ```rust
-use xquery::Query;
+use query_x::Query;
 
 // Complex product search with multiple filters
 let query = Query::from_http(
@@ -243,7 +243,7 @@ let sql = query.to_sql();
 ### User Management System
 
 ```rust
-use xquery::Query;
+use query_x::Query;
 
 // User filtering and management
 let query = Query::from_http(
@@ -258,7 +258,7 @@ let sql = query.to_sql();
 ### Content Management
 
 ```rust
-use xquery::Query;
+use query_x::Query;
 
 // Content filtering with date ranges
 let query = Query::from_http(
@@ -277,13 +277,13 @@ The library supports feature flags for optional functionality:
 ```toml
 [dependencies]
 # Default: includes SQL generation
-xquery = "0.1.0"
+query-x = "0.1.0"
 
 # Without SQL generation (smaller binary)
-xquery = { version = "0.1.0", default-features = false }
+query-x = { version = "0.1.0", default-features = false }
 
 # With specific features
-xquery = { version = "0.1.0", features = ["sql"] }
+query-x = { version = "0.1.0", features = ["sql"] }
 ```
 
 ## API Reference

@@ -1,14 +1,14 @@
 [package]
-name = "xquery"
+name = "query-x"
 version = "0.1.0"
 edition = "2024"
 authors = ["D4EM0N"]
 categories = ["http", "sql"]
 description = "Convert http query params to sql queries"
-documentation = "https://docs.rs/xquery"
+documentation = "https://docs.rs/query-x"
 keywords = ["http", "sql", "query"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/0xC0DE666/xquery"
+repository = "https://github.com/0xC0DE666/query-x"
 rust-version = "1.88"
 
 [dependencies]
