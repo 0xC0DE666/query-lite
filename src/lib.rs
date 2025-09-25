@@ -69,67 +69,23 @@ impl ToString for SortOrder {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct SortField {
-    pub name: String,
-    pub order: SortOrder,
-}
-
-impl SortField {
-    pub fn init(name: String, order: SortOrder) -> Self {
-        Self { name, order }
-    }
-
-    pub fn asc(name: String) -> Self {
-        Self {
-            name,
-            order: SortOrder::Ascending,
-        }
-    }
-
-    pub fn desc(name: String) -> Self {
-        Self {
-            name,
-            order: SortOrder::Descending,
-        }
-    }
-}
-
-impl FromStr for SortField {
-    type Err = Error;
-
-    // EXAMPLE INPUT
-    // date_created:desc
-    // name:asc
-    // surname:asc
-    fn from_str(s: &str) -> Result<Self> {
-        let trimmed = s.trim();
-        if trimmed.is_empty() {
-            return Err(Error::InvalidSortField(s.into()));
-        }
-
-        let parts: Vec<&str> = trimmed.split(COLON).collect();
-        if parts.len() != 2 {
-            return Err(Error::InvalidSortField(s.into()));
-        }
-
-        let name = url_decode(parts[0].trim());
-        let order_str = parts[1].trim();
-
-        if name.is_empty() || order_str.is_empty() {
-            return Err(Error::InvalidSortField(s.into()));
-        }
-
-        Ok(SortField::init(name, SortOrder::from_str(order_str)?))
-    }
-}
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct SortFields(pub Vec<SortField>);
+pub struct SortFields(pub IndexMap<String, SortOrder>);
 
 impl SortFields {
     pub fn new() -> Self {
-        Self(Vec::new())
+        Self(IndexMap::new())
+    }
+
+    pub fn asc(&mut self, name: String) -> &mut Self {
+        self.0.insert(name, SortOrder::Ascending);
+        self
+    }
+
+    pub fn desc(&mut self, name: String) -> &mut Self {
+        self.0.insert(name, SortOrder::Descending);
+        self
     }
 }
 
@@ -151,7 +107,7 @@ impl FromStr for SortFields {
         }
 
         let str_fields: Vec<&str> = trimmed.split(COMMA).collect();
-        let mut sort_fields: Self = SortFields(vec![]);
+        let mut sort_fields: Self = SortFields(IndexMap::new());
 
         for str_field in str_fields {
             let trimmed_field = str_field.trim();
@@ -159,7 +115,21 @@ impl FromStr for SortFields {
                 continue;
             }
 
-            sort_fields.0.push(SortField::from_str(trimmed_field)?);
+            // Parse directly without SortField
+            let parts: Vec<&str> = trimmed_field.split(COLON).collect();
+            if parts.len() != 2 {
+                return Err(Error::InvalidSortField(trimmed_field.into()));
+            }
+
+            let name = url_decode(parts[0].trim());
+            let order_str = parts[1].trim();
+
+            if name.is_empty() || order_str.is_empty() {
+                return Err(Error::InvalidSortField(trimmed_field.into()));
+            }
+
+            let order = SortOrder::from_str(order_str)?;
+            sort_fields.0.insert(name, order);
         }
 
         Ok(sort_fields)
@@ -489,11 +459,9 @@ impl Query {
             .sort_fields
             .0
             .iter()
-            .filter(|field| field.name.len() > 0)
-            .map(|field| {
-                let name = field.name.clone();
-                let order = field.order.to_string();
-                format!("{name}{COLON}{order}")
+            .filter(|(name, _)| name.len() > 0)
+            .map(|(name, order)| {
+                format!("{name}{COLON}{}", order.to_string())
             })
             .collect::<Vec<String>>()
             .join(&format!("{COMMA}"));
@@ -817,13 +785,13 @@ impl Query {
     fn build_order_clause(&self) -> String {
         let mut order_parts = Vec::new();
 
-        for field in &self.sort_fields.0 {
-            if !field.name.is_empty() {
-                let direction = match field.order {
+        for (name, order) in &self.sort_fields.0 {
+            if !name.is_empty() {
+                let direction = match order {
                     SortOrder::Ascending => "ASC",
                     SortOrder::Descending => "DESC",
                 };
-                order_parts.push(format!("{} {}", field.name, direction));
+                order_parts.push(format!("{} {}", name, direction));
             }
         }
 
