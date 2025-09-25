@@ -151,6 +151,24 @@ impl SortFields {
         self.0.insert(name, SortOrder::Descending);
         self
     }
+
+    pub fn keep(&self, keys: Vec<String>) -> Self {
+        let mut result = Self::new();
+        for key in keys {
+            if let Some(value) = self.0.get(&key) {
+                result.0.insert(key, value.clone());
+            }
+        }
+        result
+    }
+
+    pub fn remove(&self, keys: Vec<String>) -> Self {
+        let mut result = self.clone();
+        for key in keys {
+            result.0.shift_remove(&key);
+        }
+        result
+    }
 }
 
 impl Default for SortFields {
@@ -318,6 +336,24 @@ impl Parameters {
     pub fn greater_or_equal(&mut self, key: String, values: Vec<String>) -> &mut Self {
         self.0.insert(key, (Similarity::GreaterOrEqual, values));
         self
+    }
+
+    pub fn keep(&self, keys: Vec<String>) -> Self {
+        let mut result = Self::new();
+        for key in keys {
+            if let Some(value) = self.0.get(&key) {
+                result.0.insert(key, value.clone());
+            }
+        }
+        result
+    }
+
+    pub fn remove(&self, keys: Vec<String>) -> Self {
+        let mut result = self.clone();
+        for key in keys {
+            result.0.shift_remove(&key);
+        }
+        result
     }
 }
 
@@ -546,39 +582,6 @@ impl Query {
         Ok(query)
     }
 
-    pub fn keep(&self, keys: Vec<String>) -> Self {
-        let mut clone = self.clone();
-        let keys_to_remove: Vec<String> = self
-            .parameters
-            .0
-            .keys()
-            .filter(|k| !keys.contains(k))
-            .map(|k| k.clone())
-            .collect();
-
-        for k in keys_to_remove {
-            clone.parameters.0.shift_remove(&k);
-        }
-
-        clone
-    }
-
-    pub fn remove(&self, keys: Vec<String>) -> Self {
-        let mut clone = self.clone();
-        let keys_to_remove: Vec<String> = self
-            .parameters
-            .0
-            .keys()
-            .filter(|k| keys.contains(k))
-            .map(|k| k.clone())
-            .collect();
-
-        for k in keys_to_remove {
-            clone.parameters.0.shift_remove(&k);
-        }
-
-        clone
-    }
 
     #[cfg(feature = "sql")]
     pub fn to_sql(&self) -> String {

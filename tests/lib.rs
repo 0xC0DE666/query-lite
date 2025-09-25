@@ -311,6 +311,74 @@ fn test_sort_fields_helper_functions_unicode_name() {
     assert_eq!(fields.0.get("用户_姓名"), Some(&SortOrder::Ascending));
 }
 
+#[test]
+fn test_sort_fields_keep() {
+    let mut fields = SortFields::new();
+    fields.asc("name".to_string());
+    fields.desc("date_created".to_string());
+    fields.asc("email".to_string());
+
+    let filtered = fields.keep(vec!["name".to_string(), "email".to_string()]);
+
+    assert_eq!(filtered.0.len(), 2);
+    assert_eq!(filtered.0.get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(filtered.0.get("date_created"), None);
+    assert_eq!(filtered.0.get("email"), Some(&SortOrder::Ascending));
+}
+
+#[test]
+fn test_sort_fields_keep_nonexistent_keys() {
+    let mut fields = SortFields::new();
+    fields.asc("name".to_string());
+
+    let filtered = fields.keep(vec!["nonexistent".to_string()]);
+    assert_eq!(filtered.0.len(), 0);
+}
+
+#[test]
+fn test_sort_fields_keep_empty_keys() {
+    let mut fields = SortFields::new();
+    fields.asc("name".to_string());
+
+    let filtered = fields.keep(vec![]);
+    assert_eq!(filtered.0.len(), 0);
+}
+
+#[test]
+fn test_sort_fields_remove() {
+    let mut fields = SortFields::new();
+    fields.asc("name".to_string());
+    fields.desc("date_created".to_string());
+    fields.asc("email".to_string());
+
+    let filtered = fields.remove(vec!["name".to_string(), "email".to_string()]);
+
+    assert_eq!(filtered.0.len(), 1);
+    assert_eq!(filtered.0.get("name"), None);
+    assert_eq!(filtered.0.get("date_created"), Some(&SortOrder::Descending));
+    assert_eq!(filtered.0.get("email"), None);
+}
+
+#[test]
+fn test_sort_fields_remove_nonexistent_keys() {
+    let mut fields = SortFields::new();
+    fields.asc("name".to_string());
+
+    let filtered = fields.remove(vec!["nonexistent".to_string()]);
+    assert_eq!(filtered.0.len(), 1);
+    assert_eq!(filtered.0.get("name"), Some(&SortOrder::Ascending));
+}
+
+#[test]
+fn test_sort_fields_remove_empty_keys() {
+    let mut fields = SortFields::new();
+    fields.asc("name".to_string());
+
+    let filtered = fields.remove(vec![]);
+    assert_eq!(filtered.0.len(), 1);
+    assert_eq!(filtered.0.get("name"), Some(&SortOrder::Ascending));
+}
+
 // ============================================================================
 // SORT FIELDS TESTS
 // ============================================================================
@@ -998,71 +1066,71 @@ fn test_query_from_http_invalid() {
 }
 
 #[test]
-fn test_query_keep() {
-    let mut query = Query::new();
-    query.parameters.0.insert("name".to_string(), (Similarity::Contains, vec!["value1".to_string()]));
-    query.parameters.0.insert("surname".to_string(), (Similarity::Equals, vec!["value2".to_string()]));
-    query.parameters.0.insert("email".to_string(), (Similarity::StartsWith, vec!["value3".to_string()]));
+fn test_parameters_keep() {
+    let mut params = Parameters::new();
+    params.0.insert("name".to_string(), (Similarity::Contains, vec!["value1".to_string()]));
+    params.0.insert("surname".to_string(), (Similarity::Equals, vec!["value2".to_string()]));
+    params.0.insert("email".to_string(), (Similarity::StartsWith, vec!["value3".to_string()]));
 
-    let filtered = query.keep(vec!["name".to_string(), "email".to_string()]);
+    let filtered = params.keep(vec!["name".to_string(), "email".to_string()]);
 
-    assert_eq!(filtered.parameters.0.len(), 2);
-    assert!(filtered.parameters.0.contains_key("name"));
-    assert!(!filtered.parameters.0.contains_key("surname"));
-    assert!(filtered.parameters.0.contains_key("email"));
+    assert_eq!(filtered.0.len(), 2);
+    assert!(filtered.0.contains_key("name"));
+    assert!(!filtered.0.contains_key("surname"));
+    assert!(filtered.0.contains_key("email"));
 }
 
 #[test]
-fn test_query_keep_nonexistent_keys() {
-    let mut query = Query::new();
-    query.parameters.0.insert("name".to_string(), (Similarity::Contains, vec!["value1".to_string()]));
+fn test_parameters_keep_nonexistent_keys() {
+    let mut params = Parameters::new();
+    params.0.insert("name".to_string(), (Similarity::Contains, vec!["value1".to_string()]));
 
-    let filtered = query.keep(vec!["nonexistent".to_string()]);
-    assert_eq!(filtered.parameters.0.len(), 0);
+    let filtered = params.keep(vec!["nonexistent".to_string()]);
+    assert_eq!(filtered.0.len(), 0);
 }
 
 #[test]
-fn test_query_keep_empty_keys() {
-    let mut query = Query::new();
-    query.parameters.0.insert("name".to_string(), (Similarity::Contains, vec!["value1".to_string()]));
+fn test_parameters_keep_empty_keys() {
+    let mut params = Parameters::new();
+    params.0.insert("name".to_string(), (Similarity::Contains, vec!["value1".to_string()]));
 
-    let filtered = query.keep(vec![]);
-    assert_eq!(filtered.parameters.0.len(), 0);
+    let filtered = params.keep(vec![]);
+    assert_eq!(filtered.0.len(), 0);
 }
 
 #[test]
-fn test_query_remove() {
-    let mut query = Query::new();
-    query.parameters.0.insert("name".to_string(), (Similarity::Contains, vec!["value1".to_string()]));
-    query.parameters.0.insert("surname".to_string(), (Similarity::Equals, vec!["value2".to_string()]));
-    query.parameters.0.insert("email".to_string(), (Similarity::StartsWith, vec!["value3".to_string()]));
+fn test_parameters_remove() {
+    let mut params = Parameters::new();
+    params.0.insert("name".to_string(), (Similarity::Contains, vec!["value1".to_string()]));
+    params.0.insert("surname".to_string(), (Similarity::Equals, vec!["value2".to_string()]));
+    params.0.insert("email".to_string(), (Similarity::StartsWith, vec!["value3".to_string()]));
 
-    let filtered = query.remove(vec!["name".to_string(), "email".to_string()]);
+    let filtered = params.remove(vec!["name".to_string(), "email".to_string()]);
 
-    assert_eq!(filtered.parameters.0.len(), 1);
-    assert!(!filtered.parameters.0.contains_key("name"));
-    assert!(filtered.parameters.0.contains_key("surname"));
-    assert!(!filtered.parameters.0.contains_key("email"));
+    assert_eq!(filtered.0.len(), 1);
+    assert!(!filtered.0.contains_key("name"));
+    assert!(filtered.0.contains_key("surname"));
+    assert!(!filtered.0.contains_key("email"));
 }
 
 #[test]
-fn test_query_remove_nonexistent_keys() {
-    let mut query = Query::new();
-    query.parameters.0.insert("name".to_string(), (Similarity::Contains, vec!["value1".to_string()]));
+fn test_parameters_remove_nonexistent_keys() {
+    let mut params = Parameters::new();
+    params.0.insert("name".to_string(), (Similarity::Contains, vec!["value1".to_string()]));
 
-    let filtered = query.remove(vec!["nonexistent".to_string()]);
-    assert_eq!(filtered.parameters.0.len(), 1);
-    assert!(filtered.parameters.0.contains_key("name"));
+    let filtered = params.remove(vec!["nonexistent".to_string()]);
+    assert_eq!(filtered.0.len(), 1);
+    assert!(filtered.0.contains_key("name"));
 }
 
 #[test]
-fn test_query_remove_empty_keys() {
-    let mut query = Query::new();
-    query.parameters.0.insert("name".to_string(), (Similarity::Contains, vec!["value1".to_string()]));
+fn test_parameters_remove_empty_keys() {
+    let mut params = Parameters::new();
+    params.0.insert("name".to_string(), (Similarity::Contains, vec!["value1".to_string()]));
 
-    let filtered = query.remove(vec![]);
-    assert_eq!(filtered.parameters.0.len(), 1);
-    assert!(filtered.parameters.0.contains_key("name"));
+    let filtered = params.remove(vec![]);
+    assert_eq!(filtered.0.len(), 1);
+    assert!(filtered.0.contains_key("name"));
 }
 
 #[test]
@@ -1149,41 +1217,41 @@ fn test_query_to_http_with_numeric_comparisons() {
 }
 
 #[test]
-fn test_query_keep_with_numeric_comparisons() {
-    let mut query = Query::new();
+fn test_parameters_keep_with_numeric_comparisons() {
+    let mut params = Parameters::new();
     
-    query.parameters.0.insert("age".to_string(), (Similarity::Between, vec!["20".to_string(), "30".to_string()]));
-    query.parameters.0.insert("price".to_string(), (Similarity::Greater, vec!["100".to_string()]));
-    query.parameters.0.insert("name".to_string(), (Similarity::Contains, vec!["damian".to_string()]));
+    params.0.insert("age".to_string(), (Similarity::Between, vec!["20".to_string(), "30".to_string()]));
+    params.0.insert("price".to_string(), (Similarity::Greater, vec!["100".to_string()]));
+    params.0.insert("name".to_string(), (Similarity::Contains, vec!["damian".to_string()]));
     
-    let filtered = query.keep(vec!["age".to_string(), "name".to_string()]);
+    let filtered = params.keep(vec!["age".to_string(), "name".to_string()]);
     
-    assert_eq!(filtered.parameters.0.len(), 2);
-    assert!(filtered.parameters.0.contains_key("age"));
-    assert!(!filtered.parameters.0.contains_key("price"));
-    assert!(filtered.parameters.0.contains_key("name"));
+    assert_eq!(filtered.0.len(), 2);
+    assert!(filtered.0.contains_key("age"));
+    assert!(!filtered.0.contains_key("price"));
+    assert!(filtered.0.contains_key("name"));
     
-    let (similarity, values) = &filtered.parameters.0["age"];
+    let (similarity, values) = &filtered.0["age"];
     assert_eq!(*similarity, Similarity::Between);
     assert_eq!(*values, vec!["20", "30"]);
 }
 
 #[test]
-fn test_query_remove_with_numeric_comparisons() {
-    let mut query = Query::new();
+fn test_parameters_remove_with_numeric_comparisons() {
+    let mut params = Parameters::new();
     
-    query.parameters.0.insert("age".to_string(), (Similarity::Between, vec!["20".to_string(), "30".to_string()]));
-    query.parameters.0.insert("price".to_string(), (Similarity::Greater, vec!["100".to_string()]));
-    query.parameters.0.insert("name".to_string(), (Similarity::Contains, vec!["damian".to_string()]));
+    params.0.insert("age".to_string(), (Similarity::Between, vec!["20".to_string(), "30".to_string()]));
+    params.0.insert("price".to_string(), (Similarity::Greater, vec!["100".to_string()]));
+    params.0.insert("name".to_string(), (Similarity::Contains, vec!["damian".to_string()]));
     
-    let filtered = query.remove(vec!["age".to_string(), "name".to_string()]);
+    let filtered = params.remove(vec!["age".to_string(), "name".to_string()]);
     
-    assert_eq!(filtered.parameters.0.len(), 1);
-    assert!(!filtered.parameters.0.contains_key("age"));
-    assert!(filtered.parameters.0.contains_key("price"));
-    assert!(!filtered.parameters.0.contains_key("name"));
+    assert_eq!(filtered.0.len(), 1);
+    assert!(!filtered.0.contains_key("age"));
+    assert!(filtered.0.contains_key("price"));
+    assert!(!filtered.0.contains_key("name"));
     
-    let (similarity, values) = &filtered.parameters.0["price"];
+    let (similarity, values) = &filtered.0["price"];
     assert_eq!(*similarity, Similarity::Greater);
     assert_eq!(*values, vec!["100"]);
 }
