@@ -22,10 +22,10 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-query-x = "0.1.0"
+query-x = "0.2.1"
 
 # Optional: Enable SQL generation (enabled by default)
-# query-x = { version = "0.1.0", default-features = false }
+# query-x = { version = "0.2.1", default-features = false }
 ```
 
 ## Basic Usage
@@ -40,8 +40,8 @@ let query = Query::from_http("name=john&age=25&city=london".to_string())?;
 
 // Access parameters
 let name_param = query.parameters.0.get("name").unwrap();
-assert_eq!(name_param.similarity, query_x::Similarity::Equals);
-assert_eq!(name_param.values, vec!["john"]);
+assert_eq!(name_param.0, query_x::Similarity::Equals);
+assert_eq!(name_param.1, vec!["john"]);
 
 // Convert back to HTTP
 let http_string = query.to_http();
@@ -58,12 +58,12 @@ let query = Query::from_http("name=contains:john&age=between:20,30&price=greater
 
 // Access parameters with different similarity types
 let name_param = query.parameters.0.get("name").unwrap();
-assert_eq!(name_param.similarity, query_x::Similarity::Contains);
-assert_eq!(name_param.values, vec!["john"]);
+assert_eq!(name_param.0, query_x::Similarity::Contains);
+assert_eq!(name_param.1, vec!["john"]);
 
 let age_param = query.parameters.0.get("age").unwrap();
-assert_eq!(age_param.similarity, query_x::Similarity::Between);
-assert_eq!(age_param.values, vec!["20", "30"]);
+assert_eq!(age_param.0, query_x::Similarity::Between);
+assert_eq!(age_param.1, vec!["20", "30"]);
 ```
 
 ### Mixed Traditional and Advanced
@@ -76,13 +76,42 @@ let query = Query::from_http("name=john&name=jane&age=contains:25&status=active"
 
 // Traditional parameters (repeated values)
 let name_param = query.parameters.0.get("name").unwrap();
-assert_eq!(name_param.similarity, query_x::Similarity::Equals);
-assert_eq!(name_param.values, vec!["john", "jane"]);
+assert_eq!(name_param.0, query_x::Similarity::Equals);
+assert_eq!(name_param.1, vec!["john", "jane"]);
 
 // Advanced parameters
 let age_param = query.parameters.0.get("age").unwrap();
-assert_eq!(age_param.similarity, query_x::Similarity::Contains);
-assert_eq!(age_param.values, vec!["25"]);
+assert_eq!(age_param.0, query_x::Similarity::Contains);
+assert_eq!(age_param.1, vec!["25"]);
+```
+
+## Programmatic Query Building
+
+You can also build queries programmatically using the builder pattern:
+
+```rust
+use query_x::{Query, Parameters, SortFields};
+
+// Build parameters using the builder pattern
+let mut parameters = Parameters::new();
+parameters
+    .equals("name".to_string(), vec!["john".to_string(), "jane".to_string()])
+    .contains("description".to_string(), vec!["rust".to_string()])
+    .between("age".to_string(), vec!["18".to_string(), "65".to_string()])
+    .greater("price".to_string(), vec!["100".to_string()]);
+
+// Build sort fields using the builder pattern
+let mut sort_fields = SortFields::new();
+sort_fields
+    .desc("date_created".to_string())
+    .asc("name".to_string());
+
+// Create the query
+let query = Query::init(parameters, sort_fields, 25, 0);
+
+// Convert to HTTP string
+let http_string = query.to_http();
+// Result: "name=equals:john,jane&description=contains:rust&age=between:18,65&price=greater:100&order=date_created:desc,name:asc&limit=25&offset=0"
 ```
 
 ## Similarity Types
@@ -176,10 +205,10 @@ use query_x::Query;
 let query = Query::from_http("name=john%20doe&email=test%40example.com".to_string())?;
 
 let name_param = query.parameters.0.get("name").unwrap();
-assert_eq!(name_param.values, vec!["john doe"]); // Automatically decoded
+assert_eq!(name_param.1, vec!["john doe"]); // Automatically decoded
 
 let email_param = query.parameters.0.get("email").unwrap();
-assert_eq!(email_param.values, vec!["test@example.com"]); // Automatically decoded
+assert_eq!(email_param.1, vec!["test@example.com"]); // Automatically decoded
 ```
 
 ## Query Manipulation
@@ -187,14 +216,16 @@ assert_eq!(email_param.values, vec!["test@example.com"]); // Automatically decod
 ```rust
 use query_x::Query;
 
-let mut query = Query::from_http("name=john&age=25&email=john@example.com".to_string())?;
+let query = Query::from_http("name=john&age=25&email=john@example.com".to_string())?;
 
 // Keep only specific parameters
-let filtered = query.keep(vec!["name".to_string(), "age".to_string()]);
+let filtered_params = query.parameters.keep(vec!["name".to_string(), "age".to_string()]);
+let filtered_query = Query::init(filtered_params, query.sort_fields, query.limit, query.offset);
 // Result: Only name and age parameters remain
 
 // Remove specific parameters
-let filtered = query.remove(vec!["email".to_string()]);
+let filtered_params = query.parameters.remove(vec!["email".to_string()]);
+let filtered_query = Query::init(filtered_params, query.sort_fields, query.limit, query.offset);
 // Result: email parameter is removed, name and age remain
 ```
 
@@ -277,13 +308,13 @@ The library supports feature flags for optional functionality:
 ```toml
 [dependencies]
 # Default: includes SQL generation
-query-x = "0.1.0"
+query-x = "0.2.1"
 
 # Without SQL generation (smaller binary)
-query-x = { version = "0.1.0", default-features = false }
+query-x = { version = "0.2.1", default-features = false }
 
 # With specific features
-query-x = { version = "0.1.0", features = ["sql"] }
+query-x = { version = "0.2.1", features = ["sql"] }
 ```
 
 ## API Reference
@@ -291,9 +322,9 @@ query-x = { version = "0.1.0", features = ["sql"] }
 ### Core Types
 
 - `Query`: Main query structure containing parameters, sorting, and pagination
-- `Parameter`: Individual parameter with similarity type and values
+- `Parameters`: Collection of query parameters with builder methods
+- `SortFields`: Collection of sort fields with builder methods
 - `Similarity`: Enum defining comparison types (equals, contains, between, etc.)
-- `SortField`: Individual sort field with name and direction
 - `SortOrder`: Sort direction (ascending, descending)
 
 ### Key Methods
@@ -301,8 +332,15 @@ query-x = { version = "0.1.0", features = ["sql"] }
 - `Query::from_http()`: Parse HTTP query string into Query struct
 - `Query::to_http()`: Convert Query struct back to HTTP query string
 - `Query::to_sql()`: Generate SQL query with parameter placeholders (feature-gated)
-- `Query::keep()`: Filter query to keep only specified parameters
-- `Query::remove()`: Remove specified parameters from query
+- `Query::init()`: Create Query with custom parameters, sort fields, limit, and offset
+- `Parameters::new()`: Create new Parameters collection
+- `Parameters::equals()`, `Parameters::contains()`, etc.: Builder methods for adding parameters
+- `SortFields::new()`: Create new SortFields collection
+- `SortFields::asc()`, `SortFields::desc()`: Builder methods for adding sort fields
+- `Parameters::keep()`: Filter parameters to keep only specified keys
+- `Parameters::remove()`: Remove specified parameters
+- `SortFields::keep()`: Filter sort fields to keep only specified keys
+- `SortFields::remove()`: Remove specified sort fields
 
 ## Contributing
 
@@ -318,6 +356,12 @@ This project is licensed under either of
 at your option.
 
 ## Changelog
+
+### 0.2.1
+- Added builder pattern for programmatic query construction
+- Enhanced Parameters and SortFields with fluent API methods
+- Improved parameter access with tuple-based structure
+- Updated API for better ergonomics and type safety
 
 ### 0.1.0
 - Initial release
