@@ -114,6 +114,75 @@ let http_string = query.to_http();
 // Result: "name=equals:john,jane&description=contains:rust&age=between:18,65&price=greater:100&order=date_created:desc,name:asc&limit=25&offset=0"
 ```
 
+## Enhanced Parameter Access
+
+The library provides multiple ways to access parameter data for different use cases:
+
+### Semantic Access (Recommended)
+
+```rust
+use query_x::Query;
+
+let query = Query::from_http("name=contains:john&age=between:20,30".to_string())?;
+
+// Access parameters using semantic methods
+let name_param = query.parameters.inner().get("name").unwrap();
+assert_eq!(*name_param.similarity(), Similarity::Contains);
+assert_eq!(name_param.values(), &vec!["john".to_string()]);
+
+let age_param = query.parameters.inner().get("age").unwrap();
+assert_eq!(*age_param.similarity(), Similarity::Between);
+assert_eq!(age_param.values(), &vec!["20".to_string(), "30".to_string()]);
+```
+
+### Direct Collection Access
+
+For advanced operations, you can access the underlying collections directly:
+
+```rust
+use query_x::Query;
+
+let mut query = Query::new();
+query.parameters.equals("name".to_string(), vec!["john".to_string()]);
+query.sort_fields.ascending("date_created".to_string());
+
+// Access the underlying IndexMap for complex operations
+let param_map = query.parameters.inner();
+let sort_map = query.sort_fields.inner();
+
+// Iterate over all parameters
+for (key, param) in param_map {
+    println!("{}: {:?} = {:?}", key, param.similarity(), param.values());
+}
+
+// Perform bulk operations
+let param_map_mut = query.parameters.inner_mut();
+param_map_mut.insert("new_param".to_string(), (Similarity::Greater, vec!["100".to_string()]));
+```
+
+### Backward Compatibility
+
+The library maintains full backward compatibility with tuple access:
+
+```rust
+use query_x::Query;
+
+let query = Query::from_http("name=contains:john".to_string())?;
+let param = query.parameters.inner().get("name").unwrap();
+
+// Old tuple access still works
+assert_eq!(param.0, Similarity::Contains);
+assert_eq!(param.1, vec!["john".to_string()]);
+
+// New semantic access also works
+assert_eq!(*param.similarity(), Similarity::Contains);
+assert_eq!(param.values(), &vec!["john".to_string()]);
+
+// Both return the same data
+assert_eq!(param.0, *param.similarity());
+assert_eq!(param.1, *param.values());
+```
+
 ## Similarity Types
 
 The library supports various similarity types for advanced filtering:
@@ -324,23 +393,38 @@ query-x = { version = "0.2.1", features = ["sql"] }
 - `Query`: Main query structure containing parameters, sorting, and pagination
 - `Parameters`: Collection of query parameters with builder methods
 - `SortFields`: Collection of sort fields with builder methods
+- `Parameter`: Type alias for `(Similarity, Vec<String>)` with trait methods
+- `ParameterGet`: Trait providing semantic access to parameter data
 - `Similarity`: Enum defining comparison types (equals, contains, between, etc.)
 - `SortOrder`: Sort direction (ascending, descending)
 
 ### Key Methods
 
+#### Query Methods
 - `Query::from_http()`: Parse HTTP query string into Query struct
 - `Query::to_http()`: Convert Query struct back to HTTP query string
 - `Query::to_sql()`: Generate SQL query with parameter placeholders (feature-gated)
 - `Query::init()`: Create Query with custom parameters, sort fields, limit, and offset
+
+#### Parameters Methods
 - `Parameters::new()`: Create new Parameters collection
 - `Parameters::equals()`, `Parameters::contains()`, etc.: Builder methods for adding parameters
-- `SortFields::new()`: Create new SortFields collection
-- `SortFields::ascending()`, `SortFields::descending()`: Builder methods for adding sort fields
+- `Parameters::inner()`: Get immutable reference to underlying IndexMap
+- `Parameters::inner_mut()`: Get mutable reference to underlying IndexMap
 - `Parameters::keep()`: Filter parameters to keep only specified keys
 - `Parameters::remove()`: Remove specified parameters
+
+#### SortFields Methods
+- `SortFields::new()`: Create new SortFields collection
+- `SortFields::ascending()`, `SortFields::descending()`: Builder methods for adding sort fields
+- `SortFields::inner()`: Get immutable reference to underlying IndexMap
+- `SortFields::inner_mut()`: Get mutable reference to underlying IndexMap
 - `SortFields::keep()`: Filter sort fields to keep only specified keys
 - `SortFields::remove()`: Remove specified sort fields
+
+#### Parameter Access Methods
+- `Parameter::similarity()`: Get reference to similarity type
+- `Parameter::values()`: Get reference to parameter values
 
 ## Contributing
 
