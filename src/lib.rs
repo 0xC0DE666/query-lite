@@ -79,6 +79,20 @@ impl SortField {
     pub fn init(name: String, order: SortOrder) -> Self {
         Self { name, order }
     }
+
+    pub fn asc(name: String) -> Self {
+        Self {
+            name,
+            order: SortOrder::Ascending,
+        }
+    }
+
+    pub fn desc(name: String) -> Self {
+        Self {
+            name,
+            order: SortOrder::Descending,
+        }
+    }
 }
 
 impl FromStr for SortField {
@@ -238,6 +252,69 @@ impl Parameter {
 
     pub fn init(similarity: Similarity, values: Vec<String>) -> Self {
         Self { similarity, values }
+    }
+
+    pub fn equals(values: Vec<String>) -> Self {
+        Self {
+            similarity: Similarity::Equals,
+            values,
+        }
+    }
+
+    pub fn contains(values: Vec<String>) -> Self {
+        Self {
+            similarity: Similarity::Contains,
+            values,
+        }
+    }
+
+    pub fn starts_with(values: Vec<String>) -> Self {
+        Self {
+            similarity: Similarity::StartsWith,
+            values,
+        }
+    }
+
+    pub fn ends_with(values: Vec<String>) -> Self {
+        Self {
+            similarity: Similarity::EndsWith,
+            values,
+        }
+    }
+
+    pub fn between(values: Vec<String>) -> Self {
+        Self {
+            similarity: Similarity::Between,
+            values,
+        }
+    }
+
+    pub fn lesser(values: Vec<String>) -> Self {
+        Self {
+            similarity: Similarity::Lesser,
+            values,
+        }
+    }
+
+    pub fn lesser_or_equal(values: Vec<String>) -> Self {
+        Self {
+            similarity: Similarity::LesserOrEqual,
+            values,
+        }
+    }
+
+    pub fn greater(values: Vec<String>) -> Self {
+        Self {
+            similarity: Similarity::Greater,
+            values,
+        }
+    }
+
+    pub fn greater_or_equal(values: Vec<String>) -> Self {
+        Self {
+            similarity: Similarity::GreaterOrEqual,
+            values,
+        }
     }
 }
 

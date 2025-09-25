@@ -71,6 +71,122 @@ fn test_sort_field_init() {
 }
 
 #[test]
+fn test_sort_field_asc() {
+    let field = SortField::asc("name".to_string());
+    assert_eq!(field.name, "name");
+    assert_eq!(field.order, SortOrder::Ascending);
+}
+
+#[test]
+fn test_sort_field_desc() {
+    let field = SortField::desc("name".to_string());
+    assert_eq!(field.name, "name");
+    assert_eq!(field.order, SortOrder::Descending);
+}
+
+#[test]
+fn test_sort_field_helper_functions_equivalence_with_init() {
+    // Test that helper functions produce equivalent results to using init
+    let name = "date_created".to_string();
+    
+    // Test asc helper
+    let helper_asc = SortField::asc(name.clone());
+    let init_asc = SortField::init(name.clone(), SortOrder::Ascending);
+    assert_eq!(helper_asc, init_asc);
+    
+    // Test desc helper
+    let helper_desc = SortField::desc(name.clone());
+    let init_desc = SortField::init(name, SortOrder::Descending);
+    assert_eq!(helper_desc, init_desc);
+}
+
+#[test]
+fn test_sort_field_helper_functions_different_names() {
+    // Test helper functions with different field names
+    let names = vec!["name", "date_created", "email", "id", "status"];
+    
+    for name in names {
+        let asc_field = SortField::asc(name.to_string());
+        assert_eq!(asc_field.name, name);
+        assert_eq!(asc_field.order, SortOrder::Ascending);
+        
+        let desc_field = SortField::desc(name.to_string());
+        assert_eq!(desc_field.name, name);
+        assert_eq!(desc_field.order, SortOrder::Descending);
+    }
+}
+
+#[test]
+fn test_sort_field_helper_functions_empty_name() {
+    // Test helper functions with empty name
+    let empty_name = "".to_string();
+    
+    let asc_field = SortField::asc(empty_name.clone());
+    assert_eq!(asc_field.name, "");
+    assert_eq!(asc_field.order, SortOrder::Ascending);
+    
+    let desc_field = SortField::desc(empty_name);
+    assert_eq!(desc_field.name, "");
+    assert_eq!(desc_field.order, SortOrder::Descending);
+}
+
+#[test]
+fn test_sort_field_helper_functions_whitespace_name() {
+    // Test helper functions with whitespace in name
+    let whitespace_name = "  name  ".to_string();
+    
+    let asc_field = SortField::asc(whitespace_name.clone());
+    assert_eq!(asc_field.name, "  name  ");
+    assert_eq!(asc_field.order, SortOrder::Ascending);
+    
+    let desc_field = SortField::desc(whitespace_name);
+    assert_eq!(desc_field.name, "  name  ");
+    assert_eq!(desc_field.order, SortOrder::Descending);
+}
+
+#[test]
+fn test_sort_field_helper_functions_special_characters() {
+    // Test helper functions with special characters in name
+    let special_name = "user_name_123".to_string();
+    
+    let asc_field = SortField::asc(special_name.clone());
+    assert_eq!(asc_field.name, "user_name_123");
+    assert_eq!(asc_field.order, SortOrder::Ascending);
+    
+    let desc_field = SortField::desc(special_name);
+    assert_eq!(desc_field.name, "user_name_123");
+    assert_eq!(desc_field.order, SortOrder::Descending);
+}
+
+#[test]
+fn test_sort_field_helper_functions_unicode_name() {
+    // Test helper functions with unicode characters in name
+    let unicode_name = "用户_姓名".to_string();
+    
+    let asc_field = SortField::asc(unicode_name.clone());
+    assert_eq!(asc_field.name, "用户_姓名");
+    assert_eq!(asc_field.order, SortOrder::Ascending);
+    
+    let desc_field = SortField::desc(unicode_name);
+    assert_eq!(desc_field.name, "用户_姓名");
+    assert_eq!(desc_field.order, SortOrder::Descending);
+}
+
+#[test]
+fn test_sort_field_helper_functions_long_name() {
+    // Test helper functions with long field name
+    let long_name = "very_long_field_name_that_might_be_used_in_real_world_scenarios".to_string();
+    
+    let asc_field = SortField::asc(long_name.clone());
+    assert_eq!(asc_field.name, "very_long_field_name_that_might_be_used_in_real_world_scenarios");
+    assert_eq!(asc_field.order, SortOrder::Ascending);
+    
+    let desc_field = SortField::desc(long_name);
+    assert_eq!(desc_field.name, "very_long_field_name_that_might_be_used_in_real_world_scenarios");
+    assert_eq!(desc_field.order, SortOrder::Descending);
+}
+
+#[test]
 fn test_sort_field_from_str_valid() {
     let field = SortField::from_str("name:asc").unwrap();
     assert_eq!(field.name, "name");
@@ -306,6 +422,314 @@ fn test_parameter_init() {
     let param = Parameter::init(Similarity::Equals, values.clone());
     assert_eq!(param.similarity, Similarity::Equals);
     assert_eq!(param.values, values);
+}
+
+#[test]
+fn test_parameter_equals() {
+    let values = vec!["value1".to_string(), "value2".to_string()];
+    let param = Parameter::equals(values.clone());
+    assert_eq!(param.similarity, Similarity::Equals);
+    assert_eq!(param.values, values);
+}
+
+#[test]
+fn test_parameter_contains() {
+    let values = vec!["value1".to_string(), "value2".to_string()];
+    let param = Parameter::contains(values.clone());
+    assert_eq!(param.similarity, Similarity::Contains);
+    assert_eq!(param.values, values);
+}
+
+#[test]
+fn test_parameter_starts_with() {
+    let values = vec!["value1".to_string(), "value2".to_string()];
+    let param = Parameter::starts_with(values.clone());
+    assert_eq!(param.similarity, Similarity::StartsWith);
+    assert_eq!(param.values, values);
+}
+
+#[test]
+fn test_parameter_ends_with() {
+    let values = vec!["value1".to_string(), "value2".to_string()];
+    let param = Parameter::ends_with(values.clone());
+    assert_eq!(param.similarity, Similarity::EndsWith);
+    assert_eq!(param.values, values);
+}
+
+#[test]
+fn test_parameter_between() {
+    let values = vec!["20".to_string(), "30".to_string()];
+    let param = Parameter::between(values.clone());
+    assert_eq!(param.similarity, Similarity::Between);
+    assert_eq!(param.values, values);
+}
+
+#[test]
+fn test_parameter_lesser() {
+    let values = vec!["100".to_string()];
+    let param = Parameter::lesser(values.clone());
+    assert_eq!(param.similarity, Similarity::Lesser);
+    assert_eq!(param.values, values);
+}
+
+#[test]
+fn test_parameter_lesser_or_equal() {
+    let values = vec!["100".to_string()];
+    let param = Parameter::lesser_or_equal(values.clone());
+    assert_eq!(param.similarity, Similarity::LesserOrEqual);
+    assert_eq!(param.values, values);
+}
+
+#[test]
+fn test_parameter_greater() {
+    let values = vec!["50".to_string()];
+    let param = Parameter::greater(values.clone());
+    assert_eq!(param.similarity, Similarity::Greater);
+    assert_eq!(param.values, values);
+}
+
+#[test]
+fn test_parameter_greater_or_equal() {
+    let values = vec!["50".to_string()];
+    let param = Parameter::greater_or_equal(values.clone());
+    assert_eq!(param.similarity, Similarity::GreaterOrEqual);
+    assert_eq!(param.values, values);
+}
+
+#[test]
+fn test_parameter_helper_functions_single_values() {
+    // Test all helper functions with single values
+    let single_value = vec!["test".to_string()];
+    
+    let equals_param = Parameter::equals(single_value.clone());
+    assert_eq!(equals_param.similarity, Similarity::Equals);
+    assert_eq!(equals_param.values, single_value);
+    
+    let contains_param = Parameter::contains(single_value.clone());
+    assert_eq!(contains_param.similarity, Similarity::Contains);
+    assert_eq!(contains_param.values, single_value);
+    
+    let starts_with_param = Parameter::starts_with(single_value.clone());
+    assert_eq!(starts_with_param.similarity, Similarity::StartsWith);
+    assert_eq!(starts_with_param.values, single_value);
+    
+    let ends_with_param = Parameter::ends_with(single_value.clone());
+    assert_eq!(ends_with_param.similarity, Similarity::EndsWith);
+    assert_eq!(ends_with_param.values, single_value);
+    
+    let between_param = Parameter::between(single_value.clone());
+    assert_eq!(between_param.similarity, Similarity::Between);
+    assert_eq!(between_param.values, single_value);
+    
+    let lesser_param = Parameter::lesser(single_value.clone());
+    assert_eq!(lesser_param.similarity, Similarity::Lesser);
+    assert_eq!(lesser_param.values, single_value);
+    
+    let lesser_or_equal_param = Parameter::lesser_or_equal(single_value.clone());
+    assert_eq!(lesser_or_equal_param.similarity, Similarity::LesserOrEqual);
+    assert_eq!(lesser_or_equal_param.values, single_value);
+    
+    let greater_param = Parameter::greater(single_value.clone());
+    assert_eq!(greater_param.similarity, Similarity::Greater);
+    assert_eq!(greater_param.values, single_value);
+    
+    let greater_or_equal_param = Parameter::greater_or_equal(single_value.clone());
+    assert_eq!(greater_or_equal_param.similarity, Similarity::GreaterOrEqual);
+    assert_eq!(greater_or_equal_param.values, single_value);
+}
+
+#[test]
+fn test_parameter_helper_functions_multiple_values() {
+    // Test all helper functions with multiple values
+    let multiple_values = vec!["value1".to_string(), "value2".to_string(), "value3".to_string()];
+    
+    let equals_param = Parameter::equals(multiple_values.clone());
+    assert_eq!(equals_param.similarity, Similarity::Equals);
+    assert_eq!(equals_param.values, multiple_values.clone());
+    
+    let contains_param = Parameter::contains(multiple_values.clone());
+    assert_eq!(contains_param.similarity, Similarity::Contains);
+    assert_eq!(contains_param.values, multiple_values.clone());
+    
+    let starts_with_param = Parameter::starts_with(multiple_values.clone());
+    assert_eq!(starts_with_param.similarity, Similarity::StartsWith);
+    assert_eq!(starts_with_param.values, multiple_values.clone());
+    
+    let ends_with_param = Parameter::ends_with(multiple_values.clone());
+    assert_eq!(ends_with_param.similarity, Similarity::EndsWith);
+    assert_eq!(ends_with_param.values, multiple_values.clone());
+    
+    let between_param = Parameter::between(multiple_values.clone());
+    assert_eq!(between_param.similarity, Similarity::Between);
+    assert_eq!(between_param.values, multiple_values.clone());
+    
+    let lesser_param = Parameter::lesser(multiple_values.clone());
+    assert_eq!(lesser_param.similarity, Similarity::Lesser);
+    assert_eq!(lesser_param.values, multiple_values.clone());
+    
+    let lesser_or_equal_param = Parameter::lesser_or_equal(multiple_values.clone());
+    assert_eq!(lesser_or_equal_param.similarity, Similarity::LesserOrEqual);
+    assert_eq!(lesser_or_equal_param.values, multiple_values.clone());
+    
+    let greater_param = Parameter::greater(multiple_values.clone());
+    assert_eq!(greater_param.similarity, Similarity::Greater);
+    assert_eq!(greater_param.values, multiple_values.clone());
+    
+    let greater_or_equal_param = Parameter::greater_or_equal(multiple_values.clone());
+    assert_eq!(greater_or_equal_param.similarity, Similarity::GreaterOrEqual);
+    assert_eq!(greater_or_equal_param.values, multiple_values);
+}
+
+#[test]
+fn test_parameter_helper_functions_empty_values() {
+    // Test all helper functions with empty values
+    let empty_values = vec![];
+    
+    let equals_param = Parameter::equals(empty_values.clone());
+    assert_eq!(equals_param.similarity, Similarity::Equals);
+    assert_eq!(equals_param.values, empty_values.clone());
+    
+    let contains_param = Parameter::contains(empty_values.clone());
+    assert_eq!(contains_param.similarity, Similarity::Contains);
+    assert_eq!(contains_param.values, empty_values.clone());
+    
+    let starts_with_param = Parameter::starts_with(empty_values.clone());
+    assert_eq!(starts_with_param.similarity, Similarity::StartsWith);
+    assert_eq!(starts_with_param.values, empty_values.clone());
+    
+    let ends_with_param = Parameter::ends_with(empty_values.clone());
+    assert_eq!(ends_with_param.similarity, Similarity::EndsWith);
+    assert_eq!(ends_with_param.values, empty_values.clone());
+    
+    let between_param = Parameter::between(empty_values.clone());
+    assert_eq!(between_param.similarity, Similarity::Between);
+    assert_eq!(between_param.values, empty_values.clone());
+    
+    let lesser_param = Parameter::lesser(empty_values.clone());
+    assert_eq!(lesser_param.similarity, Similarity::Lesser);
+    assert_eq!(lesser_param.values, empty_values.clone());
+    
+    let lesser_or_equal_param = Parameter::lesser_or_equal(empty_values.clone());
+    assert_eq!(lesser_or_equal_param.similarity, Similarity::LesserOrEqual);
+    assert_eq!(lesser_or_equal_param.values, empty_values.clone());
+    
+    let greater_param = Parameter::greater(empty_values.clone());
+    assert_eq!(greater_param.similarity, Similarity::Greater);
+    assert_eq!(greater_param.values, empty_values.clone());
+    
+    let greater_or_equal_param = Parameter::greater_or_equal(empty_values.clone());
+    assert_eq!(greater_or_equal_param.similarity, Similarity::GreaterOrEqual);
+    assert_eq!(greater_or_equal_param.values, empty_values);
+}
+
+#[test]
+fn test_parameter_helper_functions_numeric_values() {
+    // Test numeric-specific helper functions with appropriate values
+    let numeric_single = vec!["100".to_string()];
+    let numeric_range = vec!["20".to_string(), "30".to_string()];
+    let numeric_multiple = vec!["10".to_string(), "20".to_string(), "30".to_string()];
+    
+    // Test between with range values
+    let between_param = Parameter::between(numeric_range.clone());
+    assert_eq!(between_param.similarity, Similarity::Between);
+    assert_eq!(between_param.values, numeric_range);
+    
+    // Test between with multiple values (should work but may not be typical usage)
+    let between_multiple_param = Parameter::between(numeric_multiple.clone());
+    assert_eq!(between_multiple_param.similarity, Similarity::Between);
+    assert_eq!(between_multiple_param.values, numeric_multiple);
+    
+    // Test comparison operators with single values
+    let lesser_param = Parameter::lesser(numeric_single.clone());
+    assert_eq!(lesser_param.similarity, Similarity::Lesser);
+    assert_eq!(lesser_param.values, numeric_single.clone());
+    
+    let lesser_or_equal_param = Parameter::lesser_or_equal(numeric_single.clone());
+    assert_eq!(lesser_or_equal_param.similarity, Similarity::LesserOrEqual);
+    assert_eq!(lesser_or_equal_param.values, numeric_single.clone());
+    
+    let greater_param = Parameter::greater(numeric_single.clone());
+    assert_eq!(greater_param.similarity, Similarity::Greater);
+    assert_eq!(greater_param.values, numeric_single.clone());
+    
+    let greater_or_equal_param = Parameter::greater_or_equal(numeric_single.clone());
+    assert_eq!(greater_or_equal_param.similarity, Similarity::GreaterOrEqual);
+    assert_eq!(greater_or_equal_param.values, numeric_single);
+}
+
+#[test]
+fn test_parameter_helper_functions_string_values() {
+    // Test string-specific helper functions with appropriate values
+    let string_single = vec!["damian".to_string()];
+    let string_multiple = vec!["damian".to_string(), "john".to_string(), "alice".to_string()];
+    
+    // Test string matching functions
+    let equals_param = Parameter::equals(string_multiple.clone());
+    assert_eq!(equals_param.similarity, Similarity::Equals);
+    assert_eq!(equals_param.values, string_multiple.clone());
+    
+    let contains_param = Parameter::contains(string_single.clone());
+    assert_eq!(contains_param.similarity, Similarity::Contains);
+    assert_eq!(contains_param.values, string_single.clone());
+    
+    let starts_with_param = Parameter::starts_with(string_single.clone());
+    assert_eq!(starts_with_param.similarity, Similarity::StartsWith);
+    assert_eq!(starts_with_param.values, string_single.clone());
+    
+    let ends_with_param = Parameter::ends_with(string_single.clone());
+    assert_eq!(ends_with_param.similarity, Similarity::EndsWith);
+    assert_eq!(ends_with_param.values, string_single);
+}
+
+#[test]
+fn test_parameter_helper_functions_equivalence_with_init() {
+    // Test that helper functions produce equivalent results to using init
+    let values = vec!["test".to_string(), "value".to_string()];
+    
+    // Test equals
+    let helper_equals = Parameter::equals(values.clone());
+    let init_equals = Parameter::init(Similarity::Equals, values.clone());
+    assert_eq!(helper_equals, init_equals);
+    
+    // Test contains
+    let helper_contains = Parameter::contains(values.clone());
+    let init_contains = Parameter::init(Similarity::Contains, values.clone());
+    assert_eq!(helper_contains, init_contains);
+    
+    // Test starts_with
+    let helper_starts_with = Parameter::starts_with(values.clone());
+    let init_starts_with = Parameter::init(Similarity::StartsWith, values.clone());
+    assert_eq!(helper_starts_with, init_starts_with);
+    
+    // Test ends_with
+    let helper_ends_with = Parameter::ends_with(values.clone());
+    let init_ends_with = Parameter::init(Similarity::EndsWith, values.clone());
+    assert_eq!(helper_ends_with, init_ends_with);
+    
+    // Test between
+    let helper_between = Parameter::between(values.clone());
+    let init_between = Parameter::init(Similarity::Between, values.clone());
+    assert_eq!(helper_between, init_between);
+    
+    // Test lesser
+    let helper_lesser = Parameter::lesser(values.clone());
+    let init_lesser = Parameter::init(Similarity::Lesser, values.clone());
+    assert_eq!(helper_lesser, init_lesser);
+    
+    // Test lesser_or_equal
+    let helper_lesser_or_equal = Parameter::lesser_or_equal(values.clone());
+    let init_lesser_or_equal = Parameter::init(Similarity::LesserOrEqual, values.clone());
+    assert_eq!(helper_lesser_or_equal, init_lesser_or_equal);
+    
+    // Test greater
+    let helper_greater = Parameter::greater(values.clone());
+    let init_greater = Parameter::init(Similarity::Greater, values.clone());
+    assert_eq!(helper_greater, init_greater);
+    
+    // Test greater_or_equal
+    let helper_greater_or_equal = Parameter::greater_or_equal(values.clone());
+    let init_greater_or_equal = Parameter::init(Similarity::GreaterOrEqual, values.clone());
+    assert_eq!(helper_greater_or_equal, init_greater_or_equal);
 }
 
 #[test]
