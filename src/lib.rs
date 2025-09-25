@@ -142,6 +142,14 @@ impl SortFields {
         Self(IndexMap::new())
     }
 
+    pub fn inner(&self) -> &IndexMap<String, SortOrder> {
+        &self.0
+    }
+
+    pub fn inner_mut(&mut self) -> &mut IndexMap<String, SortOrder> {
+        &mut self.0
+    }
+
     pub fn ascending(&mut self, name: String) -> &mut Self {
         self.0.insert(name, SortOrder::Ascending);
         self
@@ -275,8 +283,24 @@ impl ToString for Similarity {
     }
 }
 
+pub type Parameter = (Similarity, Vec<String>);
+pub trait ParameterGet {
+    fn similarity(&self) -> &Similarity;
+    fn values(&self) -> &Vec<String>;
+}
+
+impl ParameterGet for Parameter {
+    fn similarity(&self) -> &Similarity {
+        &self.0
+    }
+
+    fn values(&self) -> &Vec<String> {
+        &self.1
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
-pub struct Parameters(pub IndexMap<String, (Similarity, Vec<String>)>);
+pub struct Parameters(pub IndexMap<String, Parameter>);
 
 impl Parameters {
     pub const ORDER: &str = "order";
@@ -290,6 +314,14 @@ impl Parameters {
 
     pub fn new() -> Self {
         Self(IndexMap::new())
+    }
+
+    pub fn inner(&self) -> &IndexMap<String, Parameter> {
+        &self.0
+    }
+
+    pub fn inner_mut(&mut self) -> &mut IndexMap<String, Parameter> {
+        &mut self.0
     }
 
     pub fn equals(&mut self, key: String, values: Vec<String>) -> &mut Self {
@@ -472,7 +504,7 @@ impl Query {
         }
 
         if order.len() > 0 {
-            params.push_str(&order);
+            params.push_str(&format!("{}{EQUAL}{}", Parameters::ORDER, order));
             params.push_str(&format!("{AMPERSAND}"));
         }
 

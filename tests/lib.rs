@@ -2094,6 +2094,547 @@ fn test_query_to_sql_between_complex_with_other_conditions() {
 }
 
 // ============================================================================
+// PARAMETER TYPE ALIAS AND TRAIT TESTS
+// ============================================================================
+
+#[test]
+fn test_parameter_type_alias() {
+    // Test that Parameter is correctly defined as a tuple type alias
+    let param: Parameter = (Similarity::Contains, vec!["test".to_string()]);
+
+    // Test tuple access (backward compatibility)
+    assert_eq!(param.0, Similarity::Contains);
+    assert_eq!(param.1, vec!["test"]);
+}
+
+#[test]
+fn test_parameter_get_trait_similarity() {
+    let param: Parameter = (
+        Similarity::Equals,
+        vec!["value1".to_string(), "value2".to_string()],
+    );
+
+    // Test trait method access
+    assert_eq!(param.similarity(), &Similarity::Equals);
+
+    // Test with different similarity types
+    let param2: Parameter = (
+        Similarity::Between,
+        vec!["10".to_string(), "20".to_string()],
+    );
+    assert_eq!(param2.similarity(), &Similarity::Between);
+
+    let param3: Parameter = (Similarity::GreaterOrEqual, vec!["100".to_string()]);
+    assert_eq!(param3.similarity(), &Similarity::GreaterOrEqual);
+}
+
+#[test]
+fn test_parameter_get_trait_values() {
+    let param: Parameter = (
+        Similarity::Contains,
+        vec!["value1".to_string(), "value2".to_string()],
+    );
+
+    // Test trait method access
+    assert_eq!(
+        param.values(),
+        &vec!["value1".to_string(), "value2".to_string()]
+    );
+
+    // Test with empty values
+    let param2: Parameter = (Similarity::Equals, vec![]);
+    assert_eq!(param2.values(), &vec![] as &Vec<String>);
+
+    // Test with single value
+    let param3: Parameter = (Similarity::StartsWith, vec!["prefix".to_string()]);
+    assert_eq!(param3.values(), &vec!["prefix".to_string()]);
+}
+
+#[test]
+fn test_parameter_get_trait_all_similarity_types() {
+    let similarities = vec![
+        Similarity::Equals,
+        Similarity::Contains,
+        Similarity::StartsWith,
+        Similarity::EndsWith,
+        Similarity::Between,
+        Similarity::Lesser,
+        Similarity::LesserOrEqual,
+        Similarity::Greater,
+        Similarity::GreaterOrEqual,
+    ];
+
+    for similarity in similarities {
+        let param: Parameter = (similarity.clone(), vec!["test".to_string()]);
+        assert_eq!(param.similarity(), &similarity);
+        assert_eq!(param.values(), &vec!["test".to_string()]);
+    }
+}
+
+#[test]
+fn test_parameter_get_trait_immutable_references() {
+    let param: Parameter = (
+        Similarity::Contains,
+        vec!["value1".to_string(), "value2".to_string()],
+    );
+
+    // Test that we get immutable references
+    let similarity_ref = param.similarity();
+    let values_ref = param.values();
+
+    // These should be immutable references
+    assert_eq!(*similarity_ref, Similarity::Contains);
+    assert_eq!(
+        *values_ref,
+        vec!["value1".to_string(), "value2".to_string()]
+    );
+
+    // Test that we can get multiple references (no ownership issues)
+    let similarity_ref2 = param.similarity();
+    let values_ref2 = param.values();
+
+    assert_eq!(similarity_ref, similarity_ref2);
+    assert_eq!(values_ref, values_ref2);
+}
+
+#[test]
+fn test_parameter_get_trait_with_complex_values() {
+    let complex_values = vec![
+        "value with spaces".to_string(),
+        "value,with,commas".to_string(),
+        "value%20encoded".to_string(),
+        "value\nwith\nnewlines".to_string(),
+        "value\twith\ttabs".to_string(),
+    ];
+
+    let param: Parameter = (Similarity::Contains, complex_values.clone());
+
+    assert_eq!(param.similarity(), &Similarity::Contains);
+    assert_eq!(param.values(), &complex_values);
+}
+
+// ============================================================================
+// INNER METHODS TESTS
+// ============================================================================
+
+#[test]
+fn test_parameters_inner_method() {
+    let mut params = Parameters::new();
+    params.equals("name".to_string(), vec!["test".to_string()]);
+    params.contains("description".to_string(), vec!["rust".to_string()]);
+
+    // Test inner() method returns reference to IndexMap
+    let inner_map = params.inner();
+    assert_eq!(inner_map.len(), 2);
+    assert!(inner_map.contains_key("name"));
+    assert!(inner_map.contains_key("description"));
+
+    // Test that we can access the underlying data
+    let name_param = inner_map.get("name").unwrap();
+    assert_eq!(name_param.0, Similarity::Equals);
+    assert_eq!(name_param.1, vec!["test"]);
+
+    let desc_param = inner_map.get("description").unwrap();
+    assert_eq!(desc_param.0, Similarity::Contains);
+    assert_eq!(desc_param.1, vec!["rust"]);
+}
+
+#[test]
+fn test_parameters_inner_mut_method() {
+    let mut params = Parameters::new();
+    params.equals("name".to_string(), vec!["test".to_string()]);
+
+    // Test inner_mut() method returns mutable reference
+    let inner_map = params.inner_mut();
+    assert_eq!(inner_map.len(), 1);
+
+    // Test that we can modify the underlying data
+    inner_map.insert(
+        "new_key".to_string(),
+        (
+            Similarity::Between,
+            vec!["10".to_string(), "20".to_string()],
+        ),
+    );
+
+    // Verify the change
+    assert_eq!(inner_map.len(), 2);
+    assert!(inner_map.contains_key("new_key"));
+
+    let new_param = inner_map.get("new_key").unwrap();
+    assert_eq!(new_param.0, Similarity::Between);
+    assert_eq!(new_param.1, vec!["10", "20"]);
+}
+
+#[test]
+fn test_sort_fields_inner_method() {
+    let mut sort_fields = SortFields::new();
+    sort_fields.ascending("name".to_string());
+    sort_fields.descending("date_created".to_string());
+
+    // Test inner() method returns reference to IndexMap
+    let inner_map = sort_fields.inner();
+    assert_eq!(inner_map.len(), 2);
+    assert!(inner_map.contains_key("name"));
+    assert!(inner_map.contains_key("date_created"));
+
+    // Test that we can access the underlying data
+    assert_eq!(inner_map.get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(inner_map.get("date_created"), Some(&SortOrder::Descending));
+}
+
+#[test]
+fn test_sort_fields_inner_mut_method() {
+    let mut sort_fields = SortFields::new();
+    sort_fields.ascending("name".to_string());
+
+    // Test inner_mut() method returns mutable reference
+    let inner_map = sort_fields.inner_mut();
+    assert_eq!(inner_map.len(), 1);
+
+    // Test that we can modify the underlying data
+    inner_map.insert("new_field".to_string(), SortOrder::Descending);
+
+    // Verify the change
+    assert_eq!(inner_map.len(), 2);
+    assert!(inner_map.contains_key("new_field"));
+    assert_eq!(inner_map.get("new_field"), Some(&SortOrder::Descending));
+}
+
+#[test]
+fn test_inner_methods_preserve_order() {
+    let mut params = Parameters::new();
+    params.equals("first".to_string(), vec!["1".to_string()]);
+    params.contains("second".to_string(), vec!["2".to_string()]);
+    params.between("third".to_string(), vec!["3".to_string(), "4".to_string()]);
+
+    // Test that inner() preserves insertion order
+    let inner_map = params.inner();
+    let keys: Vec<&String> = inner_map.keys().collect();
+    assert_eq!(keys, vec!["first", "second", "third"]);
+
+    // Test that inner_mut() preserves order after modification
+    let inner_map_mut = params.inner_mut();
+    inner_map_mut.insert(
+        "fourth".to_string(),
+        (Similarity::Greater, vec!["5".to_string()]),
+    );
+
+    let keys_after: Vec<&String> = inner_map_mut.keys().collect();
+    assert_eq!(keys_after, vec!["first", "second", "third", "fourth"]);
+}
+
+#[test]
+fn test_inner_methods_with_empty_collections() {
+    let params = Parameters::new();
+    let sort_fields = SortFields::new();
+
+    // Test inner() with empty collections
+    assert_eq!(params.inner().len(), 0);
+    assert_eq!(sort_fields.inner().len(), 0);
+
+    // Test inner_mut() with empty collections
+    let mut params_mut = Parameters::new();
+    let mut sort_fields_mut = SortFields::new();
+
+    assert_eq!(params_mut.inner_mut().len(), 0);
+    assert_eq!(sort_fields_mut.inner_mut().len(), 0);
+}
+
+// ============================================================================
+// METHOD RENAME TESTS (ascending/descending)
+// ============================================================================
+
+#[test]
+fn test_sort_fields_ascending_method() {
+    let mut sort_fields = SortFields::new();
+    sort_fields.ascending("name".to_string());
+
+    assert_eq!(sort_fields.0.len(), 1);
+    assert_eq!(sort_fields.0.get("name"), Some(&SortOrder::Ascending));
+}
+
+#[test]
+fn test_sort_fields_descending_method() {
+    let mut sort_fields = SortFields::new();
+    sort_fields.descending("date_created".to_string());
+
+    assert_eq!(sort_fields.0.len(), 1);
+    assert_eq!(
+        sort_fields.0.get("date_created"),
+        Some(&SortOrder::Descending)
+    );
+}
+
+#[test]
+fn test_sort_fields_ascending_descending_fluent_api() {
+    let mut sort_fields = SortFields::new();
+    sort_fields
+        .ascending("name".to_string())
+        .descending("date_created".to_string())
+        .ascending("email".to_string());
+
+    assert_eq!(sort_fields.0.len(), 3);
+    assert_eq!(sort_fields.0.get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(
+        sort_fields.0.get("date_created"),
+        Some(&SortOrder::Descending)
+    );
+    assert_eq!(sort_fields.0.get("email"), Some(&SortOrder::Ascending));
+}
+
+#[test]
+fn test_sort_fields_ascending_descending_overwrite() {
+    let mut sort_fields = SortFields::new();
+    sort_fields.ascending("name".to_string());
+    sort_fields.descending("name".to_string()); // Should overwrite
+
+    assert_eq!(sort_fields.0.len(), 1);
+    assert_eq!(sort_fields.0.get("name"), Some(&SortOrder::Descending));
+}
+
+#[test]
+fn test_sort_fields_ascending_descending_with_special_characters() {
+    let mut sort_fields = SortFields::new();
+    sort_fields.ascending("user_name_123".to_string());
+    sort_fields.descending("date_created_at".to_string());
+
+    assert_eq!(sort_fields.0.len(), 2);
+    assert_eq!(
+        sort_fields.0.get("user_name_123"),
+        Some(&SortOrder::Ascending)
+    );
+    assert_eq!(
+        sort_fields.0.get("date_created_at"),
+        Some(&SortOrder::Descending)
+    );
+}
+
+#[test]
+fn test_sort_fields_ascending_descending_with_unicode() {
+    let mut sort_fields = SortFields::new();
+    sort_fields.ascending("用户_姓名".to_string());
+    sort_fields.descending("创建_日期".to_string());
+
+    assert_eq!(sort_fields.0.len(), 2);
+    assert_eq!(sort_fields.0.get("用户_姓名"), Some(&SortOrder::Ascending));
+    assert_eq!(sort_fields.0.get("创建_日期"), Some(&SortOrder::Descending));
+}
+
+#[test]
+fn test_sort_fields_ascending_descending_empty_strings() {
+    let mut sort_fields = SortFields::new();
+    sort_fields.ascending("".to_string());
+    sort_fields.descending("  ".to_string());
+
+    assert_eq!(sort_fields.0.len(), 2);
+    assert_eq!(sort_fields.0.get(""), Some(&SortOrder::Ascending));
+    assert_eq!(sort_fields.0.get("  "), Some(&SortOrder::Descending));
+}
+
+// ============================================================================
+// INTEGRATION TESTS FOR NEW FEATURES
+// ============================================================================
+
+#[test]
+fn test_parameter_trait_with_parameters_collection() {
+    let mut params = Parameters::new();
+    params.equals(
+        "name".to_string(),
+        vec!["john".to_string(), "jane".to_string()],
+    );
+    params.contains("description".to_string(), vec!["rust".to_string()]);
+
+    // Test accessing parameters using the trait methods
+    let name_param = params.inner().get("name").unwrap();
+    assert_eq!(name_param.similarity(), &Similarity::Equals);
+    assert_eq!(
+        name_param.values(),
+        &vec!["john".to_string(), "jane".to_string()]
+    );
+
+    let desc_param = params.inner().get("description").unwrap();
+    assert_eq!(desc_param.similarity(), &Similarity::Contains);
+    assert_eq!(desc_param.values(), &vec!["rust".to_string()]);
+}
+
+#[test]
+fn test_parameter_trait_with_query_parsing() {
+    let query = Query::from_http("name=contains:john&age=between:20,30".to_string()).unwrap();
+
+    // Test accessing parsed parameters using the trait methods
+    let name_param = query.parameters.inner().get("name").unwrap();
+    assert_eq!(name_param.similarity(), &Similarity::Contains);
+    assert_eq!(name_param.values(), &vec!["john".to_string()]);
+
+    let age_param = query.parameters.inner().get("age").unwrap();
+    assert_eq!(age_param.similarity(), &Similarity::Between);
+    assert_eq!(
+        age_param.values(),
+        &vec!["20".to_string(), "30".to_string()]
+    );
+}
+
+#[test]
+fn test_inner_methods_with_query_manipulation() {
+    let mut query = Query::new();
+    query
+        .parameters
+        .equals("name".to_string(), vec!["john".to_string()]);
+    query
+        .parameters
+        .contains("description".to_string(), vec!["rust".to_string()]);
+    query.sort_fields.ascending("name".to_string());
+    query.sort_fields.descending("date_created".to_string());
+
+    // Test using inner() for complex operations
+    let param_map = query.parameters.inner();
+    let sort_map = query.sort_fields.inner();
+
+    // Verify we can iterate and access data
+    let param_keys: Vec<&String> = param_map.keys().collect();
+    let sort_keys: Vec<&String> = sort_map.keys().collect();
+
+    assert_eq!(param_keys, vec!["name", "description"]);
+    assert_eq!(sort_keys, vec!["name", "date_created"]);
+
+    // Test using inner_mut() for modifications
+    let param_map_mut = query.parameters.inner_mut();
+    let sort_map_mut = query.sort_fields.inner_mut();
+
+    param_map_mut.insert(
+        "new_param".to_string(),
+        (Similarity::Greater, vec!["100".to_string()]),
+    );
+    sort_map_mut.insert("new_sort".to_string(), SortOrder::Ascending);
+
+    // Verify modifications
+    assert_eq!(param_map_mut.len(), 3);
+    assert_eq!(sort_map_mut.len(), 3);
+    assert!(param_map_mut.contains_key("new_param"));
+    assert!(sort_map_mut.contains_key("new_sort"));
+}
+
+#[test]
+fn test_renamed_methods_with_query_building() {
+    let mut params = Parameters::new();
+    let mut sort_fields = SortFields::new();
+
+    // Build using new method names
+    params
+        .equals("name".to_string(), vec!["john".to_string()])
+        .contains("description".to_string(), vec!["rust".to_string()]);
+
+    sort_fields
+        .ascending("name".to_string())
+        .descending("date_created".to_string());
+
+    let query = Query::init(params, sort_fields, 25, 10);
+
+    // Verify the query was built correctly
+    assert_eq!(query.parameters.inner().len(), 2);
+    assert_eq!(query.sort_fields.inner().len(), 2);
+    assert_eq!(query.limit, 25);
+    assert_eq!(query.offset, 10);
+
+    // Verify parameter access using trait methods
+    let name_param = query.parameters.inner().get("name").unwrap();
+    assert_eq!(name_param.similarity(), &Similarity::Equals);
+    assert_eq!(name_param.values(), &vec!["john".to_string()]);
+
+    // Verify sort field access
+    assert_eq!(
+        query.sort_fields.inner().get("name"),
+        Some(&SortOrder::Ascending)
+    );
+    assert_eq!(
+        query.sort_fields.inner().get("date_created"),
+        Some(&SortOrder::Descending)
+    );
+}
+
+#[test]
+fn test_all_new_features_roundtrip() {
+    // Build query using all new features
+    let mut params = Parameters::new();
+    let mut sort_fields = SortFields::new();
+
+    params
+        .equals(
+            "name".to_string(),
+            vec!["john".to_string(), "jane".to_string()],
+        )
+        .contains("description".to_string(), vec!["rust".to_string()])
+        .between("age".to_string(), vec!["20".to_string(), "30".to_string()]);
+
+    sort_fields
+        .ascending("name".to_string())
+        .descending("date_created".to_string());
+
+    let query = Query::init(params, sort_fields, 25, 10);
+
+    // Convert to HTTP and back
+    let http_string = query.to_http();
+    let reconstructed = Query::from_http(http_string).unwrap();
+
+    // Verify all features are preserved
+    assert_eq!(reconstructed.parameters.inner().len(), 3);
+    assert_eq!(reconstructed.sort_fields.inner().len(), 2);
+    assert_eq!(reconstructed.limit, 25);
+    assert_eq!(reconstructed.offset, 10);
+
+    // Verify parameter access using trait methods
+    let name_param = reconstructed.parameters.inner().get("name").unwrap();
+    assert_eq!(name_param.similarity(), &Similarity::Equals);
+    assert_eq!(
+        name_param.values(),
+        &vec!["john".to_string(), "jane".to_string()]
+    );
+
+    let desc_param = reconstructed.parameters.inner().get("description").unwrap();
+    assert_eq!(desc_param.similarity(), &Similarity::Contains);
+    assert_eq!(desc_param.values(), &vec!["rust".to_string()]);
+
+    let age_param = reconstructed.parameters.inner().get("age").unwrap();
+    assert_eq!(age_param.similarity(), &Similarity::Between);
+    assert_eq!(
+        age_param.values(),
+        &vec!["20".to_string(), "30".to_string()]
+    );
+
+    // Verify sort fields
+    assert_eq!(
+        reconstructed.sort_fields.inner().get("name"),
+        Some(&SortOrder::Ascending)
+    );
+    assert_eq!(
+        reconstructed.sort_fields.inner().get("date_created"),
+        Some(&SortOrder::Descending)
+    );
+}
+
+#[test]
+fn test_backward_compatibility_with_new_features() {
+    // Test that old tuple access still works alongside new features
+    let mut params = Parameters::new();
+    params.equals("name".to_string(), vec!["john".to_string()]);
+
+    let param = params.inner().get("name").unwrap();
+
+    // Old tuple access should still work
+    assert_eq!(param.0, Similarity::Equals);
+    assert_eq!(param.1, vec!["john".to_string()]);
+
+    // New trait access should also work
+    assert_eq!(param.similarity(), &Similarity::Equals);
+    assert_eq!(param.values(), &vec!["john".to_string()]);
+
+    // Both should return the same values
+    assert_eq!(param.0, *param.similarity());
+    assert_eq!(param.1, *param.values());
+}
+
+// ============================================================================
 // NORMAL QUERY PARAMETER TESTS
 // ============================================================================
 
