@@ -142,12 +142,12 @@ impl SortFields {
         Self(IndexMap::new())
     }
 
-    pub fn asc(&mut self, name: String) -> &mut Self {
+    pub fn ascending(&mut self, name: String) -> &mut Self {
         self.0.insert(name, SortOrder::Ascending);
         self
     }
 
-    pub fn desc(&mut self, name: String) -> &mut Self {
+    pub fn descending(&mut self, name: String) -> &mut Self {
         self.0.insert(name, SortOrder::Descending);
         self
     }

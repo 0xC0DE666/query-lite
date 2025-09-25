@@ -237,7 +237,7 @@ fn test_sort_order_to_string() {
 #[test]
 fn test_sort_fields_helper_functions_asc() {
     let mut fields = SortFields::new();
-    fields.asc("name".to_string());
+    fields.ascending("name".to_string());
 
     assert_eq!(fields.0.len(), 1);
     assert_eq!(fields.0.get("name"), Some(&SortOrder::Ascending));
@@ -246,7 +246,7 @@ fn test_sort_fields_helper_functions_asc() {
 #[test]
 fn test_sort_fields_helper_functions_desc() {
     let mut fields = SortFields::new();
-    fields.desc("date_created".to_string());
+    fields.descending("date_created".to_string());
 
     assert_eq!(fields.0.len(), 1);
     assert_eq!(fields.0.get("date_created"), Some(&SortOrder::Descending));
@@ -256,9 +256,9 @@ fn test_sort_fields_helper_functions_desc() {
 fn test_sort_fields_helper_functions_fluent_api() {
     let mut fields = SortFields::new();
     fields
-        .asc("name".to_string())
-        .desc("date_created".to_string())
-        .asc("email".to_string());
+        .ascending("name".to_string())
+        .descending("date_created".to_string())
+        .ascending("email".to_string());
 
     assert_eq!(fields.0.len(), 3);
     assert_eq!(fields.0.get("name"), Some(&SortOrder::Ascending));
@@ -269,8 +269,8 @@ fn test_sort_fields_helper_functions_fluent_api() {
 #[test]
 fn test_sort_fields_helper_functions_overwrite() {
     let mut fields = SortFields::new();
-    fields.asc("name".to_string());
-    fields.desc("name".to_string()); // Should overwrite
+    fields.ascending("name".to_string());
+    fields.descending("name".to_string()); // Should overwrite
 
     assert_eq!(fields.0.len(), 1);
     assert_eq!(fields.0.get("name"), Some(&SortOrder::Descending));
@@ -279,7 +279,7 @@ fn test_sort_fields_helper_functions_overwrite() {
 #[test]
 fn test_sort_fields_helper_functions_empty_name() {
     let mut fields = SortFields::new();
-    fields.asc("".to_string());
+    fields.ascending("".to_string());
 
     assert_eq!(fields.0.len(), 1);
     assert_eq!(fields.0.get(""), Some(&SortOrder::Ascending));
@@ -288,7 +288,7 @@ fn test_sort_fields_helper_functions_empty_name() {
 #[test]
 fn test_sort_fields_helper_functions_whitespace_name() {
     let mut fields = SortFields::new();
-    fields.asc("  name  ".to_string());
+    fields.ascending("  name  ".to_string());
 
     assert_eq!(fields.0.len(), 1);
     assert_eq!(fields.0.get("  name  "), Some(&SortOrder::Ascending));
@@ -297,7 +297,7 @@ fn test_sort_fields_helper_functions_whitespace_name() {
 #[test]
 fn test_sort_fields_helper_functions_special_characters() {
     let mut fields = SortFields::new();
-    fields.asc("user_name_123".to_string());
+    fields.ascending("user_name_123".to_string());
 
     assert_eq!(fields.0.len(), 1);
     assert_eq!(fields.0.get("user_name_123"), Some(&SortOrder::Ascending));
@@ -306,7 +306,7 @@ fn test_sort_fields_helper_functions_special_characters() {
 #[test]
 fn test_sort_fields_helper_functions_unicode_name() {
     let mut fields = SortFields::new();
-    fields.asc("用户_姓名".to_string());
+    fields.ascending("用户_姓名".to_string());
 
     assert_eq!(fields.0.len(), 1);
     assert_eq!(fields.0.get("用户_姓名"), Some(&SortOrder::Ascending));
@@ -315,9 +315,9 @@ fn test_sort_fields_helper_functions_unicode_name() {
 #[test]
 fn test_sort_fields_keep() {
     let mut fields = SortFields::new();
-    fields.asc("name".to_string());
-    fields.desc("date_created".to_string());
-    fields.asc("email".to_string());
+    fields.ascending("name".to_string());
+    fields.descending("date_created".to_string());
+    fields.ascending("email".to_string());
 
     let filtered = fields.keep(vec!["name".to_string(), "email".to_string()]);
 
@@ -330,7 +330,7 @@ fn test_sort_fields_keep() {
 #[test]
 fn test_sort_fields_keep_nonexistent_keys() {
     let mut fields = SortFields::new();
-    fields.asc("name".to_string());
+    fields.ascending("name".to_string());
 
     let filtered = fields.keep(vec!["nonexistent".to_string()]);
     assert_eq!(filtered.0.len(), 0);
@@ -339,7 +339,7 @@ fn test_sort_fields_keep_nonexistent_keys() {
 #[test]
 fn test_sort_fields_keep_empty_keys() {
     let mut fields = SortFields::new();
-    fields.asc("name".to_string());
+    fields.ascending("name".to_string());
 
     let filtered = fields.keep(vec![]);
     assert_eq!(filtered.0.len(), 0);
@@ -348,9 +348,9 @@ fn test_sort_fields_keep_empty_keys() {
 #[test]
 fn test_sort_fields_remove() {
     let mut fields = SortFields::new();
-    fields.asc("name".to_string());
-    fields.desc("date_created".to_string());
-    fields.asc("email".to_string());
+    fields.ascending("name".to_string());
+    fields.descending("date_created".to_string());
+    fields.ascending("email".to_string());
 
     let filtered = fields.remove(vec!["name".to_string(), "email".to_string()]);
 
@@ -363,7 +363,7 @@ fn test_sort_fields_remove() {
 #[test]
 fn test_sort_fields_remove_nonexistent_keys() {
     let mut fields = SortFields::new();
-    fields.asc("name".to_string());
+    fields.ascending("name".to_string());
 
     let filtered = fields.remove(vec!["nonexistent".to_string()]);
     assert_eq!(filtered.0.len(), 1);
@@ -373,7 +373,7 @@ fn test_sort_fields_remove_nonexistent_keys() {
 #[test]
 fn test_sort_fields_remove_empty_keys() {
     let mut fields = SortFields::new();
-    fields.asc("name".to_string());
+    fields.ascending("name".to_string());
 
     let filtered = fields.remove(vec![]);
     assert_eq!(filtered.0.len(), 1);
@@ -927,7 +927,7 @@ fn test_query_to_http_with_params() {
 #[test]
 fn test_query_to_http_with_sort() {
     let mut query = Query::new();
-    query.sort_fields.desc("date_created".to_string());
+    query.sort_fields.descending("date_created".to_string());
 
     let http = query.to_http();
     assert!(http.contains("date_created:desc"));
@@ -943,7 +943,7 @@ fn test_query_to_http_with_params_and_sort() {
         (Similarity::Contains, vec!["damian".to_string()]),
     );
 
-    query.sort_fields.desc("date_created".to_string());
+    query.sort_fields.descending("date_created".to_string());
 
     let http = query.to_http();
     assert!(http.contains("name=contains:damian"));
@@ -968,7 +968,7 @@ fn test_query_to_http_sort_fields_empty_values() {
 #[test]
 fn test_query_to_http_empty_sort_fields() {
     let mut query = Query::new();
-    query.sort_fields.asc("".to_string());
+    query.sort_fields.ascending("".to_string());
 
     let http = query.to_http();
     assert!(!http.contains(":asc"));
@@ -1269,7 +1269,7 @@ fn test_query_to_http_with_numeric_comparisons() {
         (Similarity::LesserOrEqual, vec!["85".to_string()]),
     );
 
-    query.sort_fields.desc("date_created".to_string());
+    query.sort_fields.descending("date_created".to_string());
 
     query.limit = 25;
     query.offset = 10;
@@ -1855,7 +1855,7 @@ fn test_query_to_sql_with_greater_or_equal() {
 #[test]
 fn test_query_to_sql_with_order_by() {
     let mut query = Query::new();
-    query.sort_fields.desc("date_created".to_string());
+    query.sort_fields.descending("date_created".to_string());
 
     let sql = query.to_sql();
     assert_eq!(sql, "ORDER BY date_created DESC LIMIT ? OFFSET ?");
@@ -1865,8 +1865,8 @@ fn test_query_to_sql_with_order_by() {
 #[test]
 fn test_query_to_sql_with_multiple_order_by() {
     let mut query = Query::new();
-    query.sort_fields.desc("date_created".to_string());
-    query.sort_fields.asc("name".to_string());
+    query.sort_fields.descending("date_created".to_string());
+    query.sort_fields.ascending("name".to_string());
 
     let sql = query.to_sql();
     assert_eq!(sql, "ORDER BY date_created DESC, name ASC LIMIT ? OFFSET ?");
@@ -1895,7 +1895,7 @@ fn test_query_to_sql_complex() {
     );
 
     // Add sorting
-    query.sort_fields.desc("date_created".to_string());
+    query.sort_fields.descending("date_created".to_string());
 
     let sql = query.to_sql();
     assert_eq!(
@@ -1921,7 +1921,7 @@ fn test_query_to_sql_with_empty_parameters() {
 #[test]
 fn test_query_to_sql_with_empty_sort_fields() {
     let mut query = Query::new();
-    query.sort_fields.asc("".to_string());
+    query.sort_fields.ascending("".to_string());
 
     let sql = query.to_sql();
     assert_eq!(sql, "LIMIT ? OFFSET ?");

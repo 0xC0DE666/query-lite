@@ -103,8 +103,8 @@ parameters
 // Build sort fields using the builder pattern
 let mut sort_fields = SortFields::new();
 sort_fields
-    .desc("date_created".to_string())
-    .asc("name".to_string());
+    .descending("date_created".to_string())
+    .ascending("name".to_string());
 
 // Create the query
 let query = Query::init(parameters, sort_fields, 25, 0);
@@ -336,7 +336,7 @@ query-x = { version = "0.2.1", features = ["sql"] }
 - `Parameters::new()`: Create new Parameters collection
 - `Parameters::equals()`, `Parameters::contains()`, etc.: Builder methods for adding parameters
 - `SortFields::new()`: Create new SortFields collection
-- `SortFields::asc()`, `SortFields::desc()`: Builder methods for adding sort fields
+- `SortFields::ascending()`, `SortFields::descending()`: Builder methods for adding sort fields
 - `Parameters::keep()`: Filter parameters to keep only specified keys
 - `Parameters::remove()`: Remove specified parameters
 - `SortFields::keep()`: Filter sort fields to keep only specified keys
@@ -357,18 +357,7 @@ at your option.
 
 ## Changelog
 
-### 0.2.1
-- Added builder pattern for programmatic query construction
-- Enhanced Parameters and SortFields with fluent API methods
-- Improved parameter access with tuple-based structure
-- Updated API for better ergonomics and type safety
-
-### 0.1.0
-- Initial release
-- Support for traditional and advanced query parameters
-- SQL generation with parameter binding
-- Comprehensive test suite
-- Full documentation
+See [CHANGELOG.md](CHANGELOG.md) for a detailed list of changes.
 
 ---
 
