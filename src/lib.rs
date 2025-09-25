@@ -33,7 +33,7 @@ pub fn url_encode(input: &str) -> String {
 }
 
 /// Parse a parameter string into similarity and values
-/// 
+///
 /// # Examples
 /// - "contains:damian" -> (Similarity::Contains, vec!["damian"])
 /// - "equals:black,steel,wood" -> (Similarity::Equals, vec!["black", "steel", "wood"])
@@ -71,7 +71,7 @@ pub fn parse_parameter(s: &str) -> Result<(Similarity, Vec<String>)> {
 }
 
 /// Parse a sort field string into name and order
-/// 
+///
 /// # Examples
 /// - "name:asc" -> ("name", SortOrder::Ascending)
 /// - "date_created:desc" -> ("date_created", SortOrder::Descending)
@@ -275,7 +275,6 @@ impl ToString for Similarity {
     }
 }
 
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct Parameters(pub IndexMap<String, (Similarity, Vec<String>)>);
 
@@ -400,7 +399,9 @@ impl FromStr for Parameters {
                 continue;
             }
 
-            parameters.0.insert(trimmed_key.to_string(), (similarity, values));
+            parameters
+                .0
+                .insert(trimmed_key.to_string(), (similarity, values));
         }
 
         Ok(parameters)
@@ -553,7 +554,10 @@ impl Query {
                                 continue;
                             }
                             // Replace any existing parameter (similarity-based takes precedence)
-                            query.parameters.0.insert(trimmed_key.to_string(), (similarity, values));
+                            query
+                                .parameters
+                                .0
+                                .insert(trimmed_key.to_string(), (similarity, values));
                         } else {
                             // Handle as normal query parameter (default to equals similarity)
                             let decoded_value = url_decode(trimmed_value);
@@ -569,7 +573,10 @@ impl Query {
                                 // If existing parameter is similarity-based, ignore this normal parameter
                             } else {
                                 // Create new parameter with equals similarity
-                                query.parameters.0.insert(trimmed_key.to_string(), (Similarity::Equals, vec![decoded_value]));
+                                query.parameters.0.insert(
+                                    trimmed_key.to_string(),
+                                    (Similarity::Equals, vec![decoded_value]),
+                                );
                             }
                         }
                     }
@@ -581,7 +588,6 @@ impl Query {
 
         Ok(query)
     }
-
 
     #[cfg(feature = "sql")]
     pub fn to_sql(&self) -> String {
@@ -631,10 +637,8 @@ impl Query {
                     if values.len() == 1 {
                         format!("{} LIKE ?", key)
                     } else {
-                        let like_conditions: Vec<String> = values
-                            .iter()
-                            .map(|_| format!("{} LIKE ?", key))
-                            .collect();
+                        let like_conditions: Vec<String> =
+                            values.iter().map(|_| format!("{} LIKE ?", key)).collect();
                         format!("({})", like_conditions.join(" OR "))
                     }
                 }
@@ -642,10 +646,8 @@ impl Query {
                     if values.len() == 1 {
                         format!("{} LIKE ?", key)
                     } else {
-                        let like_conditions: Vec<String> = values
-                            .iter()
-                            .map(|_| format!("{} LIKE ?", key))
-                            .collect();
+                        let like_conditions: Vec<String> =
+                            values.iter().map(|_| format!("{} LIKE ?", key)).collect();
                         format!("({})", like_conditions.join(" OR "))
                     }
                 }
@@ -653,10 +655,8 @@ impl Query {
                     if values.len() == 1 {
                         format!("{} LIKE ?", key)
                     } else {
-                        let like_conditions: Vec<String> = values
-                            .iter()
-                            .map(|_| format!("{} LIKE ?", key))
-                            .collect();
+                        let like_conditions: Vec<String> =
+                            values.iter().map(|_| format!("{} LIKE ?", key)).collect();
                         format!("({})", like_conditions.join(" OR "))
                     }
                 }
@@ -691,10 +691,8 @@ impl Query {
                     if values.len() == 1 {
                         format!("{} < ?", key)
                     } else {
-                        let conditions: Vec<String> = values
-                            .iter()
-                            .map(|_| format!("{} < ?", key))
-                            .collect();
+                        let conditions: Vec<String> =
+                            values.iter().map(|_| format!("{} < ?", key)).collect();
                         format!("({})", conditions.join(" OR "))
                     }
                 }
@@ -702,10 +700,8 @@ impl Query {
                     if values.len() == 1 {
                         format!("{} <= ?", key)
                     } else {
-                        let conditions: Vec<String> = values
-                            .iter()
-                            .map(|_| format!("{} <= ?", key))
-                            .collect();
+                        let conditions: Vec<String> =
+                            values.iter().map(|_| format!("{} <= ?", key)).collect();
                         format!("({})", conditions.join(" OR "))
                     }
                 }
@@ -713,10 +709,8 @@ impl Query {
                     if values.len() == 1 {
                         format!("{} > ?", key)
                     } else {
-                        let conditions: Vec<String> = values
-                            .iter()
-                            .map(|_| format!("{} > ?", key))
-                            .collect();
+                        let conditions: Vec<String> =
+                            values.iter().map(|_| format!("{} > ?", key)).collect();
                         format!("({})", conditions.join(" OR "))
                     }
                 }
@@ -724,10 +718,8 @@ impl Query {
                     if values.len() == 1 {
                         format!("{} >= ?", key)
                     } else {
-                        let conditions: Vec<String> = values
-                            .iter()
-                            .map(|_| format!("{} >= ?", key))
-                            .collect();
+                        let conditions: Vec<String> =
+                            values.iter().map(|_| format!("{} >= ?", key)).collect();
                         format!("({})", conditions.join(" OR "))
                     }
                 }
