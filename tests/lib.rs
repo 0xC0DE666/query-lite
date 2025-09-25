@@ -466,7 +466,6 @@ fn test_parameters_constants() {
     assert_eq!(Parameters::OFFSET, "offset");
     assert_eq!(Parameters::DEFAULT_LIMIT, 50);
     assert_eq!(Parameters::DEFAULT_OFFSET, 0);
-    assert_eq!(Parameters::MAX_LIMIT, 100);
 
     assert!(Parameters::EXCLUDE.contains(&"order"));
     assert!(Parameters::EXCLUDE.contains(&"limit"));
@@ -755,12 +754,6 @@ fn test_query_from_http_with_limit() {
 fn test_query_from_http_with_offset() {
     let query = Query::from_http("offset=20".to_string()).unwrap();
     assert_eq!(query.offset, 20);
-}
-
-#[test]
-fn test_query_from_http_with_max_limit() {
-    let query = Query::from_http("limit=200".to_string()).unwrap();
-    assert_eq!(query.limit, Parameters::MAX_LIMIT);
 }
 
 #[test]

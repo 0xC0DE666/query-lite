@@ -302,8 +302,6 @@ impl Parameters {
     pub const DEFAULT_LIMIT: usize = 50;
     pub const DEFAULT_OFFSET: usize = 0;
 
-    pub const MAX_LIMIT: usize = 100;
-
     pub fn new() -> Self {
         Self(IndexMap::new())
     }
@@ -487,9 +485,7 @@ impl Query {
                             continue;
                         }
 
-                        let limit: usize =
-                            trimmed_value.parse().unwrap_or(Parameters::DEFAULT_LIMIT);
-                        query.limit = limit.min(Parameters::MAX_LIMIT);
+                        query.limit = trimmed_value.parse().unwrap_or(Parameters::DEFAULT_LIMIT);
                     }
                     Parameters::OFFSET => {
                         if trimmed_value.is_empty() {
@@ -516,9 +512,11 @@ impl Query {
                         } else {
                             // Handle as normal query parameter (default to equals similarity)
                             let decoded_value = url_decode(trimmed_value);
-                            
+
                             // Check if parameter already exists and is not similarity-based
-                            if let Some(existing_param) = query.parameters.0.get_mut(&trimmed_key.to_string()) {
+                            if let Some(existing_param) =
+                                query.parameters.0.get_mut(&trimmed_key.to_string())
+                            {
                                 // Only append if the existing parameter is also equals similarity
                                 if existing_param.similarity == Similarity::Equals {
                                     existing_param.values.push(decoded_value);
@@ -526,7 +524,8 @@ impl Query {
                                 // If existing parameter is similarity-based, ignore this normal parameter
                             } else {
                                 // Create new parameter with equals similarity
-                                let param = Parameter::init(Similarity::Equals, vec![decoded_value]);
+                                let param =
+                                    Parameter::init(Similarity::Equals, vec![decoded_value]);
                                 query.parameters.0.insert(trimmed_key.to_string(), param);
                             }
                         }
@@ -622,7 +621,9 @@ impl Query {
                     if param.values.len() == 1 {
                         format!("{} LIKE ?", key)
                     } else {
-                        let like_conditions: Vec<String> = param.values.iter()
+                        let like_conditions: Vec<String> = param
+                            .values
+                            .iter()
                             .map(|_| format!("{} LIKE ?", key))
                             .collect();
                         format!("({})", like_conditions.join(" OR "))
@@ -632,7 +633,9 @@ impl Query {
                     if param.values.len() == 1 {
                         format!("{} LIKE ?", key)
                     } else {
-                        let like_conditions: Vec<String> = param.values.iter()
+                        let like_conditions: Vec<String> = param
+                            .values
+                            .iter()
                             .map(|_| format!("{} LIKE ?", key))
                             .collect();
                         format!("({})", like_conditions.join(" OR "))
@@ -642,7 +645,9 @@ impl Query {
                     if param.values.len() == 1 {
                         format!("{} LIKE ?", key)
                     } else {
-                        let like_conditions: Vec<String> = param.values.iter()
+                        let like_conditions: Vec<String> = param
+                            .values
+                            .iter()
                             .map(|_| format!("{} LIKE ?", key))
                             .collect();
                         format!("({})", like_conditions.join(" OR "))
@@ -652,7 +657,8 @@ impl Query {
                     if param.values.len() >= 2 {
                         // Group values into pairs, ignoring any odd value
                         let pairs: Vec<&[String]> = param.values.chunks(2).collect();
-                        let between_conditions: Vec<String> = pairs.iter()
+                        let between_conditions: Vec<String> = pairs
+                            .iter()
                             .map(|pair| {
                                 if pair.len() == 2 {
                                     format!("{} BETWEEN ? AND ?", key)
@@ -662,7 +668,7 @@ impl Query {
                             })
                             .filter(|condition| !condition.is_empty())
                             .collect();
-                        
+
                         if between_conditions.is_empty() {
                             continue; // Skip if no valid pairs
                         } else if between_conditions.len() == 1 {
@@ -678,7 +684,9 @@ impl Query {
                     if param.values.len() == 1 {
                         format!("{} < ?", key)
                     } else {
-                        let conditions: Vec<String> = param.values.iter()
+                        let conditions: Vec<String> = param
+                            .values
+                            .iter()
                             .map(|_| format!("{} < ?", key))
                             .collect();
                         format!("({})", conditions.join(" OR "))
@@ -688,7 +696,9 @@ impl Query {
                     if param.values.len() == 1 {
                         format!("{} <= ?", key)
                     } else {
-                        let conditions: Vec<String> = param.values.iter()
+                        let conditions: Vec<String> = param
+                            .values
+                            .iter()
                             .map(|_| format!("{} <= ?", key))
                             .collect();
                         format!("({})", conditions.join(" OR "))
@@ -698,7 +708,9 @@ impl Query {
                     if param.values.len() == 1 {
                         format!("{} > ?", key)
                     } else {
-                        let conditions: Vec<String> = param.values.iter()
+                        let conditions: Vec<String> = param
+                            .values
+                            .iter()
                             .map(|_| format!("{} > ?", key))
                             .collect();
                         format!("({})", conditions.join(" OR "))
@@ -708,7 +720,9 @@ impl Query {
                     if param.values.len() == 1 {
                         format!("{} >= ?", key)
                     } else {
-                        let conditions: Vec<String> = param.values.iter()
+                        let conditions: Vec<String> = param
+                            .values
+                            .iter()
                             .map(|_| format!("{} >= ?", key))
                             .collect();
                         format!("({})", conditions.join(" OR "))
