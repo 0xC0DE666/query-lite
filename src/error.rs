@@ -3,7 +3,7 @@ use thiserror::Error;
 
 pub type Result<T> = StdResult<T, Error>;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, PartialEq)]
 pub enum Error {
     #[error("Error: Invalid Sort Order '{0}'")]
     InvalidSortOrder(String),
