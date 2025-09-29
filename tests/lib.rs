@@ -2869,8 +2869,8 @@ fn test_query_to_values_empty() {
 
     // Should only contain limit and offset
     assert_eq!(values.len(), 2);
-    assert_eq!(values[0], SQLValue::Integer(50)); // default limit
-    assert_eq!(values[1], SQLValue::Integer(0)); // default offset
+    assert_eq!(values[0], SqlValue::Integer(50)); // default limit
+    assert_eq!(values[1], SqlValue::Integer(0)); // default offset
 }
 
 #[cfg(feature = "sql")]
@@ -2883,8 +2883,8 @@ fn test_query_to_values_with_custom_limit_offset() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 2);
-    assert_eq!(values[0], SQLValue::Integer(100));
-    assert_eq!(values[1], SQLValue::Integer(25));
+    assert_eq!(values[0], SqlValue::Integer(100));
+    assert_eq!(values[1], SqlValue::Integer(25));
 }
 
 #[cfg(feature = "sql")]
@@ -2899,9 +2899,9 @@ fn test_query_to_values_equals_integer() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 3);
-    assert_eq!(values[0], SQLValue::Integer(25));
-    assert_eq!(values[1], SQLValue::Integer(50)); // limit
-    assert_eq!(values[2], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Integer(25));
+    assert_eq!(values[1], SqlValue::Integer(50)); // limit
+    assert_eq!(values[2], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -2919,11 +2919,11 @@ fn test_query_to_values_equals_multiple_integers() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 5);
-    assert_eq!(values[0], SQLValue::Integer(25));
-    assert_eq!(values[1], SQLValue::Integer(30));
-    assert_eq!(values[2], SQLValue::Integer(35));
-    assert_eq!(values[3], SQLValue::Integer(50)); // limit
-    assert_eq!(values[4], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Integer(25));
+    assert_eq!(values[1], SqlValue::Integer(30));
+    assert_eq!(values[2], SqlValue::Integer(35));
+    assert_eq!(values[3], SqlValue::Integer(50)); // limit
+    assert_eq!(values[4], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -2938,9 +2938,9 @@ fn test_query_to_values_equals_real() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 3);
-    assert_eq!(values[0], SQLValue::Real(25.5));
-    assert_eq!(values[1], SQLValue::Integer(50)); // limit
-    assert_eq!(values[2], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Real(25.5));
+    assert_eq!(values[1], SqlValue::Integer(50)); // limit
+    assert_eq!(values[2], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -2955,9 +2955,9 @@ fn test_query_to_values_equals_text() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 3);
-    assert_eq!(values[0], SQLValue::Text("john".to_string()));
-    assert_eq!(values[1], SQLValue::Integer(50)); // limit
-    assert_eq!(values[2], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Text("john".to_string()));
+    assert_eq!(values[1], SqlValue::Integer(50)); // limit
+    assert_eq!(values[2], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -2972,9 +2972,9 @@ fn test_query_to_values_equals_null() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 3);
-    assert_eq!(values[0], SQLValue::Null);
-    assert_eq!(values[1], SQLValue::Integer(50)); // limit
-    assert_eq!(values[2], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Null);
+    assert_eq!(values[1], SqlValue::Integer(50)); // limit
+    assert_eq!(values[2], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -2989,9 +2989,9 @@ fn test_query_to_values_contains() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 3);
-    assert_eq!(values[0], SQLValue::Text("%john%".to_string()));
-    assert_eq!(values[1], SQLValue::Integer(50)); // limit
-    assert_eq!(values[2], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Text("%john%".to_string()));
+    assert_eq!(values[1], SqlValue::Integer(50)); // limit
+    assert_eq!(values[2], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3009,10 +3009,10 @@ fn test_query_to_values_contains_multiple() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 4);
-    assert_eq!(values[0], SQLValue::Text("%john%".to_string()));
-    assert_eq!(values[1], SQLValue::Text("%jane%".to_string()));
-    assert_eq!(values[2], SQLValue::Integer(50)); // limit
-    assert_eq!(values[3], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Text("%john%".to_string()));
+    assert_eq!(values[1], SqlValue::Text("%jane%".to_string()));
+    assert_eq!(values[2], SqlValue::Integer(50)); // limit
+    assert_eq!(values[3], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3027,9 +3027,9 @@ fn test_query_to_values_starts_with() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 3);
-    assert_eq!(values[0], SQLValue::Text("john%".to_string()));
-    assert_eq!(values[1], SQLValue::Integer(50)); // limit
-    assert_eq!(values[2], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Text("john%".to_string()));
+    assert_eq!(values[1], SqlValue::Integer(50)); // limit
+    assert_eq!(values[2], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3044,9 +3044,9 @@ fn test_query_to_values_ends_with() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 3);
-    assert_eq!(values[0], SQLValue::Text("%son".to_string()));
-    assert_eq!(values[1], SQLValue::Integer(50)); // limit
-    assert_eq!(values[2], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Text("%son".to_string()));
+    assert_eq!(values[1], SqlValue::Integer(50)); // limit
+    assert_eq!(values[2], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3064,10 +3064,10 @@ fn test_query_to_values_between() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 4);
-    assert_eq!(values[0], SQLValue::Integer(20));
-    assert_eq!(values[1], SQLValue::Integer(30));
-    assert_eq!(values[2], SQLValue::Integer(50)); // limit
-    assert_eq!(values[3], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Integer(20));
+    assert_eq!(values[1], SqlValue::Integer(30));
+    assert_eq!(values[2], SqlValue::Integer(50)); // limit
+    assert_eq!(values[3], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3082,9 +3082,9 @@ fn test_query_to_values_lesser() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 3);
-    assert_eq!(values[0], SQLValue::Integer(100));
-    assert_eq!(values[1], SQLValue::Integer(50)); // limit
-    assert_eq!(values[2], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Integer(100));
+    assert_eq!(values[1], SqlValue::Integer(50)); // limit
+    assert_eq!(values[2], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3099,9 +3099,9 @@ fn test_query_to_values_lesser_or_equal() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 3);
-    assert_eq!(values[0], SQLValue::Integer(100));
-    assert_eq!(values[1], SQLValue::Integer(50)); // limit
-    assert_eq!(values[2], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Integer(100));
+    assert_eq!(values[1], SqlValue::Integer(50)); // limit
+    assert_eq!(values[2], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3116,9 +3116,9 @@ fn test_query_to_values_greater() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 3);
-    assert_eq!(values[0], SQLValue::Integer(50));
-    assert_eq!(values[1], SQLValue::Integer(50)); // limit
-    assert_eq!(values[2], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Integer(50));
+    assert_eq!(values[1], SqlValue::Integer(50)); // limit
+    assert_eq!(values[2], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3133,9 +3133,9 @@ fn test_query_to_values_greater_or_equal() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 3);
-    assert_eq!(values[0], SQLValue::Integer(50));
-    assert_eq!(values[1], SQLValue::Integer(50)); // limit
-    assert_eq!(values[2], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Integer(50));
+    assert_eq!(values[1], SqlValue::Integer(50)); // limit
+    assert_eq!(values[2], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3162,12 +3162,12 @@ fn test_query_to_values_mixed_types() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 6);
-    assert_eq!(values[0], SQLValue::Text("%john%".to_string()));
-    assert_eq!(values[1], SQLValue::Integer(25));
-    assert_eq!(values[2], SQLValue::Real(100.5));
-    assert_eq!(values[3], SQLValue::Null);
-    assert_eq!(values[4], SQLValue::Integer(50)); // limit
-    assert_eq!(values[5], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Text("%john%".to_string()));
+    assert_eq!(values[1], SqlValue::Integer(25));
+    assert_eq!(values[2], SqlValue::Real(100.5));
+    assert_eq!(values[3], SqlValue::Null);
+    assert_eq!(values[4], SqlValue::Integer(50)); // limit
+    assert_eq!(values[5], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3204,20 +3204,20 @@ fn test_query_to_values_complex_numeric_types() {
 
     assert_eq!(values.len(), 11);
     // integers
-    assert_eq!(values[0], SQLValue::Integer(123));
-    assert_eq!(values[1], SQLValue::Integer(-456));
-    assert_eq!(values[2], SQLValue::Integer(0));
+    assert_eq!(values[0], SqlValue::Integer(123));
+    assert_eq!(values[1], SqlValue::Integer(-456));
+    assert_eq!(values[2], SqlValue::Integer(0));
     // reals
-    assert_eq!(values[3], SQLValue::Real(123.45));
-    assert_eq!(values[4], SQLValue::Real(-456.78));
-    assert_eq!(values[5], SQLValue::Real(0.0));
+    assert_eq!(values[3], SqlValue::Real(123.45));
+    assert_eq!(values[4], SqlValue::Real(-456.78));
+    assert_eq!(values[5], SqlValue::Real(0.0));
     // mixed
-    assert_eq!(values[6], SQLValue::Integer(123));
-    assert_eq!(values[7], SQLValue::Real(123.45));
-    assert_eq!(values[8], SQLValue::Text("text".to_string()));
+    assert_eq!(values[6], SqlValue::Integer(123));
+    assert_eq!(values[7], SqlValue::Real(123.45));
+    assert_eq!(values[8], SqlValue::Text("text".to_string()));
     // limit and offset
-    assert_eq!(values[9], SQLValue::Integer(50));
-    assert_eq!(values[10], SQLValue::Integer(0));
+    assert_eq!(values[9], SqlValue::Integer(50));
+    assert_eq!(values[10], SqlValue::Integer(0));
 }
 
 #[cfg(feature = "sql")]
@@ -3246,12 +3246,12 @@ fn test_query_to_values_edge_case_strings() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 6);
-    assert_eq!(values[0], SQLValue::Text("%hello%world%".to_string()));
-    assert_eq!(values[1], SQLValue::Text("%test_underscore%".to_string()));
-    assert_eq!(values[2], SQLValue::Text("测试%".to_string()));
-    assert_eq!(values[3], SQLValue::Text("héllo%".to_string()));
-    assert_eq!(values[4], SQLValue::Integer(50)); // limit
-    assert_eq!(values[5], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Text("%hello%world%".to_string()));
+    assert_eq!(values[1], SqlValue::Text("%test_underscore%".to_string()));
+    assert_eq!(values[2], SqlValue::Text("测试%".to_string()));
+    assert_eq!(values[3], SqlValue::Text("héllo%".to_string()));
+    assert_eq!(values[4], SqlValue::Integer(50)); // limit
+    assert_eq!(values[5], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3278,20 +3278,20 @@ fn test_query_to_values_numeric_edge_cases() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 10);
-    assert_eq!(values[0], SQLValue::Integer(0));
-    assert_eq!(values[1], SQLValue::Integer(0));
-    assert_eq!(values[2], SQLValue::Real(0.0));
-    assert_eq!(values[3], SQLValue::Real(-0.0));
-    assert_eq!(values[4], SQLValue::Real(1e10));
-    assert_eq!(values[5], SQLValue::Real(1.5e-5));
-    assert_eq!(values[6], SQLValue::Real(f64::INFINITY));
+    assert_eq!(values[0], SqlValue::Integer(0));
+    assert_eq!(values[1], SqlValue::Integer(0));
+    assert_eq!(values[2], SqlValue::Real(0.0));
+    assert_eq!(values[3], SqlValue::Real(-0.0));
+    assert_eq!(values[4], SqlValue::Real(1e10));
+    assert_eq!(values[5], SqlValue::Real(1.5e-5));
+    assert_eq!(values[6], SqlValue::Real(f64::INFINITY));
     // NaN doesn't equal NaN, so we need to check it's a Real with NaN
     match values[7] {
-        SQLValue::Real(nan) => assert!(nan.is_nan()),
+        SqlValue::Real(nan) => assert!(nan.is_nan()),
         _ => panic!("Expected Real(NaN), got {:?}", values[7]),
     }
-    assert_eq!(values[8], SQLValue::Integer(50)); // limit
-    assert_eq!(values[9], SQLValue::Integer(0)); // offset
+    assert_eq!(values[8], SqlValue::Integer(50)); // limit
+    assert_eq!(values[9], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3322,12 +3322,12 @@ fn test_query_to_values_large_numbers() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 6);
-    assert_eq!(values[0], SQLValue::Integer(9223372036854775807));
-    assert_eq!(values[1], SQLValue::Integer(-9223372036854775808));
-    assert_eq!(values[2], SQLValue::Real(1.7976931348623157e308));
-    assert_eq!(values[3], SQLValue::Real(-1.7976931348623157e308));
-    assert_eq!(values[4], SQLValue::Integer(50)); // limit
-    assert_eq!(values[5], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Integer(9223372036854775807));
+    assert_eq!(values[1], SqlValue::Integer(-9223372036854775808));
+    assert_eq!(values[2], SqlValue::Real(1.7976931348623157e308));
+    assert_eq!(values[3], SqlValue::Real(-1.7976931348623157e308));
+    assert_eq!(values[4], SqlValue::Integer(50)); // limit
+    assert_eq!(values[5], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3350,12 +3350,12 @@ fn test_query_to_values_null_variations() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 6);
-    assert_eq!(values[0], SQLValue::Null);
-    assert_eq!(values[1], SQLValue::Text("NULL".to_string()));
-    assert_eq!(values[2], SQLValue::Text("Null".to_string()));
-    assert_eq!(values[3], SQLValue::Text("nUlL".to_string()));
-    assert_eq!(values[4], SQLValue::Integer(50)); // limit
-    assert_eq!(values[5], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Null);
+    assert_eq!(values[1], SqlValue::Text("NULL".to_string()));
+    assert_eq!(values[2], SqlValue::Text("Null".to_string()));
+    assert_eq!(values[3], SqlValue::Text("nUlL".to_string()));
+    assert_eq!(values[4], SqlValue::Integer(50)); // limit
+    assert_eq!(values[5], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3377,11 +3377,11 @@ fn test_query_to_values_whitespace_handling() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 5);
-    assert_eq!(values[0], SQLValue::Text(" 123 ".to_string()));
-    assert_eq!(values[1], SQLValue::Text(" 123.45 ".to_string()));
-    assert_eq!(values[2], SQLValue::Text(" hello ".to_string()));
-    assert_eq!(values[3], SQLValue::Integer(50)); // limit
-    assert_eq!(values[4], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Text(" 123 ".to_string()));
+    assert_eq!(values[1], SqlValue::Text(" 123.45 ".to_string()));
+    assert_eq!(values[2], SqlValue::Text(" hello ".to_string()));
+    assert_eq!(values[3], SqlValue::Integer(50)); // limit
+    assert_eq!(values[4], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3397,8 +3397,8 @@ fn test_query_to_values_empty_parameters() {
 
     // Should only contain limit and offset
     assert_eq!(values.len(), 2);
-    assert_eq!(values[0], SQLValue::Integer(50)); // limit
-    assert_eq!(values[1], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Integer(50)); // limit
+    assert_eq!(values[1], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3417,9 +3417,9 @@ fn test_query_to_values_multiple_parameters_same_key() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 3);
-    assert_eq!(values[0], SQLValue::Text("jane%".to_string()));
-    assert_eq!(values[1], SQLValue::Integer(50)); // limit
-    assert_eq!(values[2], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Text("jane%".to_string()));
+    assert_eq!(values[1], SqlValue::Integer(50)); // limit
+    assert_eq!(values[2], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3442,12 +3442,12 @@ fn test_query_to_values_parameter_order_preservation() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 6);
-    assert_eq!(values[0], SQLValue::Integer(1));
-    assert_eq!(values[1], SQLValue::Text("%2%".to_string()));
-    assert_eq!(values[2], SQLValue::Integer(3));
-    assert_eq!(values[3], SQLValue::Integer(4));
-    assert_eq!(values[4], SQLValue::Integer(50)); // limit
-    assert_eq!(values[5], SQLValue::Integer(0)); // offset
+    assert_eq!(values[0], SqlValue::Integer(1));
+    assert_eq!(values[1], SqlValue::Text("%2%".to_string()));
+    assert_eq!(values[2], SqlValue::Integer(3));
+    assert_eq!(values[3], SqlValue::Integer(4));
+    assert_eq!(values[4], SqlValue::Integer(50)); // limit
+    assert_eq!(values[5], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3472,62 +3472,62 @@ fn test_query_to_values_with_custom_limit_offset_complex() {
     let values = query.to_values().unwrap();
 
     assert_eq!(values.len(), 5);
-    assert_eq!(values[0], SQLValue::Text("%john%".to_string()));
-    assert_eq!(values[1], SQLValue::Integer(20));
-    assert_eq!(values[2], SQLValue::Integer(30));
-    assert_eq!(values[3], SQLValue::Integer(100)); // custom limit
-    assert_eq!(values[4], SQLValue::Integer(25)); // custom offset
+    assert_eq!(values[0], SqlValue::Text("%john%".to_string()));
+    assert_eq!(values[1], SqlValue::Integer(20));
+    assert_eq!(values[2], SqlValue::Integer(30));
+    assert_eq!(values[3], SqlValue::Integer(100)); // custom limit
+    assert_eq!(values[4], SqlValue::Integer(25)); // custom offset
 }
 
 #[cfg(feature = "sql")]
 #[test]
 fn test_sql_value_enum_variants() {
     // Test all SQLValue enum variants
-    let null = SQLValue::Null;
-    let integer = SQLValue::Integer(42);
-    let real = SQLValue::Real(3.14);
-    let text = SQLValue::Text("hello".to_string());
-    let blob = SQLValue::Blob(vec![1, 2, 3, 4]);
+    let null = SqlValue::Null;
+    let integer = SqlValue::Integer(42);
+    let real = SqlValue::Real(3.14);
+    let text = SqlValue::Text("hello".to_string());
+    let blob = SqlValue::Blob(vec![1, 2, 3, 4]);
 
-    assert_eq!(null, SQLValue::Null);
-    assert_eq!(integer, SQLValue::Integer(42));
-    assert_eq!(real, SQLValue::Real(3.14));
-    assert_eq!(text, SQLValue::Text("hello".to_string()));
-    assert_eq!(blob, SQLValue::Blob(vec![1, 2, 3, 4]));
+    assert_eq!(null, SqlValue::Null);
+    assert_eq!(integer, SqlValue::Integer(42));
+    assert_eq!(real, SqlValue::Real(3.14));
+    assert_eq!(text, SqlValue::Text("hello".to_string()));
+    assert_eq!(blob, SqlValue::Blob(vec![1, 2, 3, 4]));
 }
 
 #[cfg(feature = "sql")]
 #[test]
 fn test_sql_value_enum_derived_traits() {
     // Test Clone
-    let original = SQLValue::Text("test".to_string());
+    let original = SqlValue::Text("test".to_string());
     let cloned = original.clone();
     assert_eq!(original, cloned);
 
     // Test Debug
-    let debug_str = format!("{:?}", SQLValue::Integer(42));
+    let debug_str = format!("{:?}", SqlValue::Integer(42));
     assert!(debug_str.contains("Integer"));
     assert!(debug_str.contains("42"));
 
     // Test PartialEq
-    assert_eq!(SQLValue::Null, SQLValue::Null);
-    assert_eq!(SQLValue::Integer(42), SQLValue::Integer(42));
-    assert_eq!(SQLValue::Real(3.14), SQLValue::Real(3.14));
+    assert_eq!(SqlValue::Null, SqlValue::Null);
+    assert_eq!(SqlValue::Integer(42), SqlValue::Integer(42));
+    assert_eq!(SqlValue::Real(3.14), SqlValue::Real(3.14));
     assert_eq!(
-        SQLValue::Text("hello".to_string()),
-        SQLValue::Text("hello".to_string())
+        SqlValue::Text("hello".to_string()),
+        SqlValue::Text("hello".to_string())
     );
-    assert_eq!(SQLValue::Blob(vec![1, 2, 3]), SQLValue::Blob(vec![1, 2, 3]));
+    assert_eq!(SqlValue::Blob(vec![1, 2, 3]), SqlValue::Blob(vec![1, 2, 3]));
 
     // Test inequality
-    assert_ne!(SQLValue::Null, SQLValue::Integer(0));
-    assert_ne!(SQLValue::Integer(42), SQLValue::Integer(43));
-    assert_ne!(SQLValue::Real(3.14), SQLValue::Real(3.15));
+    assert_ne!(SqlValue::Null, SqlValue::Integer(0));
+    assert_ne!(SqlValue::Integer(42), SqlValue::Integer(43));
+    assert_ne!(SqlValue::Real(3.14), SqlValue::Real(3.15));
     assert_ne!(
-        SQLValue::Text("hello".to_string()),
-        SQLValue::Text("world".to_string())
+        SqlValue::Text("hello".to_string()),
+        SqlValue::Text("world".to_string())
     );
-    assert_ne!(SQLValue::Blob(vec![1, 2, 3]), SQLValue::Blob(vec![1, 2, 4]));
+    assert_ne!(SqlValue::Blob(vec![1, 2, 3]), SqlValue::Blob(vec![1, 2, 4]));
 }
 
 #[cfg(feature = "sql")]
@@ -3546,8 +3546,8 @@ fn test_query_to_parameter_values() {
     let values = query.to_parameter_values().unwrap();
 
     assert_eq!(values.len(), 2);
-    assert_eq!(values[0], SQLValue::Text("%john%".to_string()));
-    assert_eq!(values[1], SQLValue::Integer(25));
+    assert_eq!(values[0], SqlValue::Text("%john%".to_string()));
+    assert_eq!(values[1], SqlValue::Integer(25));
 }
 
 #[cfg(feature = "sql")]
@@ -3569,8 +3569,8 @@ fn test_query_to_pagination_values() {
     let values = query.to_pagination_values();
 
     assert_eq!(values.len(), 2);
-    assert_eq!(values[0], SQLValue::Integer(100));
-    assert_eq!(values[1], SQLValue::Integer(25));
+    assert_eq!(values[0], SqlValue::Integer(100));
+    assert_eq!(values[1], SqlValue::Integer(25));
 }
 
 #[cfg(feature = "sql")]
@@ -3653,13 +3653,13 @@ fn test_query_to_values_ignores_empty_values() {
 
     // Should only contain non-empty values: john, jane, bob, 25, 30 + limit + offset = 7
     assert_eq!(values.len(), 7);
-    assert_eq!(values[0], SQLValue::Text("%john%".to_string()));
-    assert_eq!(values[1], SQLValue::Text("%jane%".to_string()));
-    assert_eq!(values[2], SQLValue::Text("%bob%".to_string()));
-    assert_eq!(values[3], SQLValue::Integer(25));
-    assert_eq!(values[4], SQLValue::Integer(30));
-    assert_eq!(values[5], SQLValue::Integer(50)); // limit
-    assert_eq!(values[6], SQLValue::Integer(0));  // offset
+    assert_eq!(values[0], SqlValue::Text("%john%".to_string()));
+    assert_eq!(values[1], SqlValue::Text("%jane%".to_string()));
+    assert_eq!(values[2], SqlValue::Text("%bob%".to_string()));
+    assert_eq!(values[3], SqlValue::Integer(25));
+    assert_eq!(values[4], SqlValue::Integer(30));
+    assert_eq!(values[5], SqlValue::Integer(50)); // limit
+    assert_eq!(values[6], SqlValue::Integer(0));  // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3683,8 +3683,8 @@ fn test_query_to_parameter_values_ignores_empty_values() {
 
     // Should only contain non-empty values: john, jane
     assert_eq!(values.len(), 2);
-    assert_eq!(values[0], SQLValue::Text("%john%".to_string()));
-    assert_eq!(values[1], SQLValue::Text("%jane%".to_string()));
+    assert_eq!(values[0], SqlValue::Text("%john%".to_string()));
+    assert_eq!(values[1], SqlValue::Text("%jane%".to_string()));
 }
 
 #[cfg(feature = "sql")]
@@ -3741,8 +3741,8 @@ fn test_query_to_values_all_empty_values() {
 
     // Should only contain limit and offset (no parameter values)
     assert_eq!(values.len(), 2);
-    assert_eq!(values[0], SQLValue::Integer(50)); // limit
-    assert_eq!(values[1], SQLValue::Integer(0));  // offset
+    assert_eq!(values[0], SqlValue::Integer(50)); // limit
+    assert_eq!(values[1], SqlValue::Integer(0));  // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3766,8 +3766,8 @@ fn test_query_to_values_mixed_empty_and_null() {
 
     // Should contain: null, active + limit + offset = 4 total
     assert_eq!(values.len(), 4);
-    assert_eq!(values[0], SQLValue::Null);
-    assert_eq!(values[1], SQLValue::Text("active".to_string()));
-    assert_eq!(values[2], SQLValue::Integer(50)); // limit
-    assert_eq!(values[3], SQLValue::Integer(0));  // offset
+    assert_eq!(values[0], SqlValue::Null);
+    assert_eq!(values[1], SqlValue::Text("active".to_string()));
+    assert_eq!(values[2], SqlValue::Integer(50)); // limit
+    assert_eq!(values[3], SqlValue::Integer(0));  // offset
 }

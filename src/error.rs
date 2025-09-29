@@ -21,5 +21,5 @@ pub enum Error {
     InvalidSearchParameters(String),
 
     #[error("Error: Invalid SQL Value '{0}'")]
-    InvalidSQLValue(String),
+    InvalidSqlValue(String),
 }

@@ -441,7 +441,7 @@ impl FromStr for Parameters {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum SQLValue {
+pub enum SqlValue {
     /// The value is a `NULL` value.
     Null,
     /// The value is a signed integer.
@@ -779,13 +779,13 @@ impl Query {
     }
 
     #[cfg(feature = "sql")]
-    pub fn to_values(&self) -> Result<Vec<SQLValue>> {
+    pub fn to_values(&self) -> Result<Vec<SqlValue>> {
         let mut sql_values = Vec::new();
 
         for k in self.parameters.inner().keys() {
             let (param_similarity, param_values) =
                 self.parameters.inner().get(k).ok_or_else(|| {
-                    Error::InvalidSQLValue(format!("Parameter '{}' not found", k))
+                    Error::InvalidSqlValue(format!("Parameter '{}' not found", k))
                 })?;
 
             for cur_val in param_values {
@@ -795,22 +795,22 @@ impl Query {
                 }
 
                 if cur_val == "null" {
-                    sql_values.push(SQLValue::Null);
+                    sql_values.push(SqlValue::Null);
                     continue;
                 }
 
                 let sql_value = match *param_similarity {
-                    Similarity::Contains => SQLValue::Text(format!("%{}%", cur_val)),
-                    Similarity::StartsWith => SQLValue::Text(format!("{}%", cur_val)),
-                    Similarity::EndsWith => SQLValue::Text(format!("%{}", cur_val)),
+                    Similarity::Contains => SqlValue::Text(format!("%{}%", cur_val)),
+                    Similarity::StartsWith => SqlValue::Text(format!("{}%", cur_val)),
+                    Similarity::EndsWith => SqlValue::Text(format!("%{}", cur_val)),
                     _ => {
                         // Try to parse as integer first, then float, then text
                         if let Ok(i) = cur_val.parse::<i64>() {
-                            SQLValue::Integer(i)
+                            SqlValue::Integer(i)
                         } else if let Ok(f) = cur_val.parse::<f64>() {
-                            SQLValue::Real(f)
+                            SqlValue::Real(f)
                         } else {
-                            SQLValue::Text(cur_val.clone())
+                            SqlValue::Text(cur_val.clone())
                         }
                     }
                 };
@@ -820,21 +820,21 @@ impl Query {
         }
 
         // Add limit and offset as the last two parameters
-        sql_values.push(SQLValue::Integer(self.limit as i64));
-        sql_values.push(SQLValue::Integer(self.offset as i64));
+        sql_values.push(SqlValue::Integer(self.limit as i64));
+        sql_values.push(SqlValue::Integer(self.offset as i64));
 
         Ok(sql_values)
     }
 
     #[cfg(feature = "sql")]
     /// Get SQL values for parameters only (without limit and offset)
-    pub fn to_parameter_values(&self) -> Result<Vec<SQLValue>> {
+    pub fn to_parameter_values(&self) -> Result<Vec<SqlValue>> {
         let mut sql_values = Vec::new();
 
         for k in self.parameters.inner().keys() {
             let (param_similarity, param_values) =
                 self.parameters.inner().get(k).ok_or_else(|| {
-                    Error::InvalidSQLValue(format!("Parameter '{}' not found", k))
+                    Error::InvalidSqlValue(format!("Parameter '{}' not found", k))
                 })?;
 
             for cur_val in param_values {
@@ -844,22 +844,22 @@ impl Query {
                 }
 
                 if cur_val == "null" {
-                    sql_values.push(SQLValue::Null);
+                    sql_values.push(SqlValue::Null);
                     continue;
                 }
 
                 let sql_value = match *param_similarity {
-                    Similarity::Contains => SQLValue::Text(format!("%{}%", cur_val)),
-                    Similarity::StartsWith => SQLValue::Text(format!("{}%", cur_val)),
-                    Similarity::EndsWith => SQLValue::Text(format!("%{}", cur_val)),
+                    Similarity::Contains => SqlValue::Text(format!("%{}%", cur_val)),
+                    Similarity::StartsWith => SqlValue::Text(format!("{}%", cur_val)),
+                    Similarity::EndsWith => SqlValue::Text(format!("%{}", cur_val)),
                     _ => {
                         // Try to parse as integer first, then float, then text
                         if let Ok(i) = cur_val.parse::<i64>() {
-                            SQLValue::Integer(i)
+                            SqlValue::Integer(i)
                         } else if let Ok(f) = cur_val.parse::<f64>() {
-                            SQLValue::Real(f)
+                            SqlValue::Real(f)
                         } else {
-                            SQLValue::Text(cur_val.clone())
+                            SqlValue::Text(cur_val.clone())
                         }
                     }
                 };
@@ -873,10 +873,10 @@ impl Query {
 
     #[cfg(feature = "sql")]
     /// Get SQL values for pagination (limit and offset only)
-    pub fn to_pagination_values(&self) -> Vec<SQLValue> {
+    pub fn to_pagination_values(&self) -> Vec<SqlValue> {
         vec![
-            SQLValue::Integer(self.limit as i64),
-            SQLValue::Integer(self.offset as i64),
+            SqlValue::Integer(self.limit as i64),
+            SqlValue::Integer(self.offset as i64),
         ]
     }
 
