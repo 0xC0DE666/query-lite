@@ -799,37 +799,103 @@ impl Query {
         let mut sql_values = Vec::new();
 
         for k in self.parameters.inner().keys() {
-            let (param_similarity, param_values) = self.parameters.inner().get(k).unwrap();
+            let (param_similarity, param_values) =
+                self.parameters.inner().get(k).ok_or_else(|| {
+                    Error::InvalidSQLValue(format!("Parameter '{}' not found", k))
+                })?;
+
             for cur_val in param_values {
                 if cur_val == "null" {
                     sql_values.push(SQLValue::Null);
                     continue;
                 }
-                match *param_similarity {
-                    Similarity::Contains => {
-                        sql_values.push(SQLValue::Text(format!("%{}%", cur_val.to_string())));
-                    }
-                    Similarity::StartsWith => {
-                        sql_values.push(SQLValue::Text(format!("{}%", cur_val.to_string())));
-                    }
-                    Similarity::EndsWith => {
-                        sql_values.push(SQLValue::Text(format!("%{}", cur_val.to_string())));
-                    }
+
+                let sql_value = match *param_similarity {
+                    Similarity::Contains => SQLValue::Text(format!("%{}%", cur_val)),
+                    Similarity::StartsWith => SQLValue::Text(format!("{}%", cur_val)),
+                    Similarity::EndsWith => SQLValue::Text(format!("%{}", cur_val)),
                     _ => {
+                        // Try to parse as integer first, then float, then text
                         if let Ok(i) = cur_val.parse::<i64>() {
-                            sql_values.push(SQLValue::Integer(i))
+                            SQLValue::Integer(i)
                         } else if let Ok(f) = cur_val.parse::<f64>() {
-                            sql_values.push(SQLValue::Real(f));
+                            SQLValue::Real(f)
                         } else {
-                            sql_values.push(SQLValue::Text(cur_val.to_string()));
+                            SQLValue::Text(cur_val.clone())
                         }
                     }
                 };
+
+                sql_values.push(sql_value);
             }
         }
+
+        // Add limit and offset as the last two parameters
         sql_values.push(SQLValue::Integer(self.limit as i64));
         sql_values.push(SQLValue::Integer(self.offset as i64));
 
         Ok(sql_values)
+    }
+
+    #[cfg(feature = "sql")]
+    /// Get SQL values for parameters only (without limit and offset)
+    pub fn to_parameter_values(&self) -> Result<Vec<SQLValue>> {
+        let mut sql_values = Vec::new();
+
+        for k in self.parameters.inner().keys() {
+            let (param_similarity, param_values) =
+                self.parameters.inner().get(k).ok_or_else(|| {
+                    Error::InvalidSQLValue(format!("Parameter '{}' not found", k))
+                })?;
+
+            for cur_val in param_values {
+                if cur_val == "null" {
+                    sql_values.push(SQLValue::Null);
+                    continue;
+                }
+
+                let sql_value = match *param_similarity {
+                    Similarity::Contains => SQLValue::Text(format!("%{}%", cur_val)),
+                    Similarity::StartsWith => SQLValue::Text(format!("{}%", cur_val)),
+                    Similarity::EndsWith => SQLValue::Text(format!("%{}", cur_val)),
+                    _ => {
+                        // Try to parse as integer first, then float, then text
+                        if let Ok(i) = cur_val.parse::<i64>() {
+                            SQLValue::Integer(i)
+                        } else if let Ok(f) = cur_val.parse::<f64>() {
+                            SQLValue::Real(f)
+                        } else {
+                            SQLValue::Text(cur_val.clone())
+                        }
+                    }
+                };
+
+                sql_values.push(sql_value);
+            }
+        }
+
+        Ok(sql_values)
+    }
+
+    #[cfg(feature = "sql")]
+    /// Get SQL values for pagination (limit and offset only)
+    pub fn to_pagination_values(&self) -> Vec<SQLValue> {
+        vec![
+            SQLValue::Integer(self.limit as i64),
+            SQLValue::Integer(self.offset as i64),
+        ]
+    }
+
+    #[cfg(feature = "sql")]
+    /// Get the total number of SQL parameter values (parameters + pagination)
+    pub fn total_parameters(&self) -> usize {
+        let parameter_count: usize = self
+            .parameters
+            .inner()
+            .values()
+            .map(|(_, values)| values.len())
+            .sum();
+
+        parameter_count + 2 // +2 for limit and offset
     }
 }

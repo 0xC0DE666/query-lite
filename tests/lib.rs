@@ -3530,3 +3530,93 @@ fn test_sql_value_enum_derived_traits() {
     );
     assert_ne!(SQLValue::Blob(vec![1, 2, 3]), SQLValue::Blob(vec![1, 2, 4]));
 }
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_parameter_values() {
+    let mut query = Query::new();
+    query.parameters.0.insert(
+        "name".to_string(),
+        (Similarity::Contains, vec!["john".to_string()]),
+    );
+    query.parameters.0.insert(
+        "age".to_string(),
+        (Similarity::Equals, vec!["25".to_string()]),
+    );
+
+    let values = query.to_parameter_values().unwrap();
+
+    assert_eq!(values.len(), 2);
+    assert_eq!(values[0], SQLValue::Text("%john%".to_string()));
+    assert_eq!(values[1], SQLValue::Integer(25));
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_parameter_values_empty() {
+    let query = Query::new();
+    let values = query.to_parameter_values().unwrap();
+
+    assert_eq!(values.len(), 0);
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_pagination_values() {
+    let mut query = Query::new();
+    query.limit = 100;
+    query.offset = 25;
+
+    let values = query.to_pagination_values();
+
+    assert_eq!(values.len(), 2);
+    assert_eq!(values[0], SQLValue::Integer(100));
+    assert_eq!(values[1], SQLValue::Integer(25));
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_total_parameters() {
+    let mut query = Query::new();
+    query.parameters.0.insert(
+        "name".to_string(),
+        (
+            Similarity::Contains,
+            vec!["john".to_string(), "jane".to_string()],
+        ),
+    );
+    query.parameters.0.insert(
+        "age".to_string(),
+        (Similarity::Equals, vec!["25".to_string()]),
+    );
+
+    let count = query.total_parameters();
+
+    // 2 name values + 1 age value + 2 pagination = 5 total
+    assert_eq!(count, 5);
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_total_parameters_empty() {
+    let query = Query::new();
+    let count = query.total_parameters();
+
+    // Only pagination values
+    assert_eq!(count, 2);
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_total_parameters_with_empty_parameters() {
+    let mut query = Query::new();
+    query
+        .parameters
+        .0
+        .insert("empty".to_string(), (Similarity::Equals, vec![]));
+
+    let count = query.total_parameters();
+
+    // No parameter values + 2 pagination = 2 total
+    assert_eq!(count, 2);
+}
