@@ -551,16 +551,12 @@ impl Query {
                 let trimmed_key = key.trim();
                 let trimmed_value = value.trim();
 
-                if trimmed_key.is_empty() {
+                if trimmed_key.is_empty() || trimmed_value.is_empty() {
                     continue;
                 }
 
                 match trimmed_key {
                     Parameters::ORDER => {
-                        if trimmed_value.is_empty() {
-                            continue;
-                        }
-
                         // Check if the value looks like a sort field format (contains colon)
                         if !trimmed_value.contains(COLON) {
                             // Fail on clearly invalid formats (like "invalid")
@@ -573,24 +569,12 @@ impl Query {
                         // Skip malformed sort fields (like ":desc")
                     }
                     Parameters::LIMIT => {
-                        if trimmed_value.is_empty() {
-                            continue;
-                        }
-
                         query.limit = trimmed_value.parse().unwrap_or(Parameters::DEFAULT_LIMIT);
                     }
                     Parameters::OFFSET => {
-                        if trimmed_value.is_empty() {
-                            continue;
-                        }
-
                         query.offset = trimmed_value.parse().unwrap_or(Parameters::DEFAULT_OFFSET);
                     }
                     _k => {
-                        if trimmed_value.is_empty() {
-                            continue;
-                        }
-
                         // Check if this is a similarity-based parameter (contains colon)
                         if trimmed_value.contains(COLON) {
                             // Parse as similarity-based parameter
@@ -904,9 +888,7 @@ impl Query {
             .parameters
             .inner()
             .values()
-            .map(|(_, values)| {
-                values.iter().filter(|v| !v.trim().is_empty()).count()
-            })
+            .map(|(_, values)| values.iter().filter(|v| !v.trim().is_empty()).count())
             .sum();
 
         parameter_count + 2 // +2 for limit and offset
