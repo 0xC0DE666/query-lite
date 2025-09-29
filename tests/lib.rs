@@ -3245,14 +3245,13 @@ fn test_query_to_values_edge_case_strings() {
 
     let values = query.to_values().unwrap();
 
-    assert_eq!(values.len(), 7);
+    assert_eq!(values.len(), 6);
     assert_eq!(values[0], SQLValue::Text("%hello%world%".to_string()));
     assert_eq!(values[1], SQLValue::Text("%test_underscore%".to_string()));
     assert_eq!(values[2], SQLValue::Text("测试%".to_string()));
     assert_eq!(values[3], SQLValue::Text("héllo%".to_string()));
-    assert_eq!(values[4], SQLValue::Text("".to_string()));
-    assert_eq!(values[5], SQLValue::Integer(50)); // limit
-    assert_eq!(values[6], SQLValue::Integer(0)); // offset
+    assert_eq!(values[4], SQLValue::Integer(50)); // limit
+    assert_eq!(values[5], SQLValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3619,4 +3618,156 @@ fn test_query_total_parameters_with_empty_parameters() {
 
     // No parameter values + 2 pagination = 2 total
     assert_eq!(count, 2);
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_values_ignores_empty_values() {
+    let mut query = Query::new();
+    query.parameters.0.insert(
+        "name".to_string(),
+        (
+            Similarity::Contains,
+            vec![
+                "john".to_string(),
+                "".to_string(),        // empty string
+                "jane".to_string(),
+                "   ".to_string(),     // whitespace only
+                "bob".to_string(),
+            ],
+        ),
+    );
+    query.parameters.0.insert(
+        "age".to_string(),
+        (
+            Similarity::Equals,
+            vec![
+                "25".to_string(),
+                "".to_string(),        // empty string
+                "30".to_string(),
+            ],
+        ),
+    );
+
+    let values = query.to_values().unwrap();
+
+    // Should only contain non-empty values: john, jane, bob, 25, 30 + limit + offset = 7
+    assert_eq!(values.len(), 7);
+    assert_eq!(values[0], SQLValue::Text("%john%".to_string()));
+    assert_eq!(values[1], SQLValue::Text("%jane%".to_string()));
+    assert_eq!(values[2], SQLValue::Text("%bob%".to_string()));
+    assert_eq!(values[3], SQLValue::Integer(25));
+    assert_eq!(values[4], SQLValue::Integer(30));
+    assert_eq!(values[5], SQLValue::Integer(50)); // limit
+    assert_eq!(values[6], SQLValue::Integer(0));  // offset
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_parameter_values_ignores_empty_values() {
+    let mut query = Query::new();
+    query.parameters.0.insert(
+        "name".to_string(),
+        (
+            Similarity::Contains,
+            vec![
+                "john".to_string(),
+                "".to_string(),        // empty string
+                "jane".to_string(),
+                "   ".to_string(),     // whitespace only
+            ],
+        ),
+    );
+
+    let values = query.to_parameter_values().unwrap();
+
+    // Should only contain non-empty values: john, jane
+    assert_eq!(values.len(), 2);
+    assert_eq!(values[0], SQLValue::Text("%john%".to_string()));
+    assert_eq!(values[1], SQLValue::Text("%jane%".to_string()));
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_total_parameters_ignores_empty_values() {
+    let mut query = Query::new();
+    query.parameters.0.insert(
+        "name".to_string(),
+        (
+            Similarity::Contains,
+            vec![
+                "john".to_string(),
+                "".to_string(),        // empty string
+                "jane".to_string(),
+                "   ".to_string(),     // whitespace only
+            ],
+        ),
+    );
+    query.parameters.0.insert(
+        "age".to_string(),
+        (
+            Similarity::Equals,
+            vec![
+                "25".to_string(),
+                "".to_string(),        // empty string
+            ],
+        ),
+    );
+
+    let count = query.total_parameters();
+
+    // 2 non-empty name values + 1 non-empty age value + 2 pagination = 5 total
+    assert_eq!(count, 5);
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_values_all_empty_values() {
+    let mut query = Query::new();
+    query.parameters.0.insert(
+        "name".to_string(),
+        (
+            Similarity::Contains,
+            vec![
+                "".to_string(),        // empty string
+                "   ".to_string(),     // whitespace only
+                "\t".to_string(),      // tab only
+                "\n".to_string(),      // newline only
+            ],
+        ),
+    );
+
+    let values = query.to_values().unwrap();
+
+    // Should only contain limit and offset (no parameter values)
+    assert_eq!(values.len(), 2);
+    assert_eq!(values[0], SQLValue::Integer(50)); // limit
+    assert_eq!(values[1], SQLValue::Integer(0));  // offset
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_query_to_values_mixed_empty_and_null() {
+    let mut query = Query::new();
+    query.parameters.0.insert(
+        "status".to_string(),
+        (
+            Similarity::Equals,
+            vec![
+                "".to_string(),        // empty string (should be ignored)
+                "null".to_string(),    // null string (should be converted to SQLValue::Null)
+                "   ".to_string(),     // whitespace only (should be ignored)
+                "active".to_string(),  // normal value
+            ],
+        ),
+    );
+
+    let values = query.to_values().unwrap();
+
+    // Should contain: null, active + limit + offset = 4 total
+    assert_eq!(values.len(), 4);
+    assert_eq!(values[0], SQLValue::Null);
+    assert_eq!(values[1], SQLValue::Text("active".to_string()));
+    assert_eq!(values[2], SQLValue::Integer(50)); // limit
+    assert_eq!(values[3], SQLValue::Integer(0));  // offset
 }

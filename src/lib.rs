@@ -805,6 +805,11 @@ impl Query {
                 })?;
 
             for cur_val in param_values {
+                // Skip empty values
+                if cur_val.trim().is_empty() {
+                    continue;
+                }
+
                 if cur_val == "null" {
                     sql_values.push(SQLValue::Null);
                     continue;
@@ -849,6 +854,11 @@ impl Query {
                 })?;
 
             for cur_val in param_values {
+                // Skip empty values
+                if cur_val.trim().is_empty() {
+                    continue;
+                }
+
                 if cur_val == "null" {
                     sql_values.push(SQLValue::Null);
                     continue;
@@ -888,12 +898,15 @@ impl Query {
 
     #[cfg(feature = "sql")]
     /// Get the total number of SQL parameter values (parameters + pagination)
+    /// This counts only non-empty values, matching the behavior of to_values()
     pub fn total_parameters(&self) -> usize {
         let parameter_count: usize = self
             .parameters
             .inner()
             .values()
-            .map(|(_, values)| values.len())
+            .map(|(_, values)| {
+                values.iter().filter(|v| !v.trim().is_empty()).count()
+            })
             .sum();
 
         parameter_count + 2 // +2 for limit and offset
