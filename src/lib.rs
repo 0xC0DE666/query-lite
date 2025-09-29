@@ -441,6 +441,20 @@ impl FromStr for Parameters {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub enum SQLValue {
+    /// The value is a `NULL` value.
+    Null,
+    /// The value is a signed integer.
+    Integer(i64),
+    /// The value is a floating point number.
+    Real(f64),
+    /// The value is a text string.
+    Text(String),
+    /// The value is a blob of data
+    Blob(Vec<u8>),
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct Query {
     pub parameters: Parameters,
     pub sort_fields: SortFields,
@@ -778,5 +792,44 @@ impl Query {
         }
 
         order_parts.join(", ")
+    }
+
+    #[cfg(feature = "sql")]
+    pub fn to_values(&self) -> Result<Vec<SQLValue>> {
+        let mut sql_values = Vec::new();
+
+        for k in self.parameters.inner().keys() {
+            let (param_similarity, param_values) = self.parameters.inner().get(k).unwrap();
+            for cur_val in param_values {
+                if cur_val == "null" {
+                    sql_values.push(SQLValue::Null);
+                    continue;
+                }
+                match *param_similarity {
+                    Similarity::Contains => {
+                        sql_values.push(SQLValue::Text(format!("%{}%", cur_val.to_string())));
+                    }
+                    Similarity::StartsWith => {
+                        sql_values.push(SQLValue::Text(format!("{}%", cur_val.to_string())));
+                    }
+                    Similarity::EndsWith => {
+                        sql_values.push(SQLValue::Text(format!("%{}", cur_val.to_string())));
+                    }
+                    _ => {
+                        if let Ok(i) = cur_val.parse::<i64>() {
+                            sql_values.push(SQLValue::Integer(i))
+                        } else if let Ok(f) = cur_val.parse::<f64>() {
+                            sql_values.push(SQLValue::Real(f));
+                        } else {
+                            sql_values.push(SQLValue::Text(cur_val.to_string()));
+                        }
+                    }
+                };
+            }
+        }
+        sql_values.push(SQLValue::Integer(self.limit as i64));
+        sql_values.push(SQLValue::Integer(self.offset as i64));
+
+        Ok(sql_values)
     }
 }
