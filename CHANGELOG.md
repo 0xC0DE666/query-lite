@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2025-10-01
+
+### Added
+- **Code Refactoring**: Eliminated code duplication in SQL value methods
+  - `Query::to_values()` now internally uses `parameter_values()` and `pagination_values()`
+  - Reduced code duplication from 40+ lines to 3 lines
+  - Improved maintainability through composition over duplication
+
+### Technical Details
+- **DRY Principle**: Eliminated code duplication through method composition
+- **Single Responsibility**: Each method now has a clear, focused purpose
+- **Maintainability**: Changes to parameter value logic only need to be made in one place
+- **Performance**: No performance impact, same functionality with cleaner code
+
 ## [0.6.0] - 2025-10-01
 
 ### Changed
