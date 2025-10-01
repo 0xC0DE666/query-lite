@@ -22,10 +22,10 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-query-x = "0.3.0"
+query-x = "0.4.0"
 
 # Optional: Enable SQL generation (enabled by default)
-# query-x = { version = "0.3.0", default-features = false }
+# query-x = { version = "0.4.0", default-features = false }
 ```
 
 ## Basic Usage
@@ -242,10 +242,49 @@ let query = Query::from_http("name=contains:john&age=between:20,30&order=date_cr
 let sql = query.to_sql();
 // Result: "WHERE name LIKE ? AND age BETWEEN ? AND ? ORDER BY date_created DESC LIMIT ? OFFSET ?"
 
+// Get parameter values separately for more control
+let param_values = query.to_parameter_values()?;
+let pagination_values = query.to_pagination_values();
+let total_params = query.total_parameters();
+
 // Use with your database driver
 // let stmt = conn.prepare(&format!("SELECT * FROM users {}", sql))?;
-// let rows = stmt.query(["%john%", "20", "30", "10", "0"])?;
+// let rows = stmt.query(param_values)?;
 ```
+
+### Advanced SQL Value Management
+
+Version 0.4.0 introduces granular control over SQL parameter values:
+
+```rust
+use query_x::Query;
+
+let query = Query::from_http("name=contains:john&age=between:20,30&price=greater:100".to_string())?;
+
+// Get only parameter values (without pagination)
+let param_values = query.to_parameter_values()?;
+// Result: [SqlValue::Text("%john%"), SqlValue::Text("20"), SqlValue::Text("30"), SqlValue::Text("100")]
+
+// Get only pagination values
+let pagination_values = query.to_pagination_values();
+// Result: [SqlValue::Integer(50), SqlValue::Integer(0)]
+
+// Get total parameter count
+let total_params = query.total_parameters();
+// Result: 6 (4 parameter values + 2 pagination values)
+
+// Combine for complete SQL execution
+let all_values = [param_values, pagination_values].concat();
+// Use with your database driver
+// let stmt = conn.prepare(&format!("SELECT * FROM users {}", query.to_sql()))?;
+// let rows = stmt.query(all_values)?;
+```
+
+This granular approach allows for:
+- **Separate Parameter Handling**: Process parameter values and pagination values independently
+- **Custom Value Processing**: Apply different logic to parameters vs pagination
+- **Performance Optimization**: Avoid unnecessary value processing when only certain parts are needed
+- **Debugging**: Easily inspect parameter counts and values for troubleshooting
 
 ### SQL Examples
 
@@ -377,13 +416,13 @@ The library supports feature flags for optional functionality:
 ```toml
 [dependencies]
 # Default: includes SQL generation
-query-x = "0.3.0"
+query-x = "0.4.0"
 
 # Without SQL generation (smaller binary)
-query-x = { version = "0.3.0", default-features = false }
+query-x = { version = "0.4.0", default-features = false }
 
 # With specific features
-query-x = { version = "0.3.0", features = ["sql"] }
+query-x = { version = "0.4.0", features = ["sql"] }
 ```
 
 ## API Reference
@@ -404,6 +443,10 @@ query-x = { version = "0.3.0", features = ["sql"] }
 - `Query::from_http()`: Parse HTTP query string into Query struct
 - `Query::to_http()`: Convert Query struct back to HTTP query string
 - `Query::to_sql()`: Generate SQL query with parameter placeholders (feature-gated)
+- `Query::to_values()`: Get all SQL values (parameters + pagination) (feature-gated)
+- `Query::to_parameter_values()`: Get SQL values for parameters only (feature-gated)
+- `Query::to_pagination_values()`: Get SQL values for pagination only (feature-gated)
+- `Query::total_parameters()`: Get total number of SQL parameter values (feature-gated)
 - `Query::init()`: Create Query with custom parameters, sort fields, limit, and offset
 
 #### Parameters Methods
