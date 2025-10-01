@@ -1,8 +1,8 @@
-# query-x
+# query-lite
 
-[![Crates.io](https://img.shields.io/crates/v/query-x.svg)](https://crates.io/crates/query-x)
-[![Documentation](https://docs.rs/query-x/badge.svg)](https://docs.rs/query-x)
-[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/0xC0DE666/query-x#license)
+[![Crates.io](https://img.shields.io/crates/v/query-lite.svg)](https://crates.io/crates/query-lite)
+[![Documentation](https://docs.rs/query-lite/badge.svg)](https://docs.rs/query-lite)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/0xC0DE666/query-lite#license)
 
 A powerful Rust library for parsing HTTP query parameters into structured queries with support for both traditional and advanced similarity-based filtering, plus optional SQL generation.
 
@@ -22,10 +22,10 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-query-x = "0.4.0"
+query-lite = "0.4.0"
 
 # Optional: Enable SQL generation (enabled by default)
-# query-x = { version = "0.4.0", default-features = false }
+# query-lite = { version = "0.4.0", default-features = false }
 ```
 
 ## Basic Usage
@@ -33,14 +33,14 @@ query-x = "0.4.0"
 ### Traditional Query Parameters
 
 ```rust
-use query_x::Query;
+use query_lite::Query;
 
 // Parse traditional HTTP query parameters
 let query = Query::from_http("name=john&age=25&city=london".to_string())?;
 
 // Access parameters
 let name_param = query.parameters.0.get("name").unwrap();
-assert_eq!(name_param.0, query_x::Similarity::Equals);
+assert_eq!(name_param.0, query_lite::Similarity::Equals);
 assert_eq!(name_param.1, vec!["john"]);
 
 // Convert back to HTTP
@@ -51,37 +51,37 @@ let http_string = query.to_http();
 ### Advanced Similarity-based Parameters
 
 ```rust
-use query_x::Query;
+use query_lite::Query;
 
 // Parse advanced query parameters
 let query = Query::from_http("name=contains:john&age=between:20,30&price=greater:100".to_string())?;
 
 // Access parameters with different similarity types
 let name_param = query.parameters.0.get("name").unwrap();
-assert_eq!(name_param.0, query_x::Similarity::Contains);
+assert_eq!(name_param.0, query_lite::Similarity::Contains);
 assert_eq!(name_param.1, vec!["john"]);
 
 let age_param = query.parameters.0.get("age").unwrap();
-assert_eq!(age_param.0, query_x::Similarity::Between);
+assert_eq!(age_param.0, query_lite::Similarity::Between);
 assert_eq!(age_param.1, vec!["20", "30"]);
 ```
 
 ### Mixed Traditional and Advanced
 
 ```rust
-use query_x::Query;
+use query_lite::Query;
 
 // Mix traditional and advanced parameters
 let query = Query::from_http("name=john&name=jane&age=contains:25&status=active".to_string())?;
 
 // Traditional parameters (repeated values)
 let name_param = query.parameters.0.get("name").unwrap();
-assert_eq!(name_param.0, query_x::Similarity::Equals);
+assert_eq!(name_param.0, query_lite::Similarity::Equals);
 assert_eq!(name_param.1, vec!["john", "jane"]);
 
 // Advanced parameters
 let age_param = query.parameters.0.get("age").unwrap();
-assert_eq!(age_param.0, query_x::Similarity::Contains);
+assert_eq!(age_param.0, query_lite::Similarity::Contains);
 assert_eq!(age_param.1, vec!["25"]);
 ```
 
@@ -90,7 +90,7 @@ assert_eq!(age_param.1, vec!["25"]);
 You can also build queries programmatically using the builder pattern:
 
 ```rust
-use query_x::{Query, Parameters, SortFields};
+use query_lite::{Query, Parameters, SortFields};
 
 // Build parameters using the builder pattern
 let mut parameters = Parameters::new();
@@ -121,7 +121,7 @@ The library provides multiple ways to access parameter data for different use ca
 ### Semantic Access (Recommended)
 
 ```rust
-use query_x::Query;
+use query_lite::Query;
 
 let query = Query::from_http("name=contains:john&age=between:20,30".to_string())?;
 
@@ -140,7 +140,7 @@ assert_eq!(age_param.values(), &vec!["20".to_string(), "30".to_string()]);
 For advanced operations, you can access the underlying collections directly:
 
 ```rust
-use query_x::Query;
+use query_lite::Query;
 
 let mut query = Query::new();
 query.parameters.equals("name".to_string(), vec!["john".to_string()]);
@@ -165,7 +165,7 @@ param_map_mut.insert("new_param".to_string(), (Similarity::Greater, vec!["100".t
 The library maintains full backward compatibility with tuple access:
 
 ```rust
-use query_x::Query;
+use query_lite::Query;
 
 let query = Query::from_http("name=contains:john".to_string())?;
 let param = query.parameters.inner().get("name").unwrap();
@@ -215,14 +215,14 @@ The library supports various similarity types for advanced filtering:
 ## Sorting and Pagination
 
 ```rust
-use query_x::Query;
+use query_lite::Query;
 
 let query = Query::from_http("name=john&order=date_created:desc,name:asc&limit=25&offset=10".to_string())?;
 
 // Access sorting
 assert_eq!(query.sort_fields.0.len(), 2);
 assert_eq!(query.sort_fields.0[0].name, "date_created");
-assert_eq!(query.sort_fields.0[0].order, query_x::SortOrder::Descending);
+assert_eq!(query.sort_fields.0[0].order, query_lite::SortOrder::Descending);
 
 // Access pagination
 assert_eq!(query.limit, 25);
@@ -234,7 +234,7 @@ assert_eq!(query.offset, 10);
 Enable the `sql` feature (enabled by default) to generate SQL queries:
 
 ```rust
-use query_x::Query;
+use query_lite::Query;
 
 let query = Query::from_http("name=contains:john&age=between:20,30&order=date_created:desc&limit=10".to_string())?;
 
@@ -257,7 +257,7 @@ let total_params = query.total_parameters();
 Version 0.4.0 introduces granular control over SQL parameter values:
 
 ```rust
-use query_x::Query;
+use query_lite::Query;
 
 let query = Query::from_http("name=contains:john&age=between:20,30&price=greater:100".to_string())?;
 
@@ -307,7 +307,7 @@ This granular approach allows for:
 The library automatically handles URL encoding and decoding:
 
 ```rust
-use query_x::Query;
+use query_lite::Query;
 
 // URL encoded parameters
 let query = Query::from_http("name=john%20doe&email=test%40example.com".to_string())?;
@@ -322,7 +322,7 @@ assert_eq!(email_param.1, vec!["test@example.com"]); // Automatically decoded
 ## Query Manipulation
 
 ```rust
-use query_x::Query;
+use query_lite::Query;
 
 let query = Query::from_http("name=john&age=25&email=john@example.com".to_string())?;
 
@@ -340,7 +340,7 @@ let filtered_query = Query::init(filtered_params, query.sort_fields, query.limit
 ## Error Handling
 
 ```rust
-use query_x::{Query, error::Error};
+use query_lite::{Query, error::Error};
 
 match Query::from_http("invalid=query".to_string()) {
     Ok(query) => {
@@ -367,7 +367,7 @@ match Query::from_http("invalid=query".to_string()) {
 ### E-commerce Product Search
 
 ```rust
-use query_x::Query;
+use query_lite::Query;
 
 // Complex product search with multiple filters
 let query = Query::from_http(
@@ -382,7 +382,7 @@ let sql = query.to_sql();
 ### User Management System
 
 ```rust
-use query_x::Query;
+use query_lite::Query;
 
 // User filtering and management
 let query = Query::from_http(
@@ -397,7 +397,7 @@ let sql = query.to_sql();
 ### Content Management
 
 ```rust
-use query_x::Query;
+use query_lite::Query;
 
 // Content filtering with date ranges
 let query = Query::from_http(
@@ -416,13 +416,13 @@ The library supports feature flags for optional functionality:
 ```toml
 [dependencies]
 # Default: includes SQL generation
-query-x = "0.4.0"
+query-lite = "0.4.0"
 
 # Without SQL generation (smaller binary)
-query-x = { version = "0.4.0", default-features = false }
+query-lite = { version = "0.4.0", default-features = false }
 
 # With specific features
-query-x = { version = "0.4.0", features = ["sql"] }
+query-lite = { version = "0.4.0", features = ["sql"] }
 ```
 
 ## API Reference

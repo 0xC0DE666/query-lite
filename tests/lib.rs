@@ -1,5 +1,5 @@
-use query_x::error::Error;
-use query_x::*;
+use query_lite::error::Error;
+use query_lite::*;
 use std::str::FromStr;
 
 // ============================================================================
