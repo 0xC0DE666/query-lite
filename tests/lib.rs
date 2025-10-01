@@ -2865,7 +2865,7 @@ fn test_query_to_sql_mixed_normal_and_similarity() {
 #[test]
 fn test_query_to_values_empty() {
     let query = Query::new();
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     // Should only contain limit and offset
     assert_eq!(values.len(), 2);
@@ -2880,7 +2880,7 @@ fn test_query_to_values_with_custom_limit_offset() {
     query.limit = 100;
     query.offset = 25;
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 2);
     assert_eq!(values[0], SqlValue::Integer(100));
@@ -2896,7 +2896,7 @@ fn test_query_to_values_equals_integer() {
         (Similarity::Equals, vec!["25".to_string()]),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 3);
     assert_eq!(values[0], SqlValue::Integer(25));
@@ -2916,7 +2916,7 @@ fn test_query_to_values_equals_multiple_integers() {
         ),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 5);
     assert_eq!(values[0], SqlValue::Integer(25));
@@ -2935,7 +2935,7 @@ fn test_query_to_values_equals_real() {
         (Similarity::Equals, vec!["25.5".to_string()]),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 3);
     assert_eq!(values[0], SqlValue::Real(25.5));
@@ -2952,7 +2952,7 @@ fn test_query_to_values_equals_text() {
         (Similarity::Equals, vec!["john".to_string()]),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 3);
     assert_eq!(values[0], SqlValue::Text("john".to_string()));
@@ -2969,7 +2969,7 @@ fn test_query_to_values_equals_null() {
         (Similarity::Equals, vec!["null".to_string()]),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 3);
     assert_eq!(values[0], SqlValue::Null);
@@ -2986,7 +2986,7 @@ fn test_query_to_values_contains() {
         (Similarity::Contains, vec!["john".to_string()]),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 3);
     assert_eq!(values[0], SqlValue::Text("%john%".to_string()));
@@ -3006,7 +3006,7 @@ fn test_query_to_values_contains_multiple() {
         ),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 4);
     assert_eq!(values[0], SqlValue::Text("%john%".to_string()));
@@ -3024,7 +3024,7 @@ fn test_query_to_values_starts_with() {
         (Similarity::StartsWith, vec!["john".to_string()]),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 3);
     assert_eq!(values[0], SqlValue::Text("john%".to_string()));
@@ -3041,7 +3041,7 @@ fn test_query_to_values_ends_with() {
         (Similarity::EndsWith, vec!["son".to_string()]),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 3);
     assert_eq!(values[0], SqlValue::Text("%son".to_string()));
@@ -3061,7 +3061,7 @@ fn test_query_to_values_between() {
         ),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 4);
     assert_eq!(values[0], SqlValue::Integer(20));
@@ -3079,7 +3079,7 @@ fn test_query_to_values_lesser() {
         (Similarity::Lesser, vec!["100".to_string()]),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 3);
     assert_eq!(values[0], SqlValue::Integer(100));
@@ -3096,7 +3096,7 @@ fn test_query_to_values_lesser_or_equal() {
         (Similarity::LesserOrEqual, vec!["100".to_string()]),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 3);
     assert_eq!(values[0], SqlValue::Integer(100));
@@ -3113,7 +3113,7 @@ fn test_query_to_values_greater() {
         (Similarity::Greater, vec!["50".to_string()]),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 3);
     assert_eq!(values[0], SqlValue::Integer(50));
@@ -3130,7 +3130,7 @@ fn test_query_to_values_greater_or_equal() {
         (Similarity::GreaterOrEqual, vec!["50".to_string()]),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 3);
     assert_eq!(values[0], SqlValue::Integer(50));
@@ -3159,7 +3159,7 @@ fn test_query_to_values_mixed_types() {
         (Similarity::Equals, vec!["null".to_string()]),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 6);
     assert_eq!(values[0], SqlValue::Text("%john%".to_string()));
@@ -3200,7 +3200,7 @@ fn test_query_to_values_complex_numeric_types() {
         ),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 11);
     // integers
@@ -3243,7 +3243,7 @@ fn test_query_to_values_edge_case_strings() {
         (Similarity::Equals, vec!["".to_string()]),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 6);
     assert_eq!(values[0], SqlValue::Text("%hello%world%".to_string()));
@@ -3275,7 +3275,7 @@ fn test_query_to_values_numeric_edge_cases() {
         ),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 10);
     assert_eq!(values[0], SqlValue::Integer(0));
@@ -3319,7 +3319,7 @@ fn test_query_to_values_large_numbers() {
         ),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 6);
     assert_eq!(values[0], SqlValue::Integer(9223372036854775807));
@@ -3347,7 +3347,7 @@ fn test_query_to_values_null_variations() {
         ),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 6);
     assert_eq!(values[0], SqlValue::Null);
@@ -3374,7 +3374,7 @@ fn test_query_to_values_whitespace_handling() {
         ),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 5);
     assert_eq!(values[0], SqlValue::Text(" 123 ".to_string()));
@@ -3393,7 +3393,7 @@ fn test_query_to_values_empty_parameters() {
         .0
         .insert("empty".to_string(), (Similarity::Equals, vec![]));
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     // Should only contain limit and offset
     assert_eq!(values.len(), 2);
@@ -3414,7 +3414,7 @@ fn test_query_to_values_multiple_parameters_same_key() {
         (Similarity::StartsWith, vec!["jane".to_string()]),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 3);
     assert_eq!(values[0], SqlValue::Text("jane%".to_string()));
@@ -3439,7 +3439,7 @@ fn test_query_to_values_parameter_order_preservation() {
         (Similarity::Between, vec!["3".to_string(), "4".to_string()]),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 6);
     assert_eq!(values[0], SqlValue::Integer(1));
@@ -3469,7 +3469,7 @@ fn test_query_to_values_with_custom_limit_offset_complex() {
         ),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     assert_eq!(values.len(), 5);
     assert_eq!(values[0], SqlValue::Text("%john%".to_string()));
@@ -3543,7 +3543,7 @@ fn test_query_parameter_values() {
         (Similarity::Equals, vec!["25".to_string()]),
     );
 
-    let values = query.parameter_values().unwrap();
+    let values = query.parameter_values();
 
     assert_eq!(values.len(), 2);
     assert_eq!(values[0], SqlValue::Text("%john%".to_string()));
@@ -3554,7 +3554,7 @@ fn test_query_parameter_values() {
 #[test]
 fn test_query_parameter_values_empty() {
     let query = Query::new();
-    let values = query.parameter_values().unwrap();
+    let values = query.parameter_values();
 
     assert_eq!(values.len(), 0);
 }
@@ -3649,7 +3649,7 @@ fn test_query_to_values_ignores_empty_values() {
         ),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     // Should only contain non-empty values: john, jane, bob, 25, 30 + limit + offset = 7
     assert_eq!(values.len(), 7);
@@ -3679,7 +3679,7 @@ fn test_query_parameter_values_ignores_empty_values() {
         ),
     );
 
-    let values = query.parameter_values().unwrap();
+    let values = query.parameter_values();
 
     // Should only contain non-empty values: john, jane
     assert_eq!(values.len(), 2);
@@ -3737,7 +3737,7 @@ fn test_query_to_values_all_empty_values() {
         ),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     // Should only contain limit and offset (no parameter values)
     assert_eq!(values.len(), 2);
@@ -3762,7 +3762,7 @@ fn test_query_to_values_mixed_empty_and_null() {
         ),
     );
 
-    let values = query.to_values().unwrap();
+    let values = query.to_values();
 
     // Should contain: null, active + limit + offset = 4 total
     assert_eq!(values.len(), 4);

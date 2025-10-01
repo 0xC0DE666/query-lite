@@ -779,12 +779,10 @@ impl Query {
     }
 
     #[cfg(feature = "sql")]
-    pub fn to_values(&self) -> Result<Vec<SqlValue>> {
+    pub fn to_values(&self) -> Vec<SqlValue> {
         let mut sql_values = Vec::new();
 
-        for k in self.parameters.inner().keys() {
-            let (param_similarity, param_values) = self.parameters.inner().get(k).unwrap();
-
+        for (_k, (param_similarity, param_values)) in self.parameters.inner() {
             for cur_val in param_values {
                 // Skip empty values
                 if cur_val.trim().is_empty() {
@@ -820,20 +818,15 @@ impl Query {
         sql_values.push(SqlValue::Integer(self.limit as i64));
         sql_values.push(SqlValue::Integer(self.offset as i64));
 
-        Ok(sql_values)
+        sql_values
     }
 
     #[cfg(feature = "sql")]
     /// Get SQL values for parameters only (without limit and offset)
-    pub fn parameter_values(&self) -> Result<Vec<SqlValue>> {
+    pub fn parameter_values(&self) -> Vec<SqlValue> {
         let mut sql_values = Vec::new();
 
-        for k in self.parameters.inner().keys() {
-            let (param_similarity, param_values) =
-                self.parameters.inner().get(k).ok_or_else(|| {
-                    Error::InvalidSqlValue(format!("Parameter '{}' not found", k))
-                })?;
-
+        for (_k, (param_similarity, param_values)) in self.parameters.inner() {
             for cur_val in param_values {
                 // Skip empty values
                 if cur_val.trim().is_empty() {
@@ -865,7 +858,7 @@ impl Query {
             }
         }
 
-        Ok(sql_values)
+        sql_values
     }
 
     #[cfg(feature = "sql")]

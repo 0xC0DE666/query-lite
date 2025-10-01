@@ -19,7 +19,4 @@ pub enum Error {
 
     #[error("Error: Invalid Search Parameters '{0}'")]
     InvalidSearchParameters(String),
-
-    #[error("Error: Invalid SQL Value '{0}'")]
-    InvalidSqlValue(String),
 }
