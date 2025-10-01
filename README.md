@@ -22,10 +22,10 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-query-lite = "0.6.0"
+query-lite = "0.7.0"
 
 # Optional: Enable SQL generation (enabled by default)
-# query-lite = { version = "0.6.0", default-features = false }
+# query-lite = { version = "0.7.0", default-features = false }
 ```
 
 ## Basic Usage
@@ -40,8 +40,8 @@ let query = Query::from_http("name=john&age=25&city=london".to_string())?;
 
 // Access parameters
 let name_param = query.parameters.0.get("name").unwrap();
-assert_eq!(name_param.0, query_lite::Similarity::Equals);
-assert_eq!(name_param.1, vec!["john"]);
+assert_eq!(*name_param.similarity(), query_lite::Similarity::Equals);
+assert_eq!(name_param.values(), &vec!["john"]);
 
 // Convert back to HTTP
 let http_string = query.to_http();
@@ -58,12 +58,12 @@ let query = Query::from_http("name=contains:john&age=between:20,30&price=greater
 
 // Access parameters with different similarity types
 let name_param = query.parameters.0.get("name").unwrap();
-assert_eq!(name_param.0, query_lite::Similarity::Contains);
-assert_eq!(name_param.1, vec!["john"]);
+assert_eq!(*name_param.similarity(), query_lite::Similarity::Contains);
+assert_eq!(name_param.values(), &vec!["john"]);
 
 let age_param = query.parameters.0.get("age").unwrap();
-assert_eq!(age_param.0, query_lite::Similarity::Between);
-assert_eq!(age_param.1, vec!["20", "30"]);
+assert_eq!(*age_param.similarity(), query_lite::Similarity::Between);
+assert_eq!(age_param.values(), &vec!["20", "30"]);
 ```
 
 ### Mixed Traditional and Advanced
@@ -76,13 +76,13 @@ let query = Query::from_http("name=john&name=jane&age=contains:25&status=active"
 
 // Traditional parameters (repeated values)
 let name_param = query.parameters.0.get("name").unwrap();
-assert_eq!(name_param.0, query_lite::Similarity::Equals);
-assert_eq!(name_param.1, vec!["john", "jane"]);
+assert_eq!(*name_param.similarity(), query_lite::Similarity::Equals);
+assert_eq!(name_param.values(), &vec!["john", "jane"]);
 
 // Advanced parameters
 let age_param = query.parameters.0.get("age").unwrap();
-assert_eq!(age_param.0, query_lite::Similarity::Contains);
-assert_eq!(age_param.1, vec!["25"]);
+assert_eq!(*age_param.similarity(), query_lite::Similarity::Contains);
+assert_eq!(age_param.values(), &vec!["25"]);
 ```
 
 ## Programmatic Query Building
@@ -157,7 +157,7 @@ for (key, param) in param_map {
 
 // Perform bulk operations
 let param_map_mut = query.parameters.inner_mut();
-param_map_mut.insert("new_param".to_string(), (Similarity::Greater, vec!["100".to_string()]));
+param_map_mut.insert("new_param".to_string(), Parameter(Similarity::Greater, vec!["100".to_string()]));
 ```
 
 ### Backward Compatibility
@@ -313,10 +313,10 @@ use query_lite::Query;
 let query = Query::from_http("name=john%20doe&email=test%40example.com".to_string())?;
 
 let name_param = query.parameters.0.get("name").unwrap();
-assert_eq!(name_param.1, vec!["john doe"]); // Automatically decoded
+assert_eq!(name_param.values(), &vec!["john doe"]); // Automatically decoded
 
 let email_param = query.parameters.0.get("email").unwrap();
-assert_eq!(email_param.1, vec!["test@example.com"]); // Automatically decoded
+assert_eq!(email_param.values(), &vec!["test@example.com"]); // Automatically decoded
 ```
 
 ## Query Manipulation
@@ -416,13 +416,13 @@ The library supports feature flags for optional functionality:
 ```toml
 [dependencies]
 # Default: includes SQL generation
-query-lite = "0.6.0"
+query-lite = "0.7.0"
 
 # Without SQL generation (smaller binary)
-query-lite = { version = "0.6.0", default-features = false }
+query-lite = { version = "0.7.0", default-features = false }
 
 # With specific features
-query-lite = { version = "0.6.0", features = ["sql"] }
+query-lite = { version = "0.7.0", features = ["sql"] }
 ```
 
 ## API Reference
@@ -432,7 +432,7 @@ query-lite = { version = "0.6.0", features = ["sql"] }
 - `Query`: Main query structure containing parameters, sorting, and pagination
 - `Parameters`: Collection of query parameters with builder methods
 - `SortFields`: Collection of sort fields with builder methods
-- `Parameter`: Type alias for `(Similarity, Vec<String>)` with trait methods
+- `Parameter`: Struct containing `(Similarity, Vec<String>)` with semantic access methods
 - `ParameterGet`: Trait providing semantic access to parameter data
 - `Similarity`: Enum defining comparison types (equals, contains, between, etc.)
 - `SortOrder`: Sort direction (ascending, descending)

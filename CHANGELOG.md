@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2025-01-27
+
+### Changed
+- **Parameter Type Refactoring**: Converted `Parameter` from type alias to proper struct
+  - `Parameter` is now a tuple struct `Parameter(Similarity, Vec<String>)` instead of a type alias
+  - Added semantic access methods: `similarity()`, `values()`, and `values_mut()`
+  - Maintains full backward compatibility with tuple field access (`.0`, `.1`)
+  - Improved API design with clearer intent and better extensibility
+
+### Added
+- **Enhanced Parameter Access**: New methods for semantic parameter data access
+  - `Parameter::similarity()`: Get immutable reference to similarity type
+  - `Parameter::values()`: Get immutable reference to parameter values  
+  - `Parameter::values_mut()`: Get mutable reference to parameter values
+- **Better API Design**: Struct-based approach provides clearer intent than generic tuple type alias
+- **Future Extensibility**: Easier to add new methods or fields to Parameter struct
+
+### Technical Details
+- **Backward Compatibility**: All existing tuple access patterns continue to work unchanged
+- **Zero Breaking Changes**: Existing code using `.0` and `.1` field access remains functional
+- **Improved Type Safety**: More explicit about what the type represents
+- **Comprehensive Testing**: Updated 100+ test cases to use new struct syntax
+- **Version Bump**: Major version bump reflects significant internal API improvements
+
 ## [0.6.1] - 2025-10-01
 
 ### Added
