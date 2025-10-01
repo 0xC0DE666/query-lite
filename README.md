@@ -22,10 +22,10 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-query-lite = "0.5.0"
+query-lite = "0.6.0"
 
 # Optional: Enable SQL generation (enabled by default)
-# query-lite = { version = "0.5.0", default-features = false }
+# query-lite = { version = "0.6.0", default-features = false }
 ```
 
 ## Basic Usage
@@ -243,7 +243,7 @@ let sql = query.to_sql();
 // Result: "WHERE name LIKE ? AND age BETWEEN ? AND ? ORDER BY date_created DESC LIMIT ? OFFSET ?"
 
 // Get parameter values separately for more control
-let param_values = query.parameter_values()?;
+let param_values = query.parameter_values();
 let pagination_values = query.pagination_values();
 let total_params = query.total_parameters();
 
@@ -254,7 +254,7 @@ let total_params = query.total_parameters();
 
 ### Advanced SQL Value Management
 
-Version 0.5.0 introduces granular control over SQL parameter values:
+Version 0.6.0 introduces simplified SQL value methods:
 
 ```rust
 use query_lite::Query;
@@ -262,7 +262,7 @@ use query_lite::Query;
 let query = Query::from_http("name=contains:john&age=between:20,30&price=greater:100".to_string())?;
 
 // Get only parameter values (without pagination)
-let param_values = query.parameter_values()?;
+let param_values = query.parameter_values();
 // Result: [SqlValue::Text("%john%"), SqlValue::Text("20"), SqlValue::Text("30"), SqlValue::Text("100")]
 
 // Get only pagination values
@@ -416,13 +416,13 @@ The library supports feature flags for optional functionality:
 ```toml
 [dependencies]
 # Default: includes SQL generation
-query-lite = "0.5.0"
+query-lite = "0.6.0"
 
 # Without SQL generation (smaller binary)
-query-lite = { version = "0.5.0", default-features = false }
+query-lite = { version = "0.6.0", default-features = false }
 
 # With specific features
-query-lite = { version = "0.5.0", features = ["sql"] }
+query-lite = { version = "0.6.0", features = ["sql"] }
 ```
 
 ## API Reference
