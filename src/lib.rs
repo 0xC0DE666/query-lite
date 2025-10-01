@@ -38,7 +38,7 @@ pub fn url_encode(input: &str) -> String {
 /// - "contains:damian" -> (Similarity::Contains, vec!["damian"])
 /// - "equals:black,steel,wood" -> (Similarity::Equals, vec!["black", "steel", "wood"])
 /// - "between:20,30" -> (Similarity::Between, vec!["20", "30"])
-pub fn parse_parameter(s: &str) -> Result<(Similarity, Vec<String>)> {
+pub fn parse_parameter(s: &str) -> Result<Parameter> {
     let trimmed = s.trim();
     if trimmed.is_empty() {
         return Err(Error::InvalidParameter(s.into()));
@@ -67,7 +67,7 @@ pub fn parse_parameter(s: &str) -> Result<(Similarity, Vec<String>)> {
     };
 
     let similarity = Similarity::from_str(similarity_str)?;
-    Ok((similarity, values))
+    Ok(Parameter(similarity, values))
 }
 
 /// Parse a sort field string into name and order
@@ -283,19 +283,20 @@ impl ToString for Similarity {
     }
 }
 
-pub type Parameter = (Similarity, Vec<String>);
-pub trait ParameterGet {
-    fn similarity(&self) -> &Similarity;
-    fn values(&self) -> &Vec<String>;
-}
+#[derive(Clone, Debug, PartialEq)]
+pub struct Parameter(pub Similarity, pub Vec<String>);
 
-impl ParameterGet for Parameter {
-    fn similarity(&self) -> &Similarity {
+impl Parameter {
+    pub fn similarity(&self) -> &Similarity {
         &self.0
     }
 
-    fn values(&self) -> &Vec<String> {
+    pub fn values(&self) -> &Vec<String> {
         &self.1
+    }
+
+    pub fn values_mut(&mut self) -> &mut Vec<String> {
+        &mut self.1
     }
 }
 
@@ -325,47 +326,50 @@ impl Parameters {
     }
 
     pub fn equals(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0.insert(key, (Similarity::Equals, values));
+        self.0.insert(key, Parameter(Similarity::Equals, values));
         self
     }
 
     pub fn contains(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0.insert(key, (Similarity::Contains, values));
+        self.0.insert(key, Parameter(Similarity::Contains, values));
         self
     }
 
     pub fn starts_with(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0.insert(key, (Similarity::StartsWith, values));
+        self.0
+            .insert(key, Parameter(Similarity::StartsWith, values));
         self
     }
 
     pub fn ends_with(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0.insert(key, (Similarity::EndsWith, values));
+        self.0.insert(key, Parameter(Similarity::EndsWith, values));
         self
     }
 
     pub fn between(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0.insert(key, (Similarity::Between, values));
+        self.0.insert(key, Parameter(Similarity::Between, values));
         self
     }
 
     pub fn lesser(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0.insert(key, (Similarity::Lesser, values));
+        self.0.insert(key, Parameter(Similarity::Lesser, values));
         self
     }
 
     pub fn lesser_or_equal(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0.insert(key, (Similarity::LesserOrEqual, values));
+        self.0
+            .insert(key, Parameter(Similarity::LesserOrEqual, values));
         self
     }
 
     pub fn greater(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0.insert(key, (Similarity::Greater, values));
+        self.0.insert(key, Parameter(Similarity::Greater, values));
         self
     }
 
     pub fn greater_or_equal(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0.insert(key, (Similarity::GreaterOrEqual, values));
+        self.0
+            .insert(key, Parameter(Similarity::GreaterOrEqual, values));
         self
     }
 
@@ -425,7 +429,7 @@ impl FromStr for Parameters {
                 continue;
             }
 
-            let (similarity, values) = parse_parameter(value)?;
+            let Parameter(similarity, values) = parse_parameter(value)?;
             // Only add parameters that have values
             if values.is_empty() {
                 continue;
@@ -433,7 +437,7 @@ impl FromStr for Parameters {
 
             parameters
                 .0
-                .insert(trimmed_key.to_string(), (similarity, values));
+                .insert(trimmed_key.to_string(), Parameter(similarity, values));
         }
 
         Ok(parameters)
@@ -491,10 +495,11 @@ impl Query {
             .parameters
             .0
             .iter()
-            .filter(|(_, (_, values))| values.len() > 0)
-            .map(|(key, (similarity, values))| {
-                let similarity_str = similarity.to_string();
-                let values_str = values
+            .filter(|(_, param)| param.values().len() > 0)
+            .map(|(key, param)| {
+                let similarity_str = param.similarity().to_string();
+                let values_str = param
+                    .values()
                     .iter()
                     .map(|v| url_encode(v))
                     .collect::<Vec<String>>()
@@ -578,7 +583,7 @@ impl Query {
                         // Check if this is a similarity-based parameter (contains colon)
                         if trimmed_value.contains(COLON) {
                             // Parse as similarity-based parameter
-                            let (similarity, values) = parse_parameter(trimmed_value)?;
+                            let Parameter(similarity, values) = parse_parameter(trimmed_value)?;
                             // Only add parameters that have values
                             if values.is_empty() {
                                 continue;
@@ -587,25 +592,25 @@ impl Query {
                             query
                                 .parameters
                                 .0
-                                .insert(trimmed_key.to_string(), (similarity, values));
+                                .insert(trimmed_key.to_string(), Parameter(similarity, values));
                         } else {
                             // Handle as normal query parameter (default to equals similarity)
                             let decoded_value = url_decode(trimmed_value);
 
                             // Check if parameter already exists and is not similarity-based
-                            if let Some((existing_similarity, existing_values)) =
+                            if let Some(existing_param) =
                                 query.parameters.0.get_mut(&trimmed_key.to_string())
                             {
                                 // Only append if the existing parameter is also equals similarity
-                                if *existing_similarity == Similarity::Equals {
-                                    existing_values.push(decoded_value);
+                                if *existing_param.similarity() == Similarity::Equals {
+                                    existing_param.1.push(decoded_value);
                                 }
                                 // If existing parameter is similarity-based, ignore this normal parameter
                             } else {
                                 // Create new parameter with equals similarity
                                 query.parameters.0.insert(
                                     trimmed_key.to_string(),
-                                    (Similarity::Equals, vec![decoded_value]),
+                                    Parameter(Similarity::Equals, vec![decoded_value]),
                                 );
                             }
                         }
@@ -645,7 +650,9 @@ impl Query {
     pub fn where_clause(&self) -> String {
         let mut conditions = Vec::new();
 
-        for (key, (similarity, values)) in &self.parameters.0 {
+        for (key, param) in &self.parameters.0 {
+            let similarity = param.similarity();
+            let values = param.values();
             if values.is_empty() {
                 continue;
             }
@@ -790,7 +797,9 @@ impl Query {
     pub fn parameter_values(&self) -> Vec<SqlValue> {
         let mut sql_values = Vec::new();
 
-        for (_k, (param_similarity, param_values)) in self.parameters.inner() {
+        for (_k, param) in self.parameters.inner() {
+            let param_similarity = param.similarity();
+            let param_values = param.values();
             for cur_val in param_values {
                 // Skip empty values
                 if cur_val.trim().is_empty() {
@@ -842,7 +851,13 @@ impl Query {
             .parameters
             .inner()
             .values()
-            .map(|(_, values)| values.iter().filter(|v| !v.trim().is_empty()).count())
+            .map(|param| {
+                param
+                    .values()
+                    .iter()
+                    .filter(|v| !v.trim().is_empty())
+                    .count()
+            })
             .sum();
 
         parameter_count + 2 // +2 for limit and offset

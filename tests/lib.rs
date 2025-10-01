@@ -9,70 +9,70 @@ use std::str::FromStr;
 // Tests for parse_parameter function
 #[test]
 fn test_parse_parameter_contains() {
-    let (similarity, values) = parse_parameter("contains:damian").unwrap();
+    let Parameter(similarity, values) = parse_parameter("contains:damian").unwrap();
     assert_eq!(similarity, Similarity::Contains);
     assert_eq!(values, vec!["damian"]);
 }
 
 #[test]
 fn test_parse_parameter_equals_multiple() {
-    let (similarity, values) = parse_parameter("equals:black,steel,wood").unwrap();
+    let Parameter(similarity, values) = parse_parameter("equals:black,steel,wood").unwrap();
     assert_eq!(similarity, Similarity::Equals);
     assert_eq!(values, vec!["black", "steel", "wood"]);
 }
 
 #[test]
 fn test_parse_parameter_between() {
-    let (similarity, values) = parse_parameter("between:20,30").unwrap();
+    let Parameter(similarity, values) = parse_parameter("between:20,30").unwrap();
     assert_eq!(similarity, Similarity::Between);
     assert_eq!(values, vec!["20", "30"]);
 }
 
 #[test]
 fn test_parse_parameter_lesser() {
-    let (similarity, values) = parse_parameter("lesser:100").unwrap();
+    let Parameter(similarity, values) = parse_parameter("lesser:100").unwrap();
     assert_eq!(similarity, Similarity::Lesser);
     assert_eq!(values, vec!["100"]);
 }
 
 #[test]
 fn test_parse_parameter_greater_or_equal() {
-    let (similarity, values) = parse_parameter("greater-or-equal:50").unwrap();
+    let Parameter(similarity, values) = parse_parameter("greater-or-equal:50").unwrap();
     assert_eq!(similarity, Similarity::GreaterOrEqual);
     assert_eq!(values, vec!["50"]);
 }
 
 #[test]
 fn test_parse_parameter_with_whitespace() {
-    let (similarity, values) = parse_parameter("  contains  :  damian  ").unwrap();
+    let Parameter(similarity, values) = parse_parameter("  contains  :  damian  ").unwrap();
     assert_eq!(similarity, Similarity::Contains);
     assert_eq!(values, vec!["damian"]);
 }
 
 #[test]
 fn test_parse_parameter_with_whitespace_in_values() {
-    let (similarity, values) = parse_parameter("equals: black , steel , wood ").unwrap();
+    let Parameter(similarity, values) = parse_parameter("equals: black , steel , wood ").unwrap();
     assert_eq!(similarity, Similarity::Equals);
     assert_eq!(values, vec!["black", "steel", "wood"]);
 }
 
 #[test]
 fn test_parse_parameter_empty_values() {
-    let (similarity, values) = parse_parameter("contains:").unwrap();
+    let Parameter(similarity, values) = parse_parameter("contains:").unwrap();
     assert_eq!(similarity, Similarity::Contains);
     assert_eq!(values, vec![] as Vec<String>);
 }
 
 #[test]
 fn test_parse_parameter_empty_values_with_commas() {
-    let (similarity, values) = parse_parameter("contains:,,,").unwrap();
+    let Parameter(similarity, values) = parse_parameter("contains:,,,").unwrap();
     assert_eq!(similarity, Similarity::Contains);
     assert_eq!(values, vec![] as Vec<String>);
 }
 
 #[test]
 fn test_parse_parameter_mixed_empty_values() {
-    let (similarity, values) = parse_parameter("contains:value1,,value2,").unwrap();
+    let Parameter(similarity, values) = parse_parameter("contains:value1,,value2,").unwrap();
     assert_eq!(similarity, Similarity::Contains);
     assert_eq!(values, vec!["value1", "value2"]);
 }
@@ -556,7 +556,7 @@ fn test_parameters_builder_equals() {
 
     assert_eq!(params.0.len(), 1);
     assert!(params.0.contains_key("name"));
-    let (similarity, param_values) = &params.0["name"];
+    let Parameter(similarity, param_values) = &params.0["name"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*param_values, values);
 }
@@ -569,7 +569,7 @@ fn test_parameters_builder_contains() {
 
     assert_eq!(params.0.len(), 1);
     assert!(params.0.contains_key("name"));
-    let (similarity, param_values) = &params.0["name"];
+    let Parameter(similarity, param_values) = &params.0["name"];
     assert_eq!(*similarity, Similarity::Contains);
     assert_eq!(*param_values, values);
 }
@@ -582,7 +582,7 @@ fn test_parameters_builder_starts_with() {
 
     assert_eq!(params.0.len(), 1);
     assert!(params.0.contains_key("name"));
-    let (similarity, param_values) = &params.0["name"];
+    let Parameter(similarity, param_values) = &params.0["name"];
     assert_eq!(*similarity, Similarity::StartsWith);
     assert_eq!(*param_values, values);
 }
@@ -595,7 +595,7 @@ fn test_parameters_builder_ends_with() {
 
     assert_eq!(params.0.len(), 1);
     assert!(params.0.contains_key("name"));
-    let (similarity, param_values) = &params.0["name"];
+    let Parameter(similarity, param_values) = &params.0["name"];
     assert_eq!(*similarity, Similarity::EndsWith);
     assert_eq!(*param_values, values);
 }
@@ -608,7 +608,7 @@ fn test_parameters_builder_between() {
 
     assert_eq!(params.0.len(), 1);
     assert!(params.0.contains_key("age"));
-    let (similarity, param_values) = &params.0["age"];
+    let Parameter(similarity, param_values) = &params.0["age"];
     assert_eq!(*similarity, Similarity::Between);
     assert_eq!(*param_values, values);
 }
@@ -621,7 +621,7 @@ fn test_parameters_builder_lesser() {
 
     assert_eq!(params.0.len(), 1);
     assert!(params.0.contains_key("price"));
-    let (similarity, param_values) = &params.0["price"];
+    let Parameter(similarity, param_values) = &params.0["price"];
     assert_eq!(*similarity, Similarity::Lesser);
     assert_eq!(*param_values, values);
 }
@@ -634,7 +634,7 @@ fn test_parameters_builder_lesser_or_equal() {
 
     assert_eq!(params.0.len(), 1);
     assert!(params.0.contains_key("price"));
-    let (similarity, param_values) = &params.0["price"];
+    let Parameter(similarity, param_values) = &params.0["price"];
     assert_eq!(*similarity, Similarity::LesserOrEqual);
     assert_eq!(*param_values, values);
 }
@@ -647,7 +647,7 @@ fn test_parameters_builder_greater() {
 
     assert_eq!(params.0.len(), 1);
     assert!(params.0.contains_key("price"));
-    let (similarity, param_values) = &params.0["price"];
+    let Parameter(similarity, param_values) = &params.0["price"];
     assert_eq!(*similarity, Similarity::Greater);
     assert_eq!(*param_values, values);
 }
@@ -660,7 +660,7 @@ fn test_parameters_builder_greater_or_equal() {
 
     assert_eq!(params.0.len(), 1);
     assert!(params.0.contains_key("price"));
-    let (similarity, param_values) = &params.0["price"];
+    let Parameter(similarity, param_values) = &params.0["price"];
     assert_eq!(*similarity, Similarity::GreaterOrEqual);
     assert_eq!(*param_values, values);
 }
@@ -675,15 +675,15 @@ fn test_parameters_builder_fluent_api() {
 
     assert_eq!(params.0.len(), 3);
 
-    let (similarity, values) = &params.0["name"];
+    let Parameter(similarity, values) = &params.0["name"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["damian"]);
 
-    let (similarity, values) = &params.0["surname"];
+    let Parameter(similarity, values) = &params.0["surname"];
     assert_eq!(*similarity, Similarity::Contains);
     assert_eq!(*values, vec!["black"]);
 
-    let (similarity, values) = &params.0["age"];
+    let Parameter(similarity, values) = &params.0["age"];
     assert_eq!(*similarity, Similarity::Between);
     assert_eq!(*values, vec!["20", "30"]);
 }
@@ -695,7 +695,7 @@ fn test_parameters_builder_overwrite() {
     params.contains("name".to_string(), vec!["john".to_string()]); // Should overwrite
 
     assert_eq!(params.0.len(), 1);
-    let (similarity, values) = &params.0["name"];
+    let Parameter(similarity, values) = &params.0["name"];
     assert_eq!(*similarity, Similarity::Contains);
     assert_eq!(*values, vec!["john"]);
 }
@@ -706,7 +706,7 @@ fn test_parameters_builder_empty_values() {
     params.equals("name".to_string(), vec![]);
 
     assert_eq!(params.0.len(), 1);
-    let (similarity, values) = &params.0["name"];
+    let Parameter(similarity, values) = &params.0["name"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec![] as Vec<String>);
 }
@@ -754,7 +754,7 @@ fn test_parameters_from_str_single() {
     let params = Parameters::from_str("name=contains:damian").unwrap();
     assert_eq!(params.0.len(), 1);
     assert!(params.0.contains_key("name"));
-    let (similarity, values) = &params.0["name"];
+    let Parameter(similarity, values) = &params.0["name"];
     assert_eq!(*similarity, Similarity::Contains);
     assert_eq!(*values, vec!["damian"]);
 }
@@ -766,12 +766,12 @@ fn test_parameters_from_str_multiple() {
     assert_eq!(params.0.len(), 2);
 
     assert!(params.0.contains_key("name"));
-    let (similarity, values) = &params.0["name"];
+    let Parameter(similarity, values) = &params.0["name"];
     assert_eq!(*similarity, Similarity::Contains);
     assert_eq!(*values, vec!["damian"]);
 
     assert!(params.0.contains_key("surname"));
-    let (similarity, values) = &params.0["surname"];
+    let Parameter(similarity, values) = &params.0["surname"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["black", "steel", "wood"]);
 }
@@ -826,17 +826,17 @@ fn test_parameters_from_str_with_numeric_comparisons() {
     assert_eq!(params.0.len(), 3);
 
     assert!(params.0.contains_key("age"));
-    let (similarity, values) = &params.0["age"];
+    let Parameter(similarity, values) = &params.0["age"];
     assert_eq!(*similarity, Similarity::Between);
     assert_eq!(*values, vec!["20", "30"]);
 
     assert!(params.0.contains_key("price"));
-    let (similarity, values) = &params.0["price"];
+    let Parameter(similarity, values) = &params.0["price"];
     assert_eq!(*similarity, Similarity::Greater);
     assert_eq!(*values, vec!["100"]);
 
     assert!(params.0.contains_key("score"));
-    let (similarity, values) = &params.0["score"];
+    let Parameter(similarity, values) = &params.0["score"];
     assert_eq!(*similarity, Similarity::LesserOrEqual);
     assert_eq!(*values, vec!["85"]);
 }
@@ -850,22 +850,22 @@ fn test_parameters_from_str_mixed_similarity_types() {
     assert_eq!(params.0.len(), 4);
 
     assert!(params.0.contains_key("name"));
-    let (similarity, values) = &params.0["name"];
+    let Parameter(similarity, values) = &params.0["name"];
     assert_eq!(*similarity, Similarity::Contains);
     assert_eq!(*values, vec!["damian"]);
 
     assert!(params.0.contains_key("age"));
-    let (similarity, values) = &params.0["age"];
+    let Parameter(similarity, values) = &params.0["age"];
     assert_eq!(*similarity, Similarity::Between);
     assert_eq!(*values, vec!["25", "35"]);
 
     assert!(params.0.contains_key("price"));
-    let (similarity, values) = &params.0["price"];
+    let Parameter(similarity, values) = &params.0["price"];
     assert_eq!(*similarity, Similarity::GreaterOrEqual);
     assert_eq!(*values, vec!["50"]);
 
     assert!(params.0.contains_key("status"));
-    let (similarity, values) = &params.0["status"];
+    let Parameter(similarity, values) = &params.0["status"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["active"]);
 }
@@ -915,7 +915,7 @@ fn test_query_to_http_with_params() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["damian".to_string()]),
+        Parameter(Similarity::Contains, vec!["damian".to_string()]),
     );
 
     let http = query.to_http();
@@ -940,7 +940,7 @@ fn test_query_to_http_with_params_and_sort() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["damian".to_string()]),
+        Parameter(Similarity::Contains, vec!["damian".to_string()]),
     );
 
     query.sort_fields.descending("date_created".to_string());
@@ -958,7 +958,7 @@ fn test_query_to_http_sort_fields_empty_values() {
     query
         .parameters
         .0
-        .insert("name".to_string(), (Similarity::Contains, vec![]));
+        .insert("name".to_string(), Parameter(Similarity::Contains, vec![]));
 
     let http = query.to_http();
     assert!(!http.contains("name="));
@@ -1093,15 +1093,15 @@ fn test_parameters_keep() {
     let mut params = Parameters::new();
     params.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["value1".to_string()]),
+        Parameter(Similarity::Contains, vec!["value1".to_string()]),
     );
     params.0.insert(
         "surname".to_string(),
-        (Similarity::Equals, vec!["value2".to_string()]),
+        Parameter(Similarity::Equals, vec!["value2".to_string()]),
     );
     params.0.insert(
         "email".to_string(),
-        (Similarity::StartsWith, vec!["value3".to_string()]),
+        Parameter(Similarity::StartsWith, vec!["value3".to_string()]),
     );
 
     let filtered = params.keep(vec!["name".to_string(), "email".to_string()]);
@@ -1117,7 +1117,7 @@ fn test_parameters_keep_nonexistent_keys() {
     let mut params = Parameters::new();
     params.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["value1".to_string()]),
+        Parameter(Similarity::Contains, vec!["value1".to_string()]),
     );
 
     let filtered = params.keep(vec!["nonexistent".to_string()]);
@@ -1129,7 +1129,7 @@ fn test_parameters_keep_empty_keys() {
     let mut params = Parameters::new();
     params.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["value1".to_string()]),
+        Parameter(Similarity::Contains, vec!["value1".to_string()]),
     );
 
     let filtered = params.keep(vec![]);
@@ -1141,15 +1141,15 @@ fn test_parameters_remove() {
     let mut params = Parameters::new();
     params.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["value1".to_string()]),
+        Parameter(Similarity::Contains, vec!["value1".to_string()]),
     );
     params.0.insert(
         "surname".to_string(),
-        (Similarity::Equals, vec!["value2".to_string()]),
+        Parameter(Similarity::Equals, vec!["value2".to_string()]),
     );
     params.0.insert(
         "email".to_string(),
-        (Similarity::StartsWith, vec!["value3".to_string()]),
+        Parameter(Similarity::StartsWith, vec!["value3".to_string()]),
     );
 
     let filtered = params.remove(vec!["name".to_string(), "email".to_string()]);
@@ -1165,7 +1165,7 @@ fn test_parameters_remove_nonexistent_keys() {
     let mut params = Parameters::new();
     params.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["value1".to_string()]),
+        Parameter(Similarity::Contains, vec!["value1".to_string()]),
     );
 
     let filtered = params.remove(vec!["nonexistent".to_string()]);
@@ -1178,7 +1178,7 @@ fn test_parameters_remove_empty_keys() {
     let mut params = Parameters::new();
     params.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["value1".to_string()]),
+        Parameter(Similarity::Contains, vec!["value1".to_string()]),
     );
 
     let filtered = params.remove(vec![]);
@@ -1193,17 +1193,17 @@ fn test_query_from_http_with_numeric_comparisons() {
     assert_eq!(query.parameters.0.len(), 3);
 
     assert!(query.parameters.0.contains_key("age"));
-    let (similarity, values) = &query.parameters.0["age"];
+    let Parameter(similarity, values) = &query.parameters.0["age"];
     assert_eq!(*similarity, Similarity::Between);
     assert_eq!(*values, vec!["20", "30"]);
 
     assert!(query.parameters.0.contains_key("price"));
-    let (similarity, values) = &query.parameters.0["price"];
+    let Parameter(similarity, values) = &query.parameters.0["price"];
     assert_eq!(*similarity, Similarity::Greater);
     assert_eq!(*values, vec!["100"]);
 
     assert!(query.parameters.0.contains_key("score"));
-    let (similarity, values) = &query.parameters.0["score"];
+    let Parameter(similarity, values) = &query.parameters.0["score"];
     assert_eq!(*similarity, Similarity::LesserOrEqual);
     assert_eq!(*values, vec!["85"]);
 
@@ -1224,22 +1224,22 @@ fn test_query_from_http_mixed_similarity_types() {
     assert_eq!(query.parameters.0.len(), 4);
 
     assert!(query.parameters.0.contains_key("name"));
-    let (similarity, values) = &query.parameters.0["name"];
+    let Parameter(similarity, values) = &query.parameters.0["name"];
     assert_eq!(*similarity, Similarity::Contains);
     assert_eq!(*values, vec!["damian"]);
 
     assert!(query.parameters.0.contains_key("age"));
-    let (similarity, values) = &query.parameters.0["age"];
+    let Parameter(similarity, values) = &query.parameters.0["age"];
     assert_eq!(*similarity, Similarity::Between);
     assert_eq!(*values, vec!["25", "35"]);
 
     assert!(query.parameters.0.contains_key("price"));
-    let (similarity, values) = &query.parameters.0["price"];
+    let Parameter(similarity, values) = &query.parameters.0["price"];
     assert_eq!(*similarity, Similarity::GreaterOrEqual);
     assert_eq!(*values, vec!["50"]);
 
     assert!(query.parameters.0.contains_key("status"));
-    let (similarity, values) = &query.parameters.0["status"];
+    let Parameter(similarity, values) = &query.parameters.0["status"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["active"]);
 
@@ -1255,18 +1255,18 @@ fn test_query_to_http_with_numeric_comparisons() {
 
     query.parameters.0.insert(
         "age".to_string(),
-        (
+        Parameter(
             Similarity::Between,
             vec!["20".to_string(), "30".to_string()],
         ),
     );
     query.parameters.0.insert(
         "price".to_string(),
-        (Similarity::Greater, vec!["100".to_string()]),
+        Parameter(Similarity::Greater, vec!["100".to_string()]),
     );
     query.parameters.0.insert(
         "score".to_string(),
-        (Similarity::LesserOrEqual, vec!["85".to_string()]),
+        Parameter(Similarity::LesserOrEqual, vec!["85".to_string()]),
     );
 
     query.sort_fields.descending("date_created".to_string());
@@ -1290,18 +1290,18 @@ fn test_parameters_keep_with_numeric_comparisons() {
 
     params.0.insert(
         "age".to_string(),
-        (
+        Parameter(
             Similarity::Between,
             vec!["20".to_string(), "30".to_string()],
         ),
     );
     params.0.insert(
         "price".to_string(),
-        (Similarity::Greater, vec!["100".to_string()]),
+        Parameter(Similarity::Greater, vec!["100".to_string()]),
     );
     params.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["damian".to_string()]),
+        Parameter(Similarity::Contains, vec!["damian".to_string()]),
     );
 
     let filtered = params.keep(vec!["age".to_string(), "name".to_string()]);
@@ -1311,7 +1311,7 @@ fn test_parameters_keep_with_numeric_comparisons() {
     assert!(!filtered.0.contains_key("price"));
     assert!(filtered.0.contains_key("name"));
 
-    let (similarity, values) = &filtered.0["age"];
+    let Parameter(similarity, values) = &filtered.0["age"];
     assert_eq!(*similarity, Similarity::Between);
     assert_eq!(*values, vec!["20", "30"]);
 }
@@ -1322,18 +1322,18 @@ fn test_parameters_remove_with_numeric_comparisons() {
 
     params.0.insert(
         "age".to_string(),
-        (
+        Parameter(
             Similarity::Between,
             vec!["20".to_string(), "30".to_string()],
         ),
     );
     params.0.insert(
         "price".to_string(),
-        (Similarity::Greater, vec!["100".to_string()]),
+        Parameter(Similarity::Greater, vec!["100".to_string()]),
     );
     params.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["damian".to_string()]),
+        Parameter(Similarity::Contains, vec!["damian".to_string()]),
     );
 
     let filtered = params.remove(vec!["age".to_string(), "name".to_string()]);
@@ -1343,7 +1343,7 @@ fn test_parameters_remove_with_numeric_comparisons() {
     assert!(filtered.0.contains_key("price"));
     assert!(!filtered.0.contains_key("name"));
 
-    let (similarity, values) = &filtered.0["price"];
+    let Parameter(similarity, values) = &filtered.0["price"];
     assert_eq!(*similarity, Similarity::Greater);
     assert_eq!(*values, vec!["100"]);
 }
@@ -1447,19 +1447,19 @@ fn test_complex_parameters_parsing() {
 
     assert_eq!(params.0.len(), 4);
 
-    let (similarity, values) = &params.0["name"];
+    let Parameter(similarity, values) = &params.0["name"];
     assert_eq!(*similarity, Similarity::Contains);
     assert_eq!(*values, vec!["damian"]);
 
-    let (similarity, values) = &params.0["surname"];
+    let Parameter(similarity, values) = &params.0["surname"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["black", "steel", "wood"]);
 
-    let (similarity, values) = &params.0["email"];
+    let Parameter(similarity, values) = &params.0["email"];
     assert_eq!(*similarity, Similarity::StartsWith);
     assert_eq!(*values, vec!["test"]);
 
-    let (similarity, values) = &params.0["age"];
+    let Parameter(similarity, values) = &params.0["age"];
     assert_eq!(*similarity, Similarity::EndsWith);
     assert_eq!(*values, vec!["25"]);
 }
@@ -1473,7 +1473,7 @@ fn test_edge_case_whitespace_handling() {
     assert_eq!(query.parameters.0.len(), 1);
     assert!(query.parameters.0.contains_key("name"));
 
-    let (similarity, values) = &query.parameters.0["name"];
+    let Parameter(similarity, values) = &query.parameters.0["name"];
     assert_eq!(*similarity, Similarity::Contains);
     assert_eq!(*values, vec!["damian"]);
 
@@ -1503,10 +1503,10 @@ fn test_edge_case_special_characters_in_values() {
 
     assert_eq!(query.parameters.0.len(), 2);
 
-    let (_, values) = &query.parameters.0["name"];
+    let Parameter(_, values) = &query.parameters.0["name"];
     assert_eq!(*values, vec!["damian test"]);
 
-    let (_, values) = &query.parameters.0["surname"];
+    let Parameter(_, values) = &query.parameters.0["surname"];
     assert_eq!(*values, vec!["black", "steel", "wood"]);
 }
 
@@ -1532,7 +1532,7 @@ fn test_edge_case_unicode_characters() {
 
     assert_eq!(query.parameters.0.len(), 2);
 
-    let (_, values) = &query.parameters.0["name"];
+    let Parameter(_, values) = &query.parameters.0["name"];
     assert_eq!(*values, vec!["damian_测试"]);
 }
 
@@ -1590,23 +1590,23 @@ fn test_complex_numeric_parameters_parsing() {
 
     assert_eq!(params.0.len(), 5);
 
-    let (similarity, values) = &params.0["age"];
+    let Parameter(similarity, values) = &params.0["age"];
     assert_eq!(*similarity, Similarity::Between);
     assert_eq!(*values, vec!["20", "30"]);
 
-    let (similarity, values) = &params.0["price"];
+    let Parameter(similarity, values) = &params.0["price"];
     assert_eq!(*similarity, Similarity::Greater);
     assert_eq!(*values, vec!["100"]);
 
-    let (similarity, values) = &params.0["score"];
+    let Parameter(similarity, values) = &params.0["score"];
     assert_eq!(*similarity, Similarity::LesserOrEqual);
     assert_eq!(*values, vec!["85"]);
 
-    let (similarity, values) = &params.0["rating"];
+    let Parameter(similarity, values) = &params.0["rating"];
     assert_eq!(*similarity, Similarity::GreaterOrEqual);
     assert_eq!(*values, vec!["4.5"]);
 
-    let (similarity, values) = &params.0["discount"];
+    let Parameter(similarity, values) = &params.0["discount"];
     assert_eq!(*similarity, Similarity::Lesser);
     assert_eq!(*values, vec!["10"]);
 }
@@ -1619,15 +1619,15 @@ fn test_edge_case_numeric_comparisons_with_whitespace() {
 
     assert_eq!(query.parameters.0.len(), 3);
 
-    let (similarity, values) = &query.parameters.0["age"];
+    let Parameter(similarity, values) = &query.parameters.0["age"];
     assert_eq!(*similarity, Similarity::Between);
     assert_eq!(*values, vec!["20", "30"]);
 
-    let (similarity, values) = &query.parameters.0["price"];
+    let Parameter(similarity, values) = &query.parameters.0["price"];
     assert_eq!(*similarity, Similarity::Greater);
     assert_eq!(*values, vec!["100"]);
 
-    let (similarity, values) = &query.parameters.0["score"];
+    let Parameter(similarity, values) = &query.parameters.0["score"];
     assert_eq!(*similarity, Similarity::LesserOrEqual);
     assert_eq!(*values, vec!["85"]);
 }
@@ -1661,15 +1661,15 @@ fn test_edge_case_numeric_comparisons_special_characters() {
 
     assert_eq!(query.parameters.0.len(), 3);
 
-    let (similarity, values) = &query.parameters.0["price"];
+    let Parameter(similarity, values) = &query.parameters.0["price"];
     assert_eq!(*similarity, Similarity::Between);
     assert_eq!(*values, vec!["100.50", "200.75"]);
 
-    let (similarity, values) = &query.parameters.0["discount"];
+    let Parameter(similarity, values) = &query.parameters.0["discount"];
     assert_eq!(*similarity, Similarity::Greater);
     assert_eq!(*values, vec!["10%"]);
 
-    let (similarity, values) = &query.parameters.0["score"];
+    let Parameter(similarity, values) = &query.parameters.0["score"];
     assert_eq!(*similarity, Similarity::LesserOrEqual);
     assert_eq!(*values, vec!["85.5"]);
 }
@@ -1692,7 +1692,7 @@ fn test_query_to_sql_with_equals() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::Equals, vec!["damian".to_string()]),
+        Parameter(Similarity::Equals, vec!["damian".to_string()]),
     );
 
     let sql = query.to_sql();
@@ -1705,7 +1705,7 @@ fn test_query_to_sql_with_equals_multiple_values() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec!["damian".to_string(), "john".to_string()],
         ),
@@ -1721,7 +1721,7 @@ fn test_query_to_sql_with_equals_null() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::Equals, vec!["null".to_string()]),
+        Parameter(Similarity::Equals, vec!["null".to_string()]),
     );
 
     let sql = query.to_sql();
@@ -1734,7 +1734,7 @@ fn test_query_to_sql_with_contains() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["damian".to_string()]),
+        Parameter(Similarity::Contains, vec!["damian".to_string()]),
     );
 
     let sql = query.to_sql();
@@ -1747,7 +1747,7 @@ fn test_query_to_sql_with_contains_multiple_values() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (
+        Parameter(
             Similarity::Contains,
             vec!["damian".to_string(), "john".to_string()],
         ),
@@ -1763,7 +1763,7 @@ fn test_query_to_sql_with_starts_with() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::StartsWith, vec!["damian".to_string()]),
+        Parameter(Similarity::StartsWith, vec!["damian".to_string()]),
     );
 
     let sql = query.to_sql();
@@ -1776,7 +1776,7 @@ fn test_query_to_sql_with_ends_with() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::EndsWith, vec!["damian".to_string()]),
+        Parameter(Similarity::EndsWith, vec!["damian".to_string()]),
     );
 
     let sql = query.to_sql();
@@ -1789,7 +1789,7 @@ fn test_query_to_sql_with_between() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "age".to_string(),
-        (
+        Parameter(
             Similarity::Between,
             vec!["20".to_string(), "30".to_string()],
         ),
@@ -1805,7 +1805,7 @@ fn test_query_to_sql_with_lesser() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "price".to_string(),
-        (Similarity::Lesser, vec!["100".to_string()]),
+        Parameter(Similarity::Lesser, vec!["100".to_string()]),
     );
 
     let sql = query.to_sql();
@@ -1818,7 +1818,7 @@ fn test_query_to_sql_with_lesser_or_equal() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "price".to_string(),
-        (Similarity::LesserOrEqual, vec!["100".to_string()]),
+        Parameter(Similarity::LesserOrEqual, vec!["100".to_string()]),
     );
 
     let sql = query.to_sql();
@@ -1831,7 +1831,7 @@ fn test_query_to_sql_with_greater() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "price".to_string(),
-        (Similarity::Greater, vec!["50".to_string()]),
+        Parameter(Similarity::Greater, vec!["50".to_string()]),
     );
 
     let sql = query.to_sql();
@@ -1844,7 +1844,7 @@ fn test_query_to_sql_with_greater_or_equal() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "price".to_string(),
-        (Similarity::GreaterOrEqual, vec!["50".to_string()]),
+        Parameter(Similarity::GreaterOrEqual, vec!["50".to_string()]),
     );
 
     let sql = query.to_sql();
@@ -1880,18 +1880,18 @@ fn test_query_to_sql_complex() {
     // Add multiple parameters
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["damian".to_string()]),
+        Parameter(Similarity::Contains, vec!["damian".to_string()]),
     );
     query.parameters.0.insert(
         "age".to_string(),
-        (
+        Parameter(
             Similarity::Between,
             vec!["20".to_string(), "30".to_string()],
         ),
     );
     query.parameters.0.insert(
         "price".to_string(),
-        (Similarity::Greater, vec!["100".to_string()]),
+        Parameter(Similarity::Greater, vec!["100".to_string()]),
     );
 
     // Add sorting
@@ -1911,7 +1911,7 @@ fn test_query_to_sql_with_empty_parameters() {
     query
         .parameters
         .0
-        .insert("name".to_string(), (Similarity::Contains, vec![]));
+        .insert("name".to_string(), Parameter(Similarity::Contains, vec![]));
 
     let sql = query.to_sql();
     assert_eq!(sql, "LIMIT ? OFFSET ?");
@@ -1933,7 +1933,7 @@ fn test_query_to_sql_numeric_comparisons_multiple_values() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "price".to_string(),
-        (
+        Parameter(
             Similarity::Greater,
             vec!["50".to_string(), "100".to_string()],
         ),
@@ -1949,7 +1949,7 @@ fn test_query_to_sql_between_invalid_values() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "age".to_string(),
-        (Similarity::Between, vec!["20".to_string()]),
+        Parameter(Similarity::Between, vec!["20".to_string()]),
     );
 
     let sql = query.to_sql();
@@ -1962,7 +1962,7 @@ fn test_query_to_sql_between_multiple_pairs() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "age".to_string(),
-        (
+        Parameter(
             Similarity::Between,
             vec![
                 "10".to_string(),
@@ -1986,7 +1986,7 @@ fn test_query_to_sql_between_odd_values_ignored() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "age".to_string(),
-        (
+        Parameter(
             Similarity::Between,
             vec![
                 "10".to_string(),
@@ -2011,7 +2011,7 @@ fn test_query_to_sql_between_three_pairs() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "age".to_string(),
-        (
+        Parameter(
             Similarity::Between,
             vec![
                 "10".to_string(),
@@ -2037,7 +2037,7 @@ fn test_query_to_sql_between_single_pair() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "age".to_string(),
-        (
+        Parameter(
             Similarity::Between,
             vec!["20".to_string(), "30".to_string()],
         ),
@@ -2054,7 +2054,7 @@ fn test_query_to_sql_between_empty_values() {
     query
         .parameters
         .0
-        .insert("age".to_string(), (Similarity::Between, vec![]));
+        .insert("age".to_string(), Parameter(Similarity::Between, vec![]));
 
     let sql = query.to_sql();
     assert_eq!(sql, "LIMIT ? OFFSET ?");
@@ -2068,7 +2068,7 @@ fn test_query_to_sql_between_complex_with_other_conditions() {
     // Add between with multiple pairs
     query.parameters.0.insert(
         "age".to_string(),
-        (
+        Parameter(
             Similarity::Between,
             vec![
                 "10".to_string(),
@@ -2083,7 +2083,7 @@ fn test_query_to_sql_between_complex_with_other_conditions() {
     // Add other condition
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["damian".to_string()]),
+        Parameter(Similarity::Contains, vec!["damian".to_string()]),
     );
 
     let sql = query.to_sql();
@@ -2100,7 +2100,7 @@ fn test_query_to_sql_between_complex_with_other_conditions() {
 #[test]
 fn test_parameter_type_alias() {
     // Test that Parameter is correctly defined as a tuple type alias
-    let param: Parameter = (Similarity::Contains, vec!["test".to_string()]);
+    let param: Parameter = Parameter(Similarity::Contains, vec!["test".to_string()]);
 
     // Test tuple access (backward compatibility)
     assert_eq!(param.0, Similarity::Contains);
@@ -2109,7 +2109,7 @@ fn test_parameter_type_alias() {
 
 #[test]
 fn test_parameter_get_trait_similarity() {
-    let param: Parameter = (
+    let param: Parameter = Parameter(
         Similarity::Equals,
         vec!["value1".to_string(), "value2".to_string()],
     );
@@ -2118,19 +2118,19 @@ fn test_parameter_get_trait_similarity() {
     assert_eq!(param.similarity(), &Similarity::Equals);
 
     // Test with different similarity types
-    let param2: Parameter = (
+    let param2: Parameter = Parameter(
         Similarity::Between,
         vec!["10".to_string(), "20".to_string()],
     );
     assert_eq!(param2.similarity(), &Similarity::Between);
 
-    let param3: Parameter = (Similarity::GreaterOrEqual, vec!["100".to_string()]);
+    let param3: Parameter = Parameter(Similarity::GreaterOrEqual, vec!["100".to_string()]);
     assert_eq!(param3.similarity(), &Similarity::GreaterOrEqual);
 }
 
 #[test]
 fn test_parameter_get_trait_values() {
-    let param: Parameter = (
+    let param: Parameter = Parameter(
         Similarity::Contains,
         vec!["value1".to_string(), "value2".to_string()],
     );
@@ -2142,11 +2142,11 @@ fn test_parameter_get_trait_values() {
     );
 
     // Test with empty values
-    let param2: Parameter = (Similarity::Equals, vec![]);
+    let param2: Parameter = Parameter(Similarity::Equals, vec![]);
     assert_eq!(param2.values(), &vec![] as &Vec<String>);
 
     // Test with single value
-    let param3: Parameter = (Similarity::StartsWith, vec!["prefix".to_string()]);
+    let param3: Parameter = Parameter(Similarity::StartsWith, vec!["prefix".to_string()]);
     assert_eq!(param3.values(), &vec!["prefix".to_string()]);
 }
 
@@ -2165,7 +2165,7 @@ fn test_parameter_get_trait_all_similarity_types() {
     ];
 
     for similarity in similarities {
-        let param: Parameter = (similarity.clone(), vec!["test".to_string()]);
+        let param: Parameter = Parameter(similarity.clone(), vec!["test".to_string()]);
         assert_eq!(param.similarity(), &similarity);
         assert_eq!(param.values(), &vec!["test".to_string()]);
     }
@@ -2173,7 +2173,7 @@ fn test_parameter_get_trait_all_similarity_types() {
 
 #[test]
 fn test_parameter_get_trait_immutable_references() {
-    let param: Parameter = (
+    let param: Parameter = Parameter(
         Similarity::Contains,
         vec!["value1".to_string(), "value2".to_string()],
     );
@@ -2207,7 +2207,7 @@ fn test_parameter_get_trait_with_complex_values() {
         "value\twith\ttabs".to_string(),
     ];
 
-    let param: Parameter = (Similarity::Contains, complex_values.clone());
+    let param: Parameter = Parameter(Similarity::Contains, complex_values.clone());
 
     assert_eq!(param.similarity(), &Similarity::Contains);
     assert_eq!(param.values(), &complex_values);
@@ -2251,7 +2251,7 @@ fn test_parameters_inner_mut_method() {
     // Test that we can modify the underlying data
     inner_map.insert(
         "new_key".to_string(),
-        (
+        Parameter(
             Similarity::Between,
             vec!["10".to_string(), "20".to_string()],
         ),
@@ -2317,7 +2317,7 @@ fn test_inner_methods_preserve_order() {
     let inner_map_mut = params.inner_mut();
     inner_map_mut.insert(
         "fourth".to_string(),
-        (Similarity::Greater, vec!["5".to_string()]),
+        Parameter(Similarity::Greater, vec!["5".to_string()]),
     );
 
     let keys_after: Vec<&String> = inner_map_mut.keys().collect();
@@ -2504,7 +2504,7 @@ fn test_inner_methods_with_query_manipulation() {
 
     param_map_mut.insert(
         "new_param".to_string(),
-        (Similarity::Greater, vec!["100".to_string()]),
+        Parameter(Similarity::Greater, vec!["100".to_string()]),
     );
     sort_map_mut.insert("new_sort".to_string(), SortOrder::Ascending);
 
@@ -2645,12 +2645,12 @@ fn test_query_from_http_normal_parameters() {
     assert_eq!(query.parameters.0.len(), 2);
 
     assert!(query.parameters.0.contains_key("name"));
-    let (similarity, values) = &query.parameters.0["name"];
+    let Parameter(similarity, values) = &query.parameters.0["name"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["ben"]);
 
     assert!(query.parameters.0.contains_key("age"));
-    let (similarity, values) = &query.parameters.0["age"];
+    let Parameter(similarity, values) = &query.parameters.0["age"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["20"]);
 }
@@ -2662,7 +2662,7 @@ fn test_query_from_http_repeated_parameters() {
     assert_eq!(query.parameters.0.len(), 1);
 
     assert!(query.parameters.0.contains_key("name"));
-    let (similarity, values) = &query.parameters.0["name"];
+    let Parameter(similarity, values) = &query.parameters.0["name"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["ben", "john", "alice"]);
 }
@@ -2676,19 +2676,19 @@ fn test_query_from_http_mixed_normal_and_similarity() {
 
     // Normal parameters (repeated)
     assert!(query.parameters.0.contains_key("name"));
-    let (similarity, values) = &query.parameters.0["name"];
+    let Parameter(similarity, values) = &query.parameters.0["name"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["ben", "john"]);
 
     // Similarity-based parameter
     assert!(query.parameters.0.contains_key("age"));
-    let (similarity, values) = &query.parameters.0["age"];
+    let Parameter(similarity, values) = &query.parameters.0["age"];
     assert_eq!(*similarity, Similarity::Contains);
     assert_eq!(*values, vec!["20"]);
 
     // Normal parameter (single)
     assert!(query.parameters.0.contains_key("status"));
-    let (similarity, values) = &query.parameters.0["status"];
+    let Parameter(similarity, values) = &query.parameters.0["status"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["active"]);
 }
@@ -2702,12 +2702,12 @@ fn test_query_from_http_normal_with_special_params() {
     assert_eq!(query.parameters.0.len(), 2);
 
     assert!(query.parameters.0.contains_key("name"));
-    let (similarity, values) = &query.parameters.0["name"];
+    let Parameter(similarity, values) = &query.parameters.0["name"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["ben"]);
 
     assert!(query.parameters.0.contains_key("age"));
-    let (similarity, values) = &query.parameters.0["age"];
+    let Parameter(similarity, values) = &query.parameters.0["age"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["20"]);
 
@@ -2728,12 +2728,12 @@ fn test_query_from_http_url_encoded_normal_params() {
     assert_eq!(query.parameters.0.len(), 2);
 
     assert!(query.parameters.0.contains_key("name"));
-    let (similarity, values) = &query.parameters.0["name"];
+    let Parameter(similarity, values) = &query.parameters.0["name"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["john doe"]);
 
     assert!(query.parameters.0.contains_key("email"));
-    let (similarity, values) = &query.parameters.0["email"];
+    let Parameter(similarity, values) = &query.parameters.0["email"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["test@example.com"]);
 }
@@ -2745,7 +2745,7 @@ fn test_query_from_http_repeated_mixed_similarity() {
     assert_eq!(query.parameters.0.len(), 1);
 
     assert!(query.parameters.0.contains_key("name"));
-    let (similarity, values) = &query.parameters.0["name"];
+    let Parameter(similarity, values) = &query.parameters.0["name"];
     // The similarity-based parameter takes precedence
     assert_eq!(*similarity, Similarity::Contains);
     assert_eq!(*values, vec!["john"]);
@@ -2758,7 +2758,7 @@ fn test_query_from_http_empty_normal_values() {
     assert_eq!(query.parameters.0.len(), 1);
 
     assert!(query.parameters.0.contains_key("age"));
-    let (similarity, values) = &query.parameters.0["age"];
+    let Parameter(similarity, values) = &query.parameters.0["age"];
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["20"]);
 }
@@ -2769,14 +2769,14 @@ fn test_query_to_http_normal_parameters() {
 
     query.parameters.0.insert(
         "name".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec!["ben".to_string(), "john".to_string()],
         ),
     );
     query.parameters.0.insert(
         "age".to_string(),
-        (Similarity::Equals, vec!["20".to_string()]),
+        Parameter(Similarity::Equals, vec!["20".to_string()]),
     );
 
     let http = query.to_http();
@@ -2822,14 +2822,14 @@ fn test_query_to_sql_normal_parameters() {
 
     query.parameters.0.insert(
         "name".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec!["ben".to_string(), "john".to_string()],
         ),
     );
     query.parameters.0.insert(
         "age".to_string(),
-        (Similarity::Equals, vec!["20".to_string()]),
+        Parameter(Similarity::Equals, vec!["20".to_string()]),
     );
 
     let sql = query.to_sql();
@@ -2843,14 +2843,14 @@ fn test_query_to_sql_mixed_normal_and_similarity() {
 
     query.parameters.0.insert(
         "name".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec!["ben".to_string(), "john".to_string()],
         ),
     );
     query.parameters.0.insert(
         "age".to_string(),
-        (Similarity::Contains, vec!["20".to_string()]),
+        Parameter(Similarity::Contains, vec!["20".to_string()]),
     );
 
     let sql = query.to_sql();
@@ -2893,7 +2893,7 @@ fn test_query_to_values_equals_integer() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "age".to_string(),
-        (Similarity::Equals, vec!["25".to_string()]),
+        Parameter(Similarity::Equals, vec!["25".to_string()]),
     );
 
     let values = query.to_values();
@@ -2910,7 +2910,7 @@ fn test_query_to_values_equals_multiple_integers() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "age".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec!["25".to_string(), "30".to_string(), "35".to_string()],
         ),
@@ -2932,7 +2932,7 @@ fn test_query_to_values_equals_real() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "price".to_string(),
-        (Similarity::Equals, vec!["25.5".to_string()]),
+        Parameter(Similarity::Equals, vec!["25.5".to_string()]),
     );
 
     let values = query.to_values();
@@ -2949,7 +2949,7 @@ fn test_query_to_values_equals_text() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::Equals, vec!["john".to_string()]),
+        Parameter(Similarity::Equals, vec!["john".to_string()]),
     );
 
     let values = query.to_values();
@@ -2966,7 +2966,7 @@ fn test_query_to_values_equals_null() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "deleted_at".to_string(),
-        (Similarity::Equals, vec!["null".to_string()]),
+        Parameter(Similarity::Equals, vec!["null".to_string()]),
     );
 
     let values = query.to_values();
@@ -2983,7 +2983,7 @@ fn test_query_to_values_contains() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["john".to_string()]),
+        Parameter(Similarity::Contains, vec!["john".to_string()]),
     );
 
     let values = query.to_values();
@@ -3000,7 +3000,7 @@ fn test_query_to_values_contains_multiple() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (
+        Parameter(
             Similarity::Contains,
             vec!["john".to_string(), "jane".to_string()],
         ),
@@ -3021,7 +3021,7 @@ fn test_query_to_values_starts_with() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::StartsWith, vec!["john".to_string()]),
+        Parameter(Similarity::StartsWith, vec!["john".to_string()]),
     );
 
     let values = query.to_values();
@@ -3038,7 +3038,7 @@ fn test_query_to_values_ends_with() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::EndsWith, vec!["son".to_string()]),
+        Parameter(Similarity::EndsWith, vec!["son".to_string()]),
     );
 
     let values = query.to_values();
@@ -3055,7 +3055,7 @@ fn test_query_to_values_between() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "age".to_string(),
-        (
+        Parameter(
             Similarity::Between,
             vec!["20".to_string(), "30".to_string()],
         ),
@@ -3076,7 +3076,7 @@ fn test_query_to_values_lesser() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "price".to_string(),
-        (Similarity::Lesser, vec!["100".to_string()]),
+        Parameter(Similarity::Lesser, vec!["100".to_string()]),
     );
 
     let values = query.to_values();
@@ -3093,7 +3093,7 @@ fn test_query_to_values_lesser_or_equal() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "price".to_string(),
-        (Similarity::LesserOrEqual, vec!["100".to_string()]),
+        Parameter(Similarity::LesserOrEqual, vec!["100".to_string()]),
     );
 
     let values = query.to_values();
@@ -3110,7 +3110,7 @@ fn test_query_to_values_greater() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "price".to_string(),
-        (Similarity::Greater, vec!["50".to_string()]),
+        Parameter(Similarity::Greater, vec!["50".to_string()]),
     );
 
     let values = query.to_values();
@@ -3127,7 +3127,7 @@ fn test_query_to_values_greater_or_equal() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "price".to_string(),
-        (Similarity::GreaterOrEqual, vec!["50".to_string()]),
+        Parameter(Similarity::GreaterOrEqual, vec!["50".to_string()]),
     );
 
     let values = query.to_values();
@@ -3144,19 +3144,19 @@ fn test_query_to_values_mixed_types() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["john".to_string()]),
+        Parameter(Similarity::Contains, vec!["john".to_string()]),
     );
     query.parameters.0.insert(
         "age".to_string(),
-        (Similarity::Equals, vec!["25".to_string()]),
+        Parameter(Similarity::Equals, vec!["25".to_string()]),
     );
     query.parameters.0.insert(
         "price".to_string(),
-        (Similarity::Greater, vec!["100.5".to_string()]),
+        Parameter(Similarity::Greater, vec!["100.5".to_string()]),
     );
     query.parameters.0.insert(
         "deleted_at".to_string(),
-        (Similarity::Equals, vec!["null".to_string()]),
+        Parameter(Similarity::Equals, vec!["null".to_string()]),
     );
 
     let values = query.to_values();
@@ -3176,14 +3176,14 @@ fn test_query_to_values_complex_numeric_types() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "integers".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec!["123".to_string(), "-456".to_string(), "0".to_string()],
         ),
     );
     query.parameters.0.insert(
         "reals".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec![
                 "123.45".to_string(),
@@ -3194,7 +3194,7 @@ fn test_query_to_values_complex_numeric_types() {
     );
     query.parameters.0.insert(
         "mixed".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec!["123".to_string(), "123.45".to_string(), "text".to_string()],
         ),
@@ -3226,21 +3226,21 @@ fn test_query_to_values_edge_case_strings() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "special_chars".to_string(),
-        (
+        Parameter(
             Similarity::Contains,
             vec!["hello%world".to_string(), "test_underscore".to_string()],
         ),
     );
     query.parameters.0.insert(
         "unicode".to_string(),
-        (
+        Parameter(
             Similarity::StartsWith,
             vec!["测试".to_string(), "héllo".to_string()],
         ),
     );
     query.parameters.0.insert(
         "empty_string".to_string(),
-        (Similarity::Equals, vec!["".to_string()]),
+        Parameter(Similarity::Equals, vec!["".to_string()]),
     );
 
     let values = query.to_values();
@@ -3260,7 +3260,7 @@ fn test_query_to_values_numeric_edge_cases() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "edge_numbers".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec![
                 "0".to_string(),
@@ -3300,7 +3300,7 @@ fn test_query_to_values_large_numbers() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "large_int".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec![
                 "9223372036854775807".to_string(),  // i64::MAX
@@ -3310,7 +3310,7 @@ fn test_query_to_values_large_numbers() {
     );
     query.parameters.0.insert(
         "large_real".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec![
                 "1.7976931348623157e308".to_string(),  // f64::MAX
@@ -3336,7 +3336,7 @@ fn test_query_to_values_null_variations() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "null_tests".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec![
                 "null".to_string(),
@@ -3364,7 +3364,7 @@ fn test_query_to_values_whitespace_handling() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "whitespace".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec![
                 " 123 ".to_string(),
@@ -3391,7 +3391,7 @@ fn test_query_to_values_empty_parameters() {
     query
         .parameters
         .0
-        .insert("empty".to_string(), (Similarity::Equals, vec![]));
+        .insert("empty".to_string(), Parameter(Similarity::Equals, vec![]));
 
     let values = query.to_values();
 
@@ -3407,11 +3407,11 @@ fn test_query_to_values_multiple_parameters_same_key() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["john".to_string()]),
+        Parameter(Similarity::Contains, vec!["john".to_string()]),
     );
     query.parameters.0.insert(
         "name".to_string(), // This should overwrite the previous
-        (Similarity::StartsWith, vec!["jane".to_string()]),
+        Parameter(Similarity::StartsWith, vec!["jane".to_string()]),
     );
 
     let values = query.to_values();
@@ -3428,15 +3428,15 @@ fn test_query_to_values_parameter_order_preservation() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "first".to_string(),
-        (Similarity::Equals, vec!["1".to_string()]),
+        Parameter(Similarity::Equals, vec!["1".to_string()]),
     );
     query.parameters.0.insert(
         "second".to_string(),
-        (Similarity::Contains, vec!["2".to_string()]),
+        Parameter(Similarity::Contains, vec!["2".to_string()]),
     );
     query.parameters.0.insert(
         "third".to_string(),
-        (Similarity::Between, vec!["3".to_string(), "4".to_string()]),
+        Parameter(Similarity::Between, vec!["3".to_string(), "4".to_string()]),
     );
 
     let values = query.to_values();
@@ -3459,11 +3459,11 @@ fn test_query_to_values_with_custom_limit_offset_complex() {
 
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["john".to_string()]),
+        Parameter(Similarity::Contains, vec!["john".to_string()]),
     );
     query.parameters.0.insert(
         "age".to_string(),
-        (
+        Parameter(
             Similarity::Between,
             vec!["20".to_string(), "30".to_string()],
         ),
@@ -3536,11 +3536,11 @@ fn test_query_parameter_values() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (Similarity::Contains, vec!["john".to_string()]),
+        Parameter(Similarity::Contains, vec!["john".to_string()]),
     );
     query.parameters.0.insert(
         "age".to_string(),
-        (Similarity::Equals, vec!["25".to_string()]),
+        Parameter(Similarity::Equals, vec!["25".to_string()]),
     );
 
     let values = query.parameter_values();
@@ -3579,14 +3579,14 @@ fn test_query_total_parameters() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (
+        Parameter(
             Similarity::Contains,
             vec!["john".to_string(), "jane".to_string()],
         ),
     );
     query.parameters.0.insert(
         "age".to_string(),
-        (Similarity::Equals, vec!["25".to_string()]),
+        Parameter(Similarity::Equals, vec!["25".to_string()]),
     );
 
     let count = query.total_parameters();
@@ -3612,7 +3612,7 @@ fn test_query_total_parameters_with_empty_parameters() {
     query
         .parameters
         .0
-        .insert("empty".to_string(), (Similarity::Equals, vec![]));
+        .insert("empty".to_string(), Parameter(Similarity::Equals, vec![]));
 
     let count = query.total_parameters();
 
@@ -3626,24 +3626,24 @@ fn test_query_to_values_ignores_empty_values() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (
+        Parameter(
             Similarity::Contains,
             vec![
                 "john".to_string(),
-                "".to_string(),        // empty string
+                "".to_string(), // empty string
                 "jane".to_string(),
-                "   ".to_string(),     // whitespace only
+                "   ".to_string(), // whitespace only
                 "bob".to_string(),
             ],
         ),
     );
     query.parameters.0.insert(
         "age".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec![
                 "25".to_string(),
-                "".to_string(),        // empty string
+                "".to_string(), // empty string
                 "30".to_string(),
             ],
         ),
@@ -3659,7 +3659,7 @@ fn test_query_to_values_ignores_empty_values() {
     assert_eq!(values[3], SqlValue::Integer(25));
     assert_eq!(values[4], SqlValue::Integer(30));
     assert_eq!(values[5], SqlValue::Integer(50)); // limit
-    assert_eq!(values[6], SqlValue::Integer(0));  // offset
+    assert_eq!(values[6], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3668,13 +3668,13 @@ fn test_query_parameter_values_ignores_empty_values() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (
+        Parameter(
             Similarity::Contains,
             vec![
                 "john".to_string(),
-                "".to_string(),        // empty string
+                "".to_string(), // empty string
                 "jane".to_string(),
-                "   ".to_string(),     // whitespace only
+                "   ".to_string(), // whitespace only
             ],
         ),
     );
@@ -3693,23 +3693,23 @@ fn test_query_total_parameters_ignores_empty_values() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (
+        Parameter(
             Similarity::Contains,
             vec![
                 "john".to_string(),
-                "".to_string(),        // empty string
+                "".to_string(), // empty string
                 "jane".to_string(),
-                "   ".to_string(),     // whitespace only
+                "   ".to_string(), // whitespace only
             ],
         ),
     );
     query.parameters.0.insert(
         "age".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec![
                 "25".to_string(),
-                "".to_string(),        // empty string
+                "".to_string(), // empty string
             ],
         ),
     );
@@ -3726,13 +3726,13 @@ fn test_query_to_values_all_empty_values() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
-        (
+        Parameter(
             Similarity::Contains,
             vec![
-                "".to_string(),        // empty string
-                "   ".to_string(),     // whitespace only
-                "\t".to_string(),      // tab only
-                "\n".to_string(),      // newline only
+                "".to_string(),    // empty string
+                "   ".to_string(), // whitespace only
+                "\t".to_string(),  // tab only
+                "\n".to_string(),  // newline only
             ],
         ),
     );
@@ -3742,7 +3742,7 @@ fn test_query_to_values_all_empty_values() {
     // Should only contain limit and offset (no parameter values)
     assert_eq!(values.len(), 2);
     assert_eq!(values[0], SqlValue::Integer(50)); // limit
-    assert_eq!(values[1], SqlValue::Integer(0));  // offset
+    assert_eq!(values[1], SqlValue::Integer(0)); // offset
 }
 
 #[cfg(feature = "sql")]
@@ -3751,13 +3751,13 @@ fn test_query_to_values_mixed_empty_and_null() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "status".to_string(),
-        (
+        Parameter(
             Similarity::Equals,
             vec![
-                "".to_string(),        // empty string (should be ignored)
-                "null".to_string(),    // null string (should be converted to SQLValue::Null)
-                "   ".to_string(),     // whitespace only (should be ignored)
-                "active".to_string(),  // normal value
+                "".to_string(),       // empty string (should be ignored)
+                "null".to_string(),   // null string (should be converted to SQLValue::Null)
+                "   ".to_string(),    // whitespace only (should be ignored)
+                "active".to_string(), // normal value
             ],
         ),
     );
@@ -3769,5 +3769,5 @@ fn test_query_to_values_mixed_empty_and_null() {
     assert_eq!(values[0], SqlValue::Null);
     assert_eq!(values[1], SqlValue::Text("active".to_string()));
     assert_eq!(values[2], SqlValue::Integer(50)); // limit
-    assert_eq!(values[3], SqlValue::Integer(0));  // offset
+    assert_eq!(values[3], SqlValue::Integer(0)); // offset
 }
