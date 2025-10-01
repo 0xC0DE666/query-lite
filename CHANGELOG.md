@@ -5,12 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-10-01
+
+### Changed
+- **API Consistency**: Renamed SQL-related methods for better consistency and clarity
+  - `Query::to_parameter_values()` → `Query::parameter_values()`
+  - `Query::to_pagination_values()` → `Query::pagination_values()`
+  - `Query::build_where_clause()` → `Query::where_clause()` (now public)
+  - `Query::build_order_clause()` → `Query::order_clause()` (now public)
+- **Package Rename**: Renamed package from `query-x` to `query-lite` for better clarity
+- **Documentation**: Updated all documentation to reflect new package name and function names
+
+### Technical Details
+- **Breaking Changes**: Function renames are breaking changes, hence the major version bump
+- **Backward Compatibility**: Old function names are no longer available
+- **Public API**: Made `where_clause()` and `order_clause()` public for better API flexibility
+- **Consistent Naming**: All SQL-related methods now follow consistent naming patterns
+
 ## [0.4.0] - 2025-12-19
 
 ### Added
 - **Granular SQL Value Management**: New methods for fine-grained control over SQL parameter values
-  - `Query::to_parameter_values()`: Get SQL values for parameters only (without limit and offset)
-  - `Query::to_pagination_values()`: Get SQL values for pagination (limit and offset only)
+  - `Query::parameter_values()`: Get SQL values for parameters only (without limit and offset)
+  - `Query::pagination_values()`: Get SQL values for pagination (limit and offset only)
   - `Query::total_parameters()`: Get the total number of SQL parameter values
 - **Enhanced SQL Workflow**: Improved SQL generation workflow with separate parameter and pagination handling
 - **Performance Optimization**: Ability to process parameter values and pagination values independently

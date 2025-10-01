@@ -22,10 +22,10 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-query-lite = "0.4.0"
+query-lite = "0.5.0"
 
 # Optional: Enable SQL generation (enabled by default)
-# query-lite = { version = "0.4.0", default-features = false }
+# query-lite = { version = "0.5.0", default-features = false }
 ```
 
 ## Basic Usage
@@ -254,7 +254,7 @@ let total_params = query.total_parameters();
 
 ### Advanced SQL Value Management
 
-Version 0.4.0 introduces granular control over SQL parameter values:
+Version 0.5.0 introduces granular control over SQL parameter values:
 
 ```rust
 use query_lite::Query;
@@ -416,13 +416,13 @@ The library supports feature flags for optional functionality:
 ```toml
 [dependencies]
 # Default: includes SQL generation
-query-lite = "0.4.0"
+query-lite = "0.5.0"
 
 # Without SQL generation (smaller binary)
-query-lite = { version = "0.4.0", default-features = false }
+query-lite = { version = "0.5.0", default-features = false }
 
 # With specific features
-query-lite = { version = "0.4.0", features = ["sql"] }
+query-lite = { version = "0.5.0", features = ["sql"] }
 ```
 
 ## API Reference
