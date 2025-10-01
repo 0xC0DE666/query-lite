@@ -780,44 +780,8 @@ impl Query {
 
     #[cfg(feature = "sql")]
     pub fn to_values(&self) -> Vec<SqlValue> {
-        let mut sql_values = Vec::new();
-
-        for (_k, (param_similarity, param_values)) in self.parameters.inner() {
-            for cur_val in param_values {
-                // Skip empty values
-                if cur_val.trim().is_empty() {
-                    continue;
-                }
-
-                if cur_val == "null" {
-                    sql_values.push(SqlValue::Null);
-                    continue;
-                }
-
-                let sql_value = match *param_similarity {
-                    Similarity::Contains => SqlValue::Text(format!("%{}%", cur_val)),
-                    Similarity::StartsWith => SqlValue::Text(format!("{}%", cur_val)),
-                    Similarity::EndsWith => SqlValue::Text(format!("%{}", cur_val)),
-                    _ => {
-                        // Try to parse as integer first, then float, then text
-                        if let Ok(i) = cur_val.parse::<i64>() {
-                            SqlValue::Integer(i)
-                        } else if let Ok(f) = cur_val.parse::<f64>() {
-                            SqlValue::Real(f)
-                        } else {
-                            SqlValue::Text(cur_val.clone())
-                        }
-                    }
-                };
-
-                sql_values.push(sql_value);
-            }
-        }
-
-        // Add limit and offset as the last two parameters
-        sql_values.push(SqlValue::Integer(self.limit as i64));
-        sql_values.push(SqlValue::Integer(self.offset as i64));
-
+        let mut sql_values = self.parameter_values();
+        sql_values.extend(self.pagination_values());
         sql_values
     }
 
