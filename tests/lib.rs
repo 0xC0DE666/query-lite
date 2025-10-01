@@ -3532,7 +3532,7 @@ fn test_sql_value_enum_derived_traits() {
 
 #[cfg(feature = "sql")]
 #[test]
-fn test_query_to_parameter_values() {
+fn test_query_parameter_values() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
@@ -3543,7 +3543,7 @@ fn test_query_to_parameter_values() {
         (Similarity::Equals, vec!["25".to_string()]),
     );
 
-    let values = query.to_parameter_values().unwrap();
+    let values = query.parameter_values().unwrap();
 
     assert_eq!(values.len(), 2);
     assert_eq!(values[0], SqlValue::Text("%john%".to_string()));
@@ -3552,21 +3552,21 @@ fn test_query_to_parameter_values() {
 
 #[cfg(feature = "sql")]
 #[test]
-fn test_query_to_parameter_values_empty() {
+fn test_query_parameter_values_empty() {
     let query = Query::new();
-    let values = query.to_parameter_values().unwrap();
+    let values = query.parameter_values().unwrap();
 
     assert_eq!(values.len(), 0);
 }
 
 #[cfg(feature = "sql")]
 #[test]
-fn test_query_to_pagination_values() {
+fn test_query_pagination_values() {
     let mut query = Query::new();
     query.limit = 100;
     query.offset = 25;
 
-    let values = query.to_pagination_values();
+    let values = query.pagination_values();
 
     assert_eq!(values.len(), 2);
     assert_eq!(values[0], SqlValue::Integer(100));
@@ -3664,7 +3664,7 @@ fn test_query_to_values_ignores_empty_values() {
 
 #[cfg(feature = "sql")]
 #[test]
-fn test_query_to_parameter_values_ignores_empty_values() {
+fn test_query_parameter_values_ignores_empty_values() {
     let mut query = Query::new();
     query.parameters.0.insert(
         "name".to_string(),
@@ -3679,7 +3679,7 @@ fn test_query_to_parameter_values_ignores_empty_values() {
         ),
     );
 
-    let values = query.to_parameter_values().unwrap();
+    let values = query.parameter_values().unwrap();
 
     // Should only contain non-empty values: john, jane
     assert_eq!(values.len(), 2);

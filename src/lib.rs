@@ -624,13 +624,13 @@ impl Query {
         let mut sql_parts = Vec::new();
 
         // Build WHERE clause from parameters
-        let where_clause = self.build_where_clause();
+        let where_clause = self.where_clause();
         if !where_clause.is_empty() {
             sql_parts.push(format!("WHERE {}", where_clause));
         }
 
         // Build ORDER BY clause from sort fields
-        let order_clause = self.build_order_clause();
+        let order_clause = self.order_clause();
         if !order_clause.is_empty() {
             sql_parts.push(format!("ORDER BY {}", order_clause));
         }
@@ -642,7 +642,7 @@ impl Query {
     }
 
     #[cfg(feature = "sql")]
-    fn build_where_clause(&self) -> String {
+    pub fn where_clause(&self) -> String {
         let mut conditions = Vec::new();
 
         for (key, (similarity, values)) in &self.parameters.0 {
@@ -762,7 +762,7 @@ impl Query {
     }
 
     #[cfg(feature = "sql")]
-    fn build_order_clause(&self) -> String {
+    pub fn order_clause(&self) -> String {
         let mut order_parts = Vec::new();
 
         for (name, order) in &self.sort_fields.0 {
@@ -825,7 +825,7 @@ impl Query {
 
     #[cfg(feature = "sql")]
     /// Get SQL values for parameters only (without limit and offset)
-    pub fn to_parameter_values(&self) -> Result<Vec<SqlValue>> {
+    pub fn parameter_values(&self) -> Result<Vec<SqlValue>> {
         let mut sql_values = Vec::new();
 
         for k in self.parameters.inner().keys() {
@@ -870,7 +870,7 @@ impl Query {
 
     #[cfg(feature = "sql")]
     /// Get SQL values for pagination (limit and offset only)
-    pub fn to_pagination_values(&self) -> Vec<SqlValue> {
+    pub fn pagination_values(&self) -> Vec<SqlValue> {
         vec![
             SqlValue::Integer(self.limit as i64),
             SqlValue::Integer(self.offset as i64),

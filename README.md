@@ -243,8 +243,8 @@ let sql = query.to_sql();
 // Result: "WHERE name LIKE ? AND age BETWEEN ? AND ? ORDER BY date_created DESC LIMIT ? OFFSET ?"
 
 // Get parameter values separately for more control
-let param_values = query.to_parameter_values()?;
-let pagination_values = query.to_pagination_values();
+let param_values = query.parameter_values()?;
+let pagination_values = query.pagination_values();
 let total_params = query.total_parameters();
 
 // Use with your database driver
@@ -262,11 +262,11 @@ use query_lite::Query;
 let query = Query::from_http("name=contains:john&age=between:20,30&price=greater:100".to_string())?;
 
 // Get only parameter values (without pagination)
-let param_values = query.to_parameter_values()?;
+let param_values = query.parameter_values()?;
 // Result: [SqlValue::Text("%john%"), SqlValue::Text("20"), SqlValue::Text("30"), SqlValue::Text("100")]
 
 // Get only pagination values
-let pagination_values = query.to_pagination_values();
+let pagination_values = query.pagination_values();
 // Result: [SqlValue::Integer(50), SqlValue::Integer(0)]
 
 // Get total parameter count
@@ -444,8 +444,8 @@ query-lite = { version = "0.4.0", features = ["sql"] }
 - `Query::to_http()`: Convert Query struct back to HTTP query string
 - `Query::to_sql()`: Generate SQL query with parameter placeholders (feature-gated)
 - `Query::to_values()`: Get all SQL values (parameters + pagination) (feature-gated)
-- `Query::to_parameter_values()`: Get SQL values for parameters only (feature-gated)
-- `Query::to_pagination_values()`: Get SQL values for pagination only (feature-gated)
+- `Query::parameter_values()`: Get SQL values for parameters only (feature-gated)
+- `Query::pagination_values()`: Get SQL values for pagination only (feature-gated)
 - `Query::total_parameters()`: Get total number of SQL parameter values (feature-gated)
 - `Query::init()`: Create Query with custom parameters, sort fields, limit, and offset
 
