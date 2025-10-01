@@ -783,10 +783,7 @@ impl Query {
         let mut sql_values = Vec::new();
 
         for k in self.parameters.inner().keys() {
-            let (param_similarity, param_values) =
-                self.parameters.inner().get(k).ok_or_else(|| {
-                    Error::InvalidSqlValue(format!("Parameter '{}' not found", k))
-                })?;
+            let (param_similarity, param_values) = self.parameters.inner().get(k).unwrap();
 
             for cur_val in param_values {
                 // Skip empty values
