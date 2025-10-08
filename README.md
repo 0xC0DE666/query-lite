@@ -22,10 +22,10 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-query-lite = "0.7.0"
+query-lite = "0.8.0"
 
 # Optional: Enable SQL generation (enabled by default)
-# query-lite = { version = "0.7.0", default-features = false }
+# query-lite = { version = "0.8.0", default-features = false }
 ```
 
 ## Basic Usage
@@ -252,6 +252,40 @@ let total_params = query.total_parameters();
 // let rows = stmt.query(param_values)?;
 ```
 
+### Advanced SQL Clause Management
+
+Version 0.8.0 introduces improved SQL clause methods that return `Option<String>` for better semantic clarity:
+
+```rust
+use query_lite::Query;
+
+let query = Query::from_http("name=contains:john&age=between:20,30&order=date_created:desc".to_string())?;
+
+// Get WHERE clause (returns None if no conditions)
+match query.where_clause() {
+    Some(where_clause) => println!("WHERE {}", where_clause),
+    None => println!("No WHERE conditions"),
+}
+
+// Get ORDER BY clause (returns None if no sorting)
+match query.order_clause() {
+    Some(order_clause) => println!("ORDER BY {}", order_clause),
+    None => println!("No ORDER BY clause"),
+}
+
+// Build custom SQL with explicit handling
+let sql = match (query.where_clause(), query.order_clause()) {
+    (Some(where_clause), Some(order_clause)) => 
+        format!("SELECT * FROM users WHERE {} ORDER BY {}", where_clause, order_clause),
+    (Some(where_clause), None) => 
+        format!("SELECT * FROM users WHERE {}", where_clause),
+    (None, Some(order_clause)) => 
+        format!("SELECT * FROM users ORDER BY {}", order_clause),
+    (None, None) => 
+        "SELECT * FROM users".to_string(),
+};
+```
+
 ### Advanced SQL Value Management
 
 Version 0.6.0 introduces simplified SQL value methods:
@@ -416,13 +450,13 @@ The library supports feature flags for optional functionality:
 ```toml
 [dependencies]
 # Default: includes SQL generation
-query-lite = "0.7.0"
+query-lite = "0.8.0"
 
 # Without SQL generation (smaller binary)
-query-lite = { version = "0.7.0", default-features = false }
+query-lite = { version = "0.8.0", default-features = false }
 
 # With specific features
-query-lite = { version = "0.7.0", features = ["sql"] }
+query-lite = { version = "0.8.0", features = ["sql"] }
 ```
 
 ## API Reference
@@ -443,6 +477,8 @@ query-lite = { version = "0.7.0", features = ["sql"] }
 - `Query::from_http()`: Parse HTTP query string into Query struct
 - `Query::to_http()`: Convert Query struct back to HTTP query string
 - `Query::to_sql()`: Generate SQL query with parameter placeholders (feature-gated)
+- `Query::where_clause()`: Get WHERE clause as Option<String> (feature-gated)
+- `Query::order_clause()`: Get ORDER BY clause as Option<String> (feature-gated)
 - `Query::to_values()`: Get all SQL values (parameters + pagination) (feature-gated)
 - `Query::parameter_values()`: Get SQL values for parameters only (feature-gated)
 - `Query::pagination_values()`: Get SQL values for pagination only (feature-gated)

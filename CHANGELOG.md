@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2025-01-27
+
+### Changed
+- **SQL Clause Methods**: Updated `where_clause()` and `order_clause()` to return `Option<String>`
+  - `Query::where_clause()`: Now returns `Option<String>` instead of `String`
+  - `Query::order_clause()`: Now returns `Option<String>` instead of `String`
+  - Returns `None` when no conditions/sorting exist, `Some(clause)` otherwise
+  - Prevents bugs from empty string handling and makes intent clearer
+
+### Added
+- **Improved SQL API**: `Option<String>` return types for SQL clause methods provide better semantic clarity
+- **Better Error Prevention**: Eliminates accidental inclusion of empty clauses in SQL
+- **Enhanced Type Safety**: Forces explicit handling of empty cases
+
+### Breaking Changes
+- **SQL Clause Methods**: `where_clause()` and `order_clause()` now return `Option<String>`
+  - Update code from `let clause = query.where_clause(); if !clause.is_empty() { ... }`
+  - To `if let Some(clause) = query.where_clause() { ... }`
+
+### Technical Details
+- **SQL Safety**: `Option<String>` prevents accidental inclusion of empty clauses in SQL
+- **Rust Idiomatic**: Follows Rust best practices for "might not exist" scenarios
+- **API Consistency**: Aligns with Rust's standard approach to optional values
+- **Version Bump**: Major version bump reflects breaking API changes
+
 ## [0.7.0] - 2025-01-27
 
 ### Changed

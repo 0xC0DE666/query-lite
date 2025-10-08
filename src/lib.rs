@@ -629,14 +629,12 @@ impl Query {
         let mut sql_parts = Vec::new();
 
         // Build WHERE clause from parameters
-        let where_clause = self.where_clause();
-        if !where_clause.is_empty() {
+        if let Some(where_clause) = self.where_clause() {
             sql_parts.push(format!("WHERE {}", where_clause));
         }
 
         // Build ORDER BY clause from sort fields
-        let order_clause = self.order_clause();
-        if !order_clause.is_empty() {
+        if let Some(order_clause) = self.order_clause() {
             sql_parts.push(format!("ORDER BY {}", order_clause));
         }
 
@@ -647,7 +645,7 @@ impl Query {
     }
 
     #[cfg(feature = "sql")]
-    pub fn where_clause(&self) -> String {
+    pub fn where_clause(&self) -> Option<String> {
         let mut conditions = Vec::new();
 
         for (key, param) in &self.parameters.0 {
@@ -765,11 +763,15 @@ impl Query {
             conditions.push(condition);
         }
 
-        conditions.join(" AND ")
+        if conditions.is_empty() {
+            None
+        } else {
+            Some(conditions.join(" AND "))
+        }
     }
 
     #[cfg(feature = "sql")]
-    pub fn order_clause(&self) -> String {
+    pub fn order_clause(&self) -> Option<String> {
         let mut order_parts = Vec::new();
 
         for (name, order) in &self.sort_fields.0 {
@@ -782,7 +784,11 @@ impl Query {
             }
         }
 
-        order_parts.join(", ")
+        if order_parts.is_empty() {
+            None
+        } else {
+            Some(order_parts.join(", "))
+        }
     }
 
     #[cfg(feature = "sql")]
