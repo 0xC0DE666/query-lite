@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Order`, `Parameter`, and `Parameters` tuple struct fields are now private
   - Added `Parameter::init()` constructor method for creating `Parameter` instances
   - Improved API safety by preventing direct field access
+- **Internal API**: Made internal utility functions and constants crate-private
+  - `parse_parameter()` and `parse_order_field()` are now `pub(crate)` (internal-only)
+  - Constants (`QUESTION`, `AMPERSAND`, `EQUAL`, `COLON`, `COMMA`, `PERCENT`) are now `pub(crate)` (internal-only)
+  - `url_decode()` and `url_encode()` are now `pub(crate)` (internal-only)
+  - These were never part of the documented public API and are now properly encapsulated
+  - Tests for these internal functions have been moved to a separate test module within the crate
 
 ### Added
 - **Parameter Constructor**: Added `Parameter::init()` method for creating `Parameter` instances
@@ -45,6 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Improved Readability**: `query.order.ascending(...)` reads more naturally than `query.sort_fields.ascending(...)`
 - **One-Word Naming**: Simpler, more concise type name following Rust naming conventions
 - **Better Encapsulation**: Private fields enforce use of accessor methods, improving API stability
+- **Reduced API Surface**: Internal utilities are no longer exposed, reducing maintenance burden and preventing accidental usage
+- **Test Organization**: Internal function tests moved to `src/parse_tests.rs` for better organization
 - **Version Bump**: Minor version bump reflects breaking API changes
 
 ## [0.8.0] - 2025-01-27

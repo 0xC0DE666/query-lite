@@ -107,69 +107,69 @@ fn test_parse_parameter_invalid_whitespace_only() {
     assert!(parse_parameter("   ").is_err());
 }
 
-// Tests for parse_sort_field function
+// Tests for parse_order_field function
 #[test]
-fn test_parse_sort_field_asc() {
-    let (name, order) = parse_sort_field("name:asc").unwrap();
+fn test_parse_order_field_asc() {
+    let (name, order) = parse_order_field("name:asc").unwrap();
     assert_eq!(name, "name");
     assert_eq!(order, SortOrder::Ascending);
 }
 
 #[test]
-fn test_parse_sort_field_desc() {
-    let (name, order) = parse_sort_field("date_created:desc").unwrap();
+fn test_parse_order_field_desc() {
+    let (name, order) = parse_order_field("date_created:desc").unwrap();
     assert_eq!(name, "date_created");
     assert_eq!(order, SortOrder::Descending);
 }
 
 #[test]
-fn test_parse_sort_field_with_whitespace() {
-    let (name, order) = parse_sort_field("  name  :  asc  ").unwrap();
+fn test_parse_order_field_with_whitespace() {
+    let (name, order) = parse_order_field("  name  :  asc  ").unwrap();
     assert_eq!(name, "name");
     assert_eq!(order, SortOrder::Ascending);
 }
 
 #[test]
-fn test_parse_sort_field_with_special_characters() {
-    let (name, order) = parse_sort_field("user_name:desc").unwrap();
+fn test_parse_order_field_with_special_characters() {
+    let (name, order) = parse_order_field("user_name:desc").unwrap();
     assert_eq!(name, "user_name");
     assert_eq!(order, SortOrder::Descending);
 }
 
 #[test]
-fn test_parse_sort_field_invalid_empty() {
-    assert!(parse_sort_field("").is_err());
+fn test_parse_order_field_invalid_empty() {
+    assert!(parse_order_field("").is_err());
 }
 
 #[test]
-fn test_parse_sort_field_invalid_no_colon() {
-    assert!(parse_sort_field("name").is_err());
-    assert!(parse_sort_field("nameasc").is_err());
+fn test_parse_order_field_invalid_no_colon() {
+    assert!(parse_order_field("name").is_err());
+    assert!(parse_order_field("nameasc").is_err());
 }
 
 #[test]
-fn test_parse_sort_field_invalid_multiple_colons() {
-    assert!(parse_sort_field("name:asc:extra").is_err());
+fn test_parse_order_field_invalid_multiple_colons() {
+    assert!(parse_order_field("name:asc:extra").is_err());
 }
 
 #[test]
-fn test_parse_sort_field_invalid_empty_name() {
-    assert!(parse_sort_field(":asc").is_err());
+fn test_parse_order_field_invalid_empty_name() {
+    assert!(parse_order_field(":asc").is_err());
 }
 
 #[test]
-fn test_parse_sort_field_invalid_empty_order() {
-    assert!(parse_sort_field("name:").is_err());
+fn test_parse_order_field_invalid_empty_order() {
+    assert!(parse_order_field("name:").is_err());
 }
 
 #[test]
-fn test_parse_sort_field_invalid_order() {
-    assert!(parse_sort_field("name:invalid").is_err());
+fn test_parse_order_field_invalid_order() {
+    assert!(parse_order_field("name:invalid").is_err());
 }
 
 #[test]
-fn test_parse_sort_field_invalid_whitespace_only() {
-    assert!(parse_sort_field("   ").is_err());
+fn test_parse_order_field_invalid_whitespace_only() {
+    assert!(parse_order_field("   ").is_err());
 }
 
 #[test]

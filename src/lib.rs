@@ -655,7 +655,7 @@ impl FromStr for Order {
                 continue;
             }
 
-            let (name, sort_order) = parse_sort_field(trimmed_field)?;
+            let (name, sort_order) = parse_order_field(trimmed_field)?;
             order.0.insert(name, sort_order);
         }
 
@@ -825,12 +825,12 @@ pub(crate) fn parse_parameter(s: &str) -> Result<Parameter> {
     Ok(Parameter(similarity, values))
 }
 
-/// Parse a sort field string into name and order
+/// Parse an order field string into name and order
 ///
 /// # Examples
 /// - "name:asc" -> ("name", SortOrder::Ascending)
 /// - "date_created:desc" -> ("date_created", SortOrder::Descending)
-pub(crate) fn parse_sort_field(s: &str) -> Result<(String, SortOrder)> {
+pub(crate) fn parse_order_field(s: &str) -> Result<(String, SortOrder)> {
     let trimmed = s.trim();
     if trimmed.is_empty() {
         return Err(Error::InvalidSortField(s.into()));
