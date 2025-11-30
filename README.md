@@ -4,14 +4,14 @@
 [![Documentation](https://docs.rs/query-lite/badge.svg)](https://docs.rs/query-lite)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/0xC0DE666/query-lite#license)
 
-A powerful Rust library for parsing HTTP query parameters into structured queries with support for both traditional and advanced similarity-based filtering, plus optional SQL generation.
+A powerful Rust library for parsing HTTP query parameters into structured queries with support for both traditional and advanced similarity-based filtering, plus optional SQLite query generation.
 
 ## Features
 
 - 🔍 **Dual URL Support**: Handle both traditional (`?name=john`) and advanced (`?name=contains:john`) query parameters
 - 🎯 **Advanced Filtering**: Support for contains, starts-with, ends-with, between, greater, lesser, and more
 - 🔄 **Roundtrip Conversion**: Convert between HTTP queries and structured objects seamlessly
-- 🗄️ **SQL Generation**: Optional SQL query generation with parameter binding (opt-in feature)
+- 🗄️ **SQLite Query Generation**: Optional SQLite query generation with parameter binding (opt-in feature)
 - 🛡️ **Type Safety**: Full Rust type safety with comprehensive error handling
 - ⚡ **Zero Dependencies**: Minimal dependencies for core functionality
 - 🧪 **Well Tested**: Comprehensive test suite with 240+ tests
@@ -183,7 +183,7 @@ let new_param = Parameter::init(Similarity::Greater, vec!["100".to_string()]);
 
 The library supports various similarity types for advanced filtering:
 
-| Similarity | Description | Example | SQL Equivalent |
+| Similarity | Description | Example | SQLite Equivalent |
 |------------|-------------|---------|----------------|
 | `equals` | Exact match | `name=equals:john` | `name = ?` |
 | `contains` | Substring match | `name=contains:john` | `name LIKE ?` |
@@ -225,16 +225,16 @@ assert_eq!(query.limit, 25);
 assert_eq!(query.offset, 10);
 ```
 
-## SQL Generation (Optional)
+## SQLite Query Generation (Optional)
 
-Enable the `sql` feature to generate SQL queries:
+Enable the `sql` feature to generate SQLite-compatible queries:
 
 ```rust
 use query_lite::Query;
 
 let query = Query::from_http("name=contains:john&age=between:20,30&order=date_created:desc&limit=10".to_string())?;
 
-// Generate SQL with parameter placeholders
+// Generate SQLite-compatible SQL with parameter placeholders
 let sql = query.to_sql();
 // Result: "WHERE name LIKE ? AND age BETWEEN ? AND ? ORDER BY date_created DESC LIMIT ? OFFSET ?"
 
@@ -243,14 +243,14 @@ let param_values = query.parameter_values();
 let pagination_values = query.pagination_values();
 let total_params = query.total_parameters();
 
-// Use with your database driver
+// Use with SQLite
 // let stmt = conn.prepare(&format!("SELECT * FROM users {}", sql))?;
 // let rows = stmt.query(param_values)?;
 ```
 
-### Advanced SQL Clause Management
+### Advanced SQLite Clause Management
 
-Version 0.8.0 introduces improved SQL clause methods that return `Option<String>` for better semantic clarity:
+Version 0.8.0 introduces improved SQLite clause methods that return `Option<String>` for better semantic clarity:
 
 ```rust
 use query_lite::Query;
@@ -282,9 +282,9 @@ let sql = match (query.where_clause(), query.order_clause()) {
 };
 ```
 
-### Advanced SQL Value Management
+### Advanced SQLite Value Management
 
-Version 0.6.0 introduces simplified SQL value methods:
+Version 0.6.0 introduces simplified SQLite value methods:
 
 ```rust
 use query_lite::Query;
@@ -305,7 +305,7 @@ let total_params = query.total_parameters();
 
 // Combine for complete SQL execution
 let all_values = [param_values, pagination_values].concat();
-// Use with your database driver
+// Use with SQLite
 // let stmt = conn.prepare(&format!("SELECT * FROM users {}", query.to_sql()))?;
 // let rows = stmt.query(all_values)?;
 ```
@@ -316,7 +316,9 @@ This granular approach allows for:
 - **Performance Optimization**: Avoid unnecessary value processing when only certain parts are needed
 - **Debugging**: Easily inspect parameter counts and values for troubleshooting
 
-### SQL Examples
+### SQLite Examples
+
+The generated SQL uses SQLite syntax with `?` parameter placeholders:
 
 ```rust
 // Traditional parameters
@@ -404,7 +406,7 @@ let query = Query::from_http(
     "category=electronics&brand=apple&brand=samsung&price=between:100,500&rating=greater-or-equal:4&order=price:asc&limit=20"
 )?;
 
-// Generate SQL for product search
+// Generate SQLite query for product search
 let sql = query.to_sql();
 // "WHERE category = ? AND brand IN (?, ?) AND price BETWEEN ? AND ? AND rating >= ? ORDER BY price ASC LIMIT ? OFFSET ?"
 ```
@@ -419,7 +421,7 @@ let query = Query::from_http(
     "name=contains:john&age=greater:18&status=active&role=admin&role=user&order=created_at:desc&limit=50"
 )?;
 
-// Generate SQL for user query
+// Generate SQLite query for user query
 let sql = query.to_sql();
 // "WHERE name LIKE ? AND age > ? AND status = ? AND role IN (?, ?) ORDER BY created_at DESC LIMIT ? OFFSET ?"
 ```
@@ -434,7 +436,7 @@ let query = Query::from_http(
     "title=contains:rust&tags=programming&tags=web&date=between:2023-01-01,2023-12-31&published=true&order=date:desc&limit=25"
 )?;
 
-// Generate SQL for content query
+// Generate SQLite query for content query
 let sql = query.to_sql();
 // "WHERE title LIKE ? AND tags IN (?, ?) AND date BETWEEN ? AND ? AND published = ? ORDER BY date DESC LIMIT ? OFFSET ?"
 ```
@@ -445,10 +447,10 @@ The library supports feature flags for optional functionality:
 
 ```toml
 [dependencies]
-# Default: core functionality only (no SQL generation)
+# Default: core functionality only (no SQLite query generation)
 query-lite = "0.9.0"
 
-# Enable SQL generation
+# Enable SQLite query generation
 query-lite = { version = "0.9.0", features = ["sql"] }
 ```
 
@@ -470,13 +472,13 @@ query-lite = { version = "0.9.0", features = ["sql"] }
 - `Query::init()`: Create Query with custom parameters, order, limit, and offset
 - `Query::from_http()`: Parse HTTP query string into Query struct
 - `Query::to_http()`: Convert Query struct back to HTTP query string
-- `Query::to_sql()`: Generate SQL query with parameter placeholders (feature-gated)
+- `Query::to_sql()`: Generate SQLite-compatible query with parameter placeholders (feature-gated)
 - `Query::where_clause()`: Get WHERE clause as Option<String> (feature-gated)
 - `Query::order_clause()`: Get ORDER BY clause as Option<String> (feature-gated)
-- `Query::to_values()`: Get all SQL values (parameters + pagination) (feature-gated)
-- `Query::parameter_values()`: Get SQL values for parameters only (feature-gated)
-- `Query::pagination_values()`: Get SQL values for pagination only (feature-gated)
-- `Query::total_parameters()`: Get total number of SQL parameter values (feature-gated)
+- `Query::to_values()`: Get all SQLite values (parameters + pagination) (feature-gated)
+- `Query::parameter_values()`: Get SQLite values for parameters only (feature-gated)
+- `Query::pagination_values()`: Get SQLite values for pagination only (feature-gated)
+- `Query::total_parameters()`: Get total number of SQLite parameter values (feature-gated)
 
 #### Parameters Methods
 - `Parameters::new()`: Create new Parameters collection
