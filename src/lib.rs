@@ -740,8 +740,8 @@ impl FromStr for OrderField {
     /// Parse an order field string into name and order
     ///
     /// # Examples
-    /// - "name:asc" -> OrderField("name", SortOrder::Ascending)
-    /// - "date_created:desc" -> OrderField("date_created", SortOrder::Descending)
+    /// - "name:asc" -> OrderField("name", SortDirection::Ascending)
+    /// - "date_created:desc" -> OrderField("date_created", SortDirection::Descending)
     fn from_str(s: &str) -> Result<Self> {
         let trimmed = s.trim();
         if trimmed.is_empty() {

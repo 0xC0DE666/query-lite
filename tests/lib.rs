@@ -1512,7 +1512,7 @@ fn test_error_invalid_sort_order() {
     let error = SortDirection::from_str("invalid").unwrap_err();
     match error {
         Error::InvalidSortDirection(msg) => assert_eq!(msg, "invalid"),
-        _ => panic!("Expected InvalidSortOrder error"),
+        _ => panic!("Expected InvalidSortDirection error"),
     }
 }
 

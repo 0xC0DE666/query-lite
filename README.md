@@ -217,8 +217,8 @@ let query = Query::from_http("name=john&order=date_created:desc,name:asc&limit=2
 
 // Access sorting
 assert_eq!(query.order.inner().len(), 2);
-assert_eq!(query.order.inner().get("date_created"), Some(&query_lite::SortOrder::Descending));
-assert_eq!(query.order.inner().get("name"), Some(&query_lite::SortOrder::Ascending));
+assert_eq!(query.order.inner().get("date_created"), Some(&query_lite::SortDirection::Descending));
+assert_eq!(query.order.inner().get("name"), Some(&query_lite::SortDirection::Ascending));
 
 // Access pagination
 assert_eq!(query.limit, 25);
@@ -467,7 +467,7 @@ query-lite = { version = "0.10.0", features = ["sql"] }
 - `Parameter`: Struct containing similarity and values with semantic access methods (fields are private)
 - `Order`: Collection of sort fields with builder methods
 - `Similarity`: Enum defining comparison types (equals, contains, between, etc.)
-- `SortOrder`: Sort direction (ascending, descending)
+- `SortDirection`: Sort direction (ascending, descending)
 
 ### Key Methods
 

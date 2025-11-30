@@ -8,8 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.10.0] - 2025-11-30
 
 ### Changed
+- **Type Renaming**: Renamed `SortOrder` enum to `SortDirection` for better clarity
+  - `SortOrder` → `SortDirection` (enum name)
+  - `OrderField::order()` → `OrderField::sort_direction()` (method name)
+  - `Error::InvalidSortOrder` → `Error::InvalidSortDirection` (error variant)
+  - Better semantic clarity: "Direction" more accurately describes ascending/descending than "Order"
+  - Reduces confusion with the `Order` type (collection of sort fields)
 - **Display Trait Implementation**: Replaced `ToString` implementations with `Display` trait for better Rust idioms
-  - `Parameter`, `OrderField`, `Similarity`, `SortOrder` now implement `Display` instead of `ToString`
+  - `Parameter`, `OrderField`, `Similarity`, `SortDirection` now implement `Display` instead of `ToString`
   - `Parameters` and `Order` now implement `Display` for HTTP query string formatting
   - `Display` automatically provides `ToString` via blanket implementation, maintaining backward compatibility
   - Enables direct use in `format!` macros: `format!("{}", parameter)` instead of `format!("{}", parameter.to_string())`
@@ -33,15 +39,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Parameter`: Formats as `similarity:value1,value2` (e.g., `contains:damian`)
   - `OrderField`: Formats as `name:order` (e.g., `date_created:desc`)
   - `Similarity`: Formats as similarity string (e.g., `contains`, `equals`)
-  - `SortOrder`: Formats as order string (e.g., `asc`, `desc`)
+  - `SortDirection`: Formats as direction string (e.g., `asc`, `desc`)
   - `Parameters`: Formats as HTTP query string (e.g., `name=contains:damian&age=between:20,30`)
   - `Order`: Formats as comma-separated order fields (e.g., `name:asc,date_created:desc`)
 - **Comprehensive Display Tests**: Added tests for all `Display` implementations
-  - Tests for `Parameter`, `OrderField`, `Similarity`, `SortOrder` display formatting
+  - Tests for `Parameter`, `OrderField`, `Similarity`, `SortDirection` display formatting
   - Tests for `Parameters` and `Order` display formatting with edge cases
   - Tests for empty collections, filtering behavior, and multiple values
 
 ### Breaking Changes
+- **Type Renaming**: `SortOrder` enum renamed to `SortDirection`
+  - `SortOrder` → `SortDirection` (enum name)
+  - `OrderField::order()` → `OrderField::sort_direction()` (method name)
+  - `Error::InvalidSortOrder` → `Error::InvalidSortDirection` (error variant)
+  - Migration: Update all `SortOrder::` references to `SortDirection::`
+  - Migration: Update `order_field.order()` to `order_field.sort_direction()`
+  - Migration: Update error handling from `Error::InvalidSortOrder(msg)` to `Error::InvalidSortDirection(msg)`
+  - Example: `SortOrder::Ascending` → `SortDirection::Ascending`, `order_field.order()` → `order_field.sort_direction()`
 - **SQL Module Refactoring**: SQL types moved to `sql` module namespace
   - `SqlValue` → `sql::Value` (enum)
   - `"null"` string literal → `sql::NULL` constant
