@@ -201,7 +201,7 @@ impl Query {
             let condition = match similarity {
                 Similarity::Equals => {
                     if values.len() == 1 {
-                        if values[0] == "null" {
+                        if values[0] == sql::NULL {
                             format!("{} IS ?", key)
                         } else {
                             format!("{} = ?", key)
@@ -335,7 +335,7 @@ impl Query {
     }
 
     #[cfg(feature = "sql")]
-    pub fn to_values(&self) -> Vec<SqlValue> {
+    pub fn to_values(&self) -> Vec<sql::Value> {
         let mut sql_values = self.parameter_values();
         sql_values.extend(self.pagination_values());
         sql_values
@@ -343,7 +343,7 @@ impl Query {
 
     #[cfg(feature = "sql")]
     /// Get SQL values for parameters only (without limit and offset)
-    pub fn parameter_values(&self) -> Vec<SqlValue> {
+    pub fn parameter_values(&self) -> Vec<sql::Value> {
         let mut sql_values = Vec::new();
 
         for (_k, param) in self.parameters.inner() {
@@ -355,23 +355,23 @@ impl Query {
                     continue;
                 }
 
-                if cur_val == "null" {
-                    sql_values.push(SqlValue::Null);
+                if cur_val == sql::NULL {
+                    sql_values.push(sql::Value::Null);
                     continue;
                 }
 
                 let sql_value = match *param_similarity {
-                    Similarity::Contains => SqlValue::Text(format!("%{}%", cur_val)),
-                    Similarity::StartsWith => SqlValue::Text(format!("{}%", cur_val)),
-                    Similarity::EndsWith => SqlValue::Text(format!("%{}", cur_val)),
+                    Similarity::Contains => sql::Value::Text(format!("%{}%", cur_val)),
+                    Similarity::StartsWith => sql::Value::Text(format!("{}%", cur_val)),
+                    Similarity::EndsWith => sql::Value::Text(format!("%{}", cur_val)),
                     _ => {
                         // Try to parse as integer first, then float, then text
                         if let Ok(i) = cur_val.parse::<i64>() {
-                            SqlValue::Integer(i)
+                            sql::Value::Integer(i)
                         } else if let Ok(f) = cur_val.parse::<f64>() {
-                            SqlValue::Real(f)
+                            sql::Value::Real(f)
                         } else {
-                            SqlValue::Text(cur_val.clone())
+                            sql::Value::Text(cur_val.clone())
                         }
                     }
                 };
@@ -385,10 +385,10 @@ impl Query {
 
     #[cfg(feature = "sql")]
     /// Get SQL values for pagination (limit and offset only)
-    pub fn pagination_values(&self) -> Vec<SqlValue> {
+    pub fn pagination_values(&self) -> Vec<sql::Value> {
         vec![
-            SqlValue::Integer(self.limit as i64),
-            SqlValue::Integer(self.offset as i64),
+            sql::Value::Integer(self.limit as i64),
+            sql::Value::Integer(self.offset as i64),
         ]
     }
 
@@ -771,20 +771,23 @@ impl ToString for SortOrder {
     }
 }
 
-// Utility types
 #[cfg(feature = "sql")]
-#[derive(Clone, Debug, PartialEq)]
-pub enum SqlValue {
-    /// The value is a `NULL` value.
-    Null,
-    /// The value is a signed integer.
-    Integer(i64),
-    /// The value is a floating point number.
-    Real(f64),
-    /// The value is a text string.
-    Text(String),
-    /// The value is a blob of data
-    Blob(Vec<u8>),
+pub mod sql {
+    pub const NULL: &str = "null";
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub enum Value {
+        /// The value is a `NULL` value.
+        Null,
+        /// The value is a signed integer.
+        Integer(i64),
+        /// The value is a floating point number.
+        Real(f64),
+        /// The value is a text string.
+        Text(String),
+        /// The value is a blob of data
+        Blob(Vec<u8>),
+    }
 }
 
 // Utility functions
