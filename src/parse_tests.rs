@@ -2,179 +2,179 @@ use crate::error::Error;
 use crate::*;
 
 // ============================================================================
-// PARSE FUNCTION TESTS
+// FROMSTR IMPLEMENTATION TESTS
 // ============================================================================
 
-// Tests for parse_parameter function
+// Tests for Parameter::from_str
 #[test]
 fn test_parse_parameter_contains() {
-    let param = parse_parameter("contains:damian").unwrap();
+    let param = "contains:damian".parse::<Parameter>().unwrap();
     assert_eq!(*param.similarity(), Similarity::Contains);
     assert_eq!(*param.values(), vec!["damian"]);
 }
 
 #[test]
 fn test_parse_parameter_equals_multiple() {
-    let param = parse_parameter("equals:black,steel,wood").unwrap();
+    let param = "equals:black,steel,wood".parse::<Parameter>().unwrap();
     assert_eq!(*param.similarity(), Similarity::Equals);
     assert_eq!(*param.values(), vec!["black", "steel", "wood"]);
 }
 
 #[test]
 fn test_parse_parameter_between() {
-    let param = parse_parameter("between:20,30").unwrap();
+    let param = "between:20,30".parse::<Parameter>().unwrap();
     assert_eq!(*param.similarity(), Similarity::Between);
     assert_eq!(*param.values(), vec!["20", "30"]);
 }
 
 #[test]
 fn test_parse_parameter_lesser() {
-    let param = parse_parameter("lesser:100").unwrap();
+    let param = "lesser:100".parse::<Parameter>().unwrap();
     assert_eq!(*param.similarity(), Similarity::Lesser);
     assert_eq!(*param.values(), vec!["100"]);
 }
 
 #[test]
 fn test_parse_parameter_greater_or_equal() {
-    let param = parse_parameter("greater-or-equal:50").unwrap();
+    let param = "greater-or-equal:50".parse::<Parameter>().unwrap();
     assert_eq!(*param.similarity(), Similarity::GreaterOrEqual);
     assert_eq!(*param.values(), vec!["50"]);
 }
 
 #[test]
 fn test_parse_parameter_with_whitespace() {
-    let param = parse_parameter("  contains  :  damian  ").unwrap();
+    let param = "  contains  :  damian  ".parse::<Parameter>().unwrap();
     assert_eq!(*param.similarity(), Similarity::Contains);
     assert_eq!(*param.values(), vec!["damian"]);
 }
 
 #[test]
 fn test_parse_parameter_with_whitespace_in_values() {
-    let param = parse_parameter("equals: black , steel , wood ").unwrap();
+    let param = "equals: black , steel , wood ".parse::<Parameter>().unwrap();
     assert_eq!(*param.similarity(), Similarity::Equals);
     assert_eq!(*param.values(), vec!["black", "steel", "wood"]);
 }
 
 #[test]
 fn test_parse_parameter_empty_values() {
-    let param = parse_parameter("contains:").unwrap();
+    let param = "contains:".parse::<Parameter>().unwrap();
     assert_eq!(*param.similarity(), Similarity::Contains);
     assert_eq!(*param.values(), vec![] as Vec<String>);
 }
 
 #[test]
 fn test_parse_parameter_empty_values_with_commas() {
-    let param = parse_parameter("contains:,,,").unwrap();
+    let param = "contains:,,,".parse::<Parameter>().unwrap();
     assert_eq!(*param.similarity(), Similarity::Contains);
     assert_eq!(*param.values(), vec![] as Vec<String>);
 }
 
 #[test]
 fn test_parse_parameter_mixed_empty_values() {
-    let param = parse_parameter("contains:value1,,value2,").unwrap();
+    let param = "contains:value1,,value2,".parse::<Parameter>().unwrap();
     assert_eq!(*param.similarity(), Similarity::Contains);
     assert_eq!(*param.values(), vec!["value1", "value2"]);
 }
 
 #[test]
 fn test_parse_parameter_invalid_empty() {
-    assert!(parse_parameter("").is_err());
+    assert!("".parse::<Parameter>().is_err());
 }
 
 #[test]
 fn test_parse_parameter_invalid_no_colon() {
-    assert!(parse_parameter("contains").is_err());
-    assert!(parse_parameter("containsdamian").is_err());
+    assert!("contains".parse::<Parameter>().is_err());
+    assert!("containsdamian".parse::<Parameter>().is_err());
 }
 
 #[test]
 fn test_parse_parameter_invalid_multiple_colons() {
-    assert!(parse_parameter("contains:damian:extra").is_err());
+    assert!("contains:damian:extra".parse::<Parameter>().is_err());
 }
 
 #[test]
 fn test_parse_parameter_invalid_empty_similarity() {
-    assert!(parse_parameter(":damian").is_err());
+    assert!(":damian".parse::<Parameter>().is_err());
 }
 
 #[test]
 fn test_parse_parameter_invalid_similarity() {
-    assert!(parse_parameter("invalid:damian").is_err());
+    assert!("invalid:damian".parse::<Parameter>().is_err());
 }
 
 #[test]
 fn test_parse_parameter_invalid_whitespace_only() {
-    assert!(parse_parameter("   ").is_err());
+    assert!("   ".parse::<Parameter>().is_err());
 }
 
-// Tests for parse_order_field function
+// Tests for OrderField::from_str
 #[test]
 fn test_parse_order_field_asc() {
-    let (name, order) = parse_order_field("name:asc").unwrap();
-    assert_eq!(name, "name");
-    assert_eq!(order, SortOrder::Ascending);
+    let order_field = "name:asc".parse::<OrderField>().unwrap();
+    assert_eq!(order_field.name(), "name");
+    assert_eq!(*order_field.order(), SortOrder::Ascending);
 }
 
 #[test]
 fn test_parse_order_field_desc() {
-    let (name, order) = parse_order_field("date_created:desc").unwrap();
-    assert_eq!(name, "date_created");
-    assert_eq!(order, SortOrder::Descending);
+    let order_field = "date_created:desc".parse::<OrderField>().unwrap();
+    assert_eq!(order_field.name(), "date_created");
+    assert_eq!(*order_field.order(), SortOrder::Descending);
 }
 
 #[test]
 fn test_parse_order_field_with_whitespace() {
-    let (name, order) = parse_order_field("  name  :  asc  ").unwrap();
-    assert_eq!(name, "name");
-    assert_eq!(order, SortOrder::Ascending);
+    let order_field = "  name  :  asc  ".parse::<OrderField>().unwrap();
+    assert_eq!(order_field.name(), "name");
+    assert_eq!(*order_field.order(), SortOrder::Ascending);
 }
 
 #[test]
 fn test_parse_order_field_with_special_characters() {
-    let (name, order) = parse_order_field("user_name:desc").unwrap();
-    assert_eq!(name, "user_name");
-    assert_eq!(order, SortOrder::Descending);
+    let order_field = "user_name:desc".parse::<OrderField>().unwrap();
+    assert_eq!(order_field.name(), "user_name");
+    assert_eq!(*order_field.order(), SortOrder::Descending);
 }
 
 #[test]
 fn test_parse_order_field_invalid_empty() {
-    assert!(parse_order_field("").is_err());
+    assert!("".parse::<OrderField>().is_err());
 }
 
 #[test]
 fn test_parse_order_field_invalid_no_colon() {
-    assert!(parse_order_field("name").is_err());
-    assert!(parse_order_field("nameasc").is_err());
+    assert!("name".parse::<OrderField>().is_err());
+    assert!("nameasc".parse::<OrderField>().is_err());
 }
 
 #[test]
 fn test_parse_order_field_invalid_multiple_colons() {
-    assert!(parse_order_field("name:asc:extra").is_err());
+    assert!("name:asc:extra".parse::<OrderField>().is_err());
 }
 
 #[test]
 fn test_parse_order_field_invalid_empty_name() {
-    assert!(parse_order_field(":asc").is_err());
+    assert!(":asc".parse::<OrderField>().is_err());
 }
 
 #[test]
 fn test_parse_order_field_invalid_empty_order() {
-    assert!(parse_order_field("name:").is_err());
+    assert!("name:".parse::<OrderField>().is_err());
 }
 
 #[test]
 fn test_parse_order_field_invalid_order() {
-    assert!(parse_order_field("name:invalid").is_err());
+    assert!("name:invalid".parse::<OrderField>().is_err());
 }
 
 #[test]
 fn test_parse_order_field_invalid_whitespace_only() {
-    assert!(parse_order_field("   ").is_err());
+    assert!("   ".parse::<OrderField>().is_err());
 }
 
 #[test]
 fn test_error_invalid_parameter() {
-    let error = parse_parameter("invalid").unwrap_err();
+    let error = "invalid".parse::<Parameter>().unwrap_err();
     match error {
         Error::InvalidParameter(msg) => assert_eq!(msg, "invalid"),
         _ => panic!("Expected InvalidParameter error"),

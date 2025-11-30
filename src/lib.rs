@@ -47,7 +47,7 @@ impl Query {
                     .map(|v| url_encode(v))
                     .collect::<Vec<String>>()
                     .join(&format!("{COMMA}"));
-                format!("{key}{EQUAL}{similarity_str}{COLON}{values_str}",)
+                format!("{key}{EQUAL}{similarity_str}{COLON}{values_str}")
             })
             .collect::<Vec<String>>()
             .join("&");
@@ -126,16 +126,13 @@ impl Query {
                         // Check if this is a similarity-based parameter (contains colon)
                         if trimmed_value.contains(COLON) {
                             // Parse as similarity-based parameter
-                            let Parameter(similarity, values) = parse_parameter(trimmed_value)?;
+                            let param = trimmed_value.parse::<Parameter>()?;
                             // Only add parameters that have values
-                            if values.is_empty() {
+                            if param.values().is_empty() {
                                 continue;
                             }
                             // Replace any existing parameter (similarity-based takes precedence)
-                            query
-                                .parameters
-                                .0
-                                .insert(trimmed_key.to_string(), Parameter(similarity, values));
+                            query.parameters.0.insert(trimmed_key.to_string(), param);
                         } else {
                             // Handle as normal query parameter (default to equals similarity)
                             let decoded_value = url_decode(trimmed_value);
@@ -529,7 +526,7 @@ impl FromStr for Parameters {
         }
 
         let str_parameters: Vec<&str> = trimmed.split(AMPERSAND).collect();
-        let mut parameters: Self = Parameters(IndexMap::new());
+        let mut parameters: Self = Parameters::new();
 
         for str_param in str_parameters {
             let trimmed_param = str_param.trim();
@@ -548,15 +545,13 @@ impl FromStr for Parameters {
                 continue;
             }
 
-            let Parameter(similarity, values) = parse_parameter(value)?;
+            let param = value.parse::<Parameter>()?;
             // Only add parameters that have values
-            if values.is_empty() {
+            if param.values().is_empty() {
                 continue;
             }
 
-            parameters
-                .0
-                .insert(trimmed_key.to_string(), Parameter(similarity, values));
+            parameters.0.insert(trimmed_key.to_string(), param);
         }
 
         Ok(parameters)
@@ -581,6 +576,48 @@ impl Parameter {
 
     pub fn values_mut(&mut self) -> &mut Vec<String> {
         &mut self.1
+    }
+}
+
+impl FromStr for Parameter {
+    type Err = Error;
+
+    /// Parse a parameter string into similarity and values
+    ///
+    /// # Examples
+    /// - "contains:damian" -> Parameter(Similarity::Contains, vec!["damian"])
+    /// - "equals:black,steel,wood" -> Parameter(Similarity::Equals, vec!["black", "steel", "wood"])
+    /// - "between:20,30" -> Parameter(Similarity::Between, vec!["20", "30"])
+    fn from_str(s: &str) -> Result<Self> {
+        let trimmed = s.trim();
+        if trimmed.is_empty() {
+            return Err(Error::InvalidParameter(s.into()));
+        }
+
+        let parts: Vec<&str> = trimmed.split(COLON).collect();
+        if parts.len() != 2 {
+            return Err(Error::InvalidParameter(s.into()));
+        }
+
+        let similarity_str = parts[0].trim();
+        let values_str = parts[1].trim();
+
+        if similarity_str.is_empty() {
+            return Err(Error::InvalidParameter(s.into()));
+        }
+
+        let values: Vec<String> = if values_str.is_empty() {
+            vec![]
+        } else {
+            values_str
+                .split(COMMA)
+                .map(|v| url_decode(v.trim()))
+                .filter(|v| !v.is_empty())
+                .collect()
+        };
+
+        let similarity = similarity_str.parse::<Similarity>()?;
+        Ok(Parameter(similarity, values))
     }
 }
 
@@ -647,7 +684,7 @@ impl FromStr for Order {
         }
 
         let str_fields: Vec<&str> = trimmed.split(COMMA).collect();
-        let mut order: Self = Order(IndexMap::new());
+        let mut order: Self = Order::new();
 
         for str_field in str_fields {
             let trimmed_field = str_field.trim();
@@ -655,11 +692,54 @@ impl FromStr for Order {
                 continue;
             }
 
-            let (name, sort_order) = parse_order_field(trimmed_field)?;
+            let OrderField(name, sort_order) = trimmed_field.parse::<OrderField>()?;
             order.0.insert(name, sort_order);
         }
 
         Ok(order)
+    }
+}
+
+pub struct OrderField(String, SortOrder);
+
+impl OrderField {
+    pub fn name(&self) -> &String {
+        &self.0
+    }
+
+    pub fn order(&self) -> &SortOrder {
+        &self.1
+    }
+}
+
+impl FromStr for OrderField {
+    type Err = Error;
+
+    /// Parse an order field string into name and order
+    ///
+    /// # Examples
+    /// - "name:asc" -> OrderField("name", SortOrder::Ascending)
+    /// - "date_created:desc" -> OrderField("date_created", SortOrder::Descending)
+    fn from_str(s: &str) -> Result<Self> {
+        let trimmed = s.trim();
+        if trimmed.is_empty() {
+            return Err(Error::InvalidOrderField(s.into()));
+        }
+
+        let parts: Vec<&str> = trimmed.split(COLON).collect();
+        if parts.len() != 2 {
+            return Err(Error::InvalidOrderField(s.into()));
+        }
+
+        let name = url_decode(parts[0].trim());
+        let order = parts[1].trim();
+
+        if name.is_empty() || order.is_empty() {
+            return Err(Error::InvalidOrderField(s.into()));
+        }
+
+        let order = order.parse::<SortOrder>()?;
+        Ok(OrderField(name, order))
     }
 }
 
@@ -788,72 +868,6 @@ pub mod sql {
         /// The value is a blob of data
         Blob(Vec<u8>),
     }
-}
-
-// Utility functions
-/// Parse a parameter string into similarity and values
-///
-/// # Examples
-/// - "contains:damian" -> (Similarity::Contains, vec!["damian"])
-/// - "equals:black,steel,wood" -> (Similarity::Equals, vec!["black", "steel", "wood"])
-/// - "between:20,30" -> (Similarity::Between, vec!["20", "30"])
-pub(crate) fn parse_parameter(s: &str) -> Result<Parameter> {
-    let trimmed = s.trim();
-    if trimmed.is_empty() {
-        return Err(Error::InvalidParameter(s.into()));
-    }
-
-    let parts: Vec<&str> = trimmed.split(COLON).collect();
-    if parts.len() != 2 {
-        return Err(Error::InvalidParameter(s.into()));
-    }
-
-    let similarity_str = parts[0].trim();
-    let values_str = parts[1].trim();
-
-    if similarity_str.is_empty() {
-        return Err(Error::InvalidParameter(s.into()));
-    }
-
-    let values: Vec<String> = if values_str.is_empty() {
-        vec![]
-    } else {
-        values_str
-            .split(COMMA)
-            .map(|v| url_decode(v.trim()))
-            .filter(|v| !v.is_empty())
-            .collect()
-    };
-
-    let similarity = Similarity::from_str(similarity_str)?;
-    Ok(Parameter(similarity, values))
-}
-
-/// Parse an order field string into name and order
-///
-/// # Examples
-/// - "name:asc" -> ("name", SortOrder::Ascending)
-/// - "date_created:desc" -> ("date_created", SortOrder::Descending)
-pub(crate) fn parse_order_field(s: &str) -> Result<(String, SortOrder)> {
-    let trimmed = s.trim();
-    if trimmed.is_empty() {
-        return Err(Error::InvalidOrderField(s.into()));
-    }
-
-    let parts: Vec<&str> = trimmed.split(COLON).collect();
-    if parts.len() != 2 {
-        return Err(Error::InvalidOrderField(s.into()));
-    }
-
-    let name = url_decode(parts[0].trim());
-    let order_str = parts[1].trim();
-
-    if name.is_empty() || order_str.is_empty() {
-        return Err(Error::InvalidOrderField(s.into()));
-    }
-
-    let order = SortOrder::from_str(order_str)?;
-    Ok((name, order))
 }
 
 pub(crate) const QUESTION: char = '?';
