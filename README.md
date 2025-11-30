@@ -11,7 +11,7 @@ A powerful Rust library for parsing HTTP query parameters into structured querie
 - 🔍 **Dual URL Support**: Handle both traditional (`?name=john`) and advanced (`?name=contains:john`) query parameters
 - 🎯 **Advanced Filtering**: Support for contains, starts-with, ends-with, between, greater, lesser, and more
 - 🔄 **Roundtrip Conversion**: Convert between HTTP queries and structured objects seamlessly
-- 🗄️ **SQL Generation**: Optional SQL query generation with parameter binding (feature-gated)
+- 🗄️ **SQL Generation**: Optional SQL query generation with parameter binding (opt-in feature)
 - 🛡️ **Type Safety**: Full Rust type safety with comprehensive error handling
 - ⚡ **Zero Dependencies**: Minimal dependencies for core functionality
 - 🧪 **Well Tested**: Comprehensive test suite with 240+ tests
@@ -22,10 +22,11 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
+# Basic usage (without SQL generation)
 query-lite = "0.9.0"
 
-# Optional: Enable SQL generation (enabled by default)
-# query-lite = { version = "0.9.0", default-features = false }
+# With SQL generation (opt-in)
+query-lite = { version = "0.9.0", features = ["sql"] }
 ```
 
 ## Basic Usage
@@ -226,7 +227,7 @@ assert_eq!(query.offset, 10);
 
 ## SQL Generation (Optional)
 
-Enable the `sql` feature (enabled by default) to generate SQL queries:
+Enable the `sql` feature to generate SQL queries:
 
 ```rust
 use query_lite::Query;
@@ -444,13 +445,10 @@ The library supports feature flags for optional functionality:
 
 ```toml
 [dependencies]
-# Default: includes SQL generation
+# Default: core functionality only (no SQL generation)
 query-lite = "0.9.0"
 
-# Without SQL generation (smaller binary)
-query-lite = { version = "0.9.0", default-features = false }
-
-# With specific features
+# Enable SQL generation
 query-lite = { version = "0.9.0", features = ["sql"] }
 ```
 

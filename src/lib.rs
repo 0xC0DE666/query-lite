@@ -772,6 +772,7 @@ impl ToString for SortOrder {
 }
 
 // Utility types
+#[cfg(feature = "sql")]
 #[derive(Clone, Debug, PartialEq)]
 pub enum SqlValue {
     /// The value is a `NULL` value.
