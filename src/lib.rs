@@ -2,6 +2,7 @@ pub mod error;
 
 use error::{Error, Result};
 use indexmap::IndexMap;
+use std::fmt;
 use std::str::FromStr;
 use url::form_urlencoded;
 
@@ -39,7 +40,7 @@ impl Query {
             .inner()
             .iter()
             .filter(|(_, param)| param.values().len() > 0)
-            .map(|(key, param)| format!("{key}{EQUAL}{}", param.to_string()))
+            .map(|(key, param)| format!("{key}{EQUAL}{param}"))
             .collect::<Vec<String>>()
             .join("&");
 
@@ -48,7 +49,7 @@ impl Query {
             .inner()
             .iter()
             .filter(|(name, _)| name.len() > 0)
-            .map(|(name, sort_order)| OrderField(name.clone(), sort_order.clone()).to_string())
+            .map(|(name, sort_order)| format!("{}", OrderField(name.clone(), sort_order.clone())))
             .collect::<Vec<String>>()
             .join(&format!("{COMMA}"));
 
@@ -614,8 +615,8 @@ impl FromStr for Parameter {
     }
 }
 
-impl ToString for Parameter {
-    fn to_string(&self) -> String {
+impl fmt::Display for Parameter {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let similarity_str = self.similarity().to_string();
         let values_str = self
             .values()
@@ -623,7 +624,7 @@ impl ToString for Parameter {
             .map(|v| url_encode(v))
             .collect::<Vec<String>>()
             .join(&format!("{COMMA}"));
-        format!("{similarity_str}{COLON}{values_str}")
+        write!(f, "{similarity_str}{COLON}{values_str}")
     }
 }
 
@@ -749,9 +750,9 @@ impl FromStr for OrderField {
     }
 }
 
-impl ToString for OrderField {
-    fn to_string(&self) -> String {
-        format!("{}{COLON}{}", self.name(), self.order().to_string())
+impl fmt::Display for OrderField {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{COLON}{}", self.name(), self.order())
     }
 }
 
@@ -809,20 +810,21 @@ impl FromStr for Similarity {
     }
 }
 
-impl ToString for Similarity {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Equals => Self::EQUALS.to_string(),
-            Self::Contains => Self::CONTAINS.to_string(),
-            Self::StartsWith => Self::STARTS_WITH.to_string(),
-            Self::EndsWith => Self::ENDS_WITH.to_string(),
+impl fmt::Display for Similarity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            Self::Equals => Self::EQUALS,
+            Self::Contains => Self::CONTAINS,
+            Self::StartsWith => Self::STARTS_WITH,
+            Self::EndsWith => Self::ENDS_WITH,
 
-            Self::Between => Self::BETWEEN.to_string(),
-            Self::Lesser => Self::LESSER.to_string(),
-            Self::LesserOrEqual => Self::LESSER_OR_EQUAL.to_string(),
-            Self::Greater => Self::GREATER.to_string(),
-            Self::GreaterOrEqual => Self::GREATER_OR_EQUAL.to_string(),
-        }
+            Self::Between => Self::BETWEEN,
+            Self::Lesser => Self::LESSER,
+            Self::LesserOrEqual => Self::LESSER_OR_EQUAL,
+            Self::Greater => Self::GREATER,
+            Self::GreaterOrEqual => Self::GREATER_OR_EQUAL,
+        };
+        write!(f, "{}", s)
     }
 }
 
@@ -854,12 +856,13 @@ impl FromStr for SortOrder {
     }
 }
 
-impl ToString for SortOrder {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Ascending => SortOrder::ASCENDING.to_string(),
-            Self::Descending => SortOrder::DESCENDING.to_string(),
-        }
+impl fmt::Display for SortOrder {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            Self::Ascending => SortOrder::ASCENDING,
+            Self::Descending => SortOrder::DESCENDING,
+        };
+        write!(f, "{}", s)
     }
 }
 
