@@ -1178,11 +1178,11 @@ fn test_error_invalid_sort_order() {
 }
 
 #[test]
-fn test_error_invalid_sort_field() {
+fn test_error_invalid_order_field() {
     let error = Order::from_str("invalid").unwrap_err();
     match error {
-        Error::InvalidSortField(msg) => assert_eq!(msg, "invalid"),
-        _ => panic!("Expected InvalidSortField error"),
+        Error::InvalidOrderField(msg) => assert_eq!(msg, "invalid"),
+        _ => panic!("Expected InvalidOrderField error"),
     }
 }
 

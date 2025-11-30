@@ -383,9 +383,9 @@ match Query::from_http("invalid=query".to_string()) {
         // Handle invalid parameter format
         eprintln!("Invalid parameter: {}", msg);
     }
-    Err(Error::InvalidSortField(msg)) => {
-        // Handle invalid sort field
-        eprintln!("Invalid sort field: {}", msg);
+    Err(Error::InvalidOrderField(msg)) => {
+        // Handle invalid order field
+        eprintln!("Invalid order field: {}", msg);
     }
     Err(e) => {
         // Handle other errors

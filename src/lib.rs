@@ -108,7 +108,7 @@ impl Query {
                         // Check if the value looks like a sort field format (contains colon)
                         if !trimmed_value.contains(COLON) {
                             // Fail on clearly invalid formats (like "invalid")
-                            return Err(Error::InvalidSortField(trimmed_value.into()));
+                            return Err(Error::InvalidOrderField(trimmed_value.into()));
                         }
 
                         if let Ok(order) = Order::from_str(trimmed_value) {
@@ -834,19 +834,19 @@ pub(crate) fn parse_parameter(s: &str) -> Result<Parameter> {
 pub(crate) fn parse_order_field(s: &str) -> Result<(String, SortOrder)> {
     let trimmed = s.trim();
     if trimmed.is_empty() {
-        return Err(Error::InvalidSortField(s.into()));
+        return Err(Error::InvalidOrderField(s.into()));
     }
 
     let parts: Vec<&str> = trimmed.split(COLON).collect();
     if parts.len() != 2 {
-        return Err(Error::InvalidSortField(s.into()));
+        return Err(Error::InvalidOrderField(s.into()));
     }
 
     let name = url_decode(parts[0].trim());
     let order_str = parts[1].trim();
 
     if name.is_empty() || order_str.is_empty() {
-        return Err(Error::InvalidSortField(s.into()));
+        return Err(Error::InvalidOrderField(s.into()));
     }
 
     let order = SortOrder::from_str(order_str)?;

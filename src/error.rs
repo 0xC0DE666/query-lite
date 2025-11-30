@@ -8,8 +8,8 @@ pub enum Error {
     #[error("Error: Invalid Sort Order '{0}'")]
     InvalidSortOrder(String),
 
-    #[error("Error: Invalid Sort Field '{0}'")]
-    InvalidSortField(String),
+    #[error("Error: Invalid Order Field '{0}'")]
+    InvalidOrderField(String),
 
     #[error("Error: Invalid Similarity '{0}'")]
     InvalidSimilarity(String),
