@@ -135,7 +135,7 @@ impl ToString for SortOrder {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Order(pub IndexMap<String, SortOrder>);
+pub struct Order(IndexMap<String, SortOrder>);
 
 impl Order {
     pub fn new() -> Self {
@@ -284,9 +284,13 @@ impl ToString for Similarity {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Parameter(pub Similarity, pub Vec<String>);
+pub struct Parameter(Similarity, Vec<String>);
 
 impl Parameter {
+    pub fn init(similarity: Similarity, values: Vec<String>) -> Self {
+        Self(similarity, values)
+    }
+
     pub fn similarity(&self) -> &Similarity {
         &self.0
     }
@@ -301,7 +305,7 @@ impl Parameter {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Parameters(pub IndexMap<String, Parameter>);
+pub struct Parameters(IndexMap<String, Parameter>);
 
 impl Parameters {
     pub const ORDER: &str = "order";
@@ -486,7 +490,7 @@ impl Query {
     }
 
     pub fn to_http(&self) -> String {
-        let mut params = self
+        let mut params_str = self
             .parameters
             .inner()
             .iter()
@@ -513,17 +517,17 @@ impl Query {
             .collect::<Vec<String>>()
             .join(&format!("{COMMA}"));
 
-        if params.len() > 0 {
-            params.push_str(&format!("{AMPERSAND}"));
+        if params_str.len() > 0 {
+            params_str.push_str(&format!("{AMPERSAND}"));
         }
 
         if order_str.len() > 0 {
-            params.push_str(&format!("{}{EQUAL}{}", Parameters::ORDER, order_str));
-            params.push_str(&format!("{AMPERSAND}"));
+            params_str.push_str(&format!("{}{EQUAL}{}", Parameters::ORDER, order_str));
+            params_str.push_str(&format!("{AMPERSAND}"));
         }
 
         format!(
-            "{params}{}{EQUAL}{}{AMPERSAND}{}{EQUAL}{}",
+            "{params_str}{}{EQUAL}{}{AMPERSAND}{}{EQUAL}{}",
             Parameters::LIMIT,
             self.limit,
             Parameters::OFFSET,
