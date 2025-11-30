@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2025-11-30
+
+### Changed
+- **Display Trait Implementation**: Replaced `ToString` implementations with `Display` trait for better Rust idioms
+  - `Parameter`, `OrderField`, `Similarity`, `SortOrder` now implement `Display` instead of `ToString`
+  - `Parameters` and `Order` now implement `Display` for HTTP query string formatting
+  - `Display` automatically provides `ToString` via blanket implementation, maintaining backward compatibility
+  - Enables direct use in `format!` macros: `format!("{}", parameter)` instead of `format!("{}", parameter.to_string())`
+- **HTTP Generation Refactoring**: Simplified `Query::to_http()` method
+  - Now uses `Display` implementations for `Parameters` and `Order` instead of inline formatting
+  - Cleaner, more maintainable code with better separation of concerns
+  - Formatting logic moved into type-specific `Display` implementations
+- **SQL Module Organization**: Refactored SQL types into a dedicated module
+  - `SqlValue` enum moved to `sql::Value` inside a new `pub mod sql` module
+  - Extracted `"null"` string literal into `sql::NULL` constant for better maintainability
+  - All SQL-related types now grouped under the `sql` module namespace
+  - Improved code organization and module structure
+  - Migration: Update `SqlValue::` to `sql::Value::` and `"null"` to `sql::NULL`
+- **Test Organization**: Moved internal parsing tests to integration tests
+  - Tests for `Parameter::from_str()` and `OrderField::from_str()` moved from `src/parse_tests.rs` to `tests/lib.rs`
+  - Better organization with tests grouped by type in appropriate sections
+  - All tests remain comprehensive and maintain full coverage
+
+### Added
+- **Display Trait for Core Types**: All core types now implement `Display` for user-facing output
+  - `Parameter`: Formats as `similarity:value1,value2` (e.g., `contains:damian`)
+  - `OrderField`: Formats as `name:order` (e.g., `date_created:desc`)
+  - `Similarity`: Formats as similarity string (e.g., `contains`, `equals`)
+  - `SortOrder`: Formats as order string (e.g., `asc`, `desc`)
+  - `Parameters`: Formats as HTTP query string (e.g., `name=contains:damian&age=between:20,30`)
+  - `Order`: Formats as comma-separated order fields (e.g., `name:asc,date_created:desc`)
+- **Comprehensive Display Tests**: Added tests for all `Display` implementations
+  - Tests for `Parameter`, `OrderField`, `Similarity`, `SortOrder` display formatting
+  - Tests for `Parameters` and `Order` display formatting with edge cases
+  - Tests for empty collections, filtering behavior, and multiple values
+
+### Breaking Changes
+- **SQL Module Refactoring**: SQL types moved to `sql` module namespace
+  - `SqlValue` → `sql::Value` (enum)
+  - `"null"` string literal → `sql::NULL` constant
+  - Migration: Update all `SqlValue::` references to `sql::Value::`
+  - Migration: Update `"null"` string comparisons to use `sql::NULL`
+  - Example: `SqlValue::Null` → `sql::Value::Null`, `if value == "null"` → `if value == sql::NULL`
+
+### Technical Details
+- **Rust Idioms**: `Display` is the standard trait for user-facing output in Rust
+- **Automatic ToString**: `Display` implementation automatically provides `ToString` via blanket impl
+- **Better Formatting**: Direct use in format strings: `format!("{param}")` instead of `format!("{}", param.to_string())`
+- **Code Quality**: Improved separation of concerns with formatting logic in type implementations
+- **Module Organization**: SQL-related types grouped in dedicated module for better code structure
+- **Test Coverage**: All Display implementations are thoroughly tested with edge cases
+- **Backward Compatibility**: All existing `.to_string()` calls continue to work unchanged
+- **Version Bump**: Minor version bump reflects API improvements, new trait implementations, and module refactoring
+
 ## [0.9.0] - 2025-11-30
 
 ### Changed

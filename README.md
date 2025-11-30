@@ -23,10 +23,10 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 # Basic usage (without SQL generation)
-query-lite = "0.9.0"
+query-lite = "0.10.0"
 
 # With SQL generation (opt-in)
-query-lite = { version = "0.9.0", features = ["sql"] }
+query-lite = { version = "0.10.0", features = ["sql"] }
 ```
 
 ## Basic Usage
@@ -289,15 +289,19 @@ Version 0.6.0 introduces simplified SQLite value methods:
 ```rust
 use query_lite::Query;
 
-let query = Query::from_http("name=contains:john&age=between:20,30&price=greater:100".to_string())?;
+let query = Query::from_http("name=contains:john&age=between:20,30&price=greater:100&order=date_created:desc".to_string())?;
 
 // Get only parameter values (without pagination)
 let param_values = query.parameter_values();
-// Result: [SqlValue::Text("%john%"), SqlValue::Text("20"), SqlValue::Text("30"), SqlValue::Text("100")]
+// Result: [sql::Value::Text("%john%"), sql::Value::Text("20"), sql::Value::Text("30"), sql::Value::Text("100")]
+
+// Get only order values (without pagination)
+let param_values = query.parameter_values();
+// Result: [sql::Value::Text("%john%"), sql::Value::Text("20"), sql::Value::Text("30"), sql::Value::Text("100")]
 
 // Get only pagination values
 let pagination_values = query.pagination_values();
-// Result: [SqlValue::Integer(50), SqlValue::Integer(0)]
+// Result: [sql::Value::Integer(50), sql::Value::Integer(0)]
 
 // Get total parameter count
 let total_params = query.total_parameters();
@@ -448,10 +452,10 @@ The library supports feature flags for optional functionality:
 ```toml
 [dependencies]
 # Default: core functionality only (no SQLite query generation)
-query-lite = "0.9.0"
+query-lite = "0.10.0"
 
 # Enable SQLite query generation
-query-lite = { version = "0.9.0", features = ["sql"] }
+query-lite = { version = "0.10.0", features = ["sql"] }
 ```
 
 ## API Reference
