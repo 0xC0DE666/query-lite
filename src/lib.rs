@@ -912,5 +912,3 @@ pub(crate) fn url_encode(input: &str) -> String {
     form_urlencoded::byte_serialize(input.as_bytes()).collect()
 }
 
-#[cfg(test)]
-mod parse_tests;

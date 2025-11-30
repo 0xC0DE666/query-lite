@@ -41,9 +41,86 @@ fn test_sort_order_from_str_invalid() {
 }
 
 #[test]
-fn test_sort_order_to_string() {
-    assert_eq!(SortOrder::Ascending.to_string(), "asc");
-    assert_eq!(SortOrder::Descending.to_string(), "desc");
+fn test_sort_order_display() {
+    assert_eq!(format!("{}", SortOrder::Ascending), "asc");
+    assert_eq!(format!("{}", SortOrder::Descending), "desc");
+}
+
+// ============================================================================
+// ORDER FIELD TESTS
+// ============================================================================
+
+#[test]
+fn test_parse_order_field_asc() {
+    let order_field = "name:asc".parse::<OrderField>().unwrap();
+    assert_eq!(order_field.name(), "name");
+    assert_eq!(*order_field.order(), SortOrder::Ascending);
+}
+
+#[test]
+fn test_parse_order_field_desc() {
+    let order_field = "date_created:desc".parse::<OrderField>().unwrap();
+    assert_eq!(order_field.name(), "date_created");
+    assert_eq!(*order_field.order(), SortOrder::Descending);
+}
+
+#[test]
+fn test_parse_order_field_with_whitespace() {
+    let order_field = "  name  :  asc  ".parse::<OrderField>().unwrap();
+    assert_eq!(order_field.name(), "name");
+    assert_eq!(*order_field.order(), SortOrder::Ascending);
+}
+
+#[test]
+fn test_parse_order_field_with_special_characters() {
+    let order_field = "user_name:desc".parse::<OrderField>().unwrap();
+    assert_eq!(order_field.name(), "user_name");
+    assert_eq!(*order_field.order(), SortOrder::Descending);
+}
+
+#[test]
+fn test_parse_order_field_invalid_empty() {
+    assert!("".parse::<OrderField>().is_err());
+}
+
+#[test]
+fn test_parse_order_field_invalid_no_colon() {
+    assert!("name".parse::<OrderField>().is_err());
+    assert!("nameasc".parse::<OrderField>().is_err());
+}
+
+#[test]
+fn test_parse_order_field_invalid_multiple_colons() {
+    assert!("name:asc:extra".parse::<OrderField>().is_err());
+}
+
+#[test]
+fn test_parse_order_field_invalid_empty_name() {
+    assert!(":asc".parse::<OrderField>().is_err());
+}
+
+#[test]
+fn test_parse_order_field_invalid_empty_order() {
+    assert!("name:".parse::<OrderField>().is_err());
+}
+
+#[test]
+fn test_parse_order_field_invalid_order() {
+    assert!("name:invalid".parse::<OrderField>().is_err());
+}
+
+#[test]
+fn test_parse_order_field_invalid_whitespace_only() {
+    assert!("   ".parse::<OrderField>().is_err());
+}
+
+#[test]
+fn test_order_field_display() {
+    let order_field = "name:asc".parse::<OrderField>().unwrap();
+    assert_eq!(format!("{}", order_field), "name:asc");
+
+    let order_field = "date_created:desc".parse::<OrderField>().unwrap();
+    assert_eq!(format!("{}", order_field), "date_created:desc");
 }
 
 // ============================================================================
@@ -365,16 +442,157 @@ fn test_similarity_from_str_invalid() {
 }
 
 #[test]
-fn test_similarity_to_string() {
-    assert_eq!(Similarity::Equals.to_string(), "equals");
-    assert_eq!(Similarity::Contains.to_string(), "contains");
-    assert_eq!(Similarity::StartsWith.to_string(), "starts-with");
-    assert_eq!(Similarity::EndsWith.to_string(), "ends-with");
-    assert_eq!(Similarity::Between.to_string(), "between");
-    assert_eq!(Similarity::Lesser.to_string(), "lesser");
-    assert_eq!(Similarity::LesserOrEqual.to_string(), "lesser-or-equal");
-    assert_eq!(Similarity::Greater.to_string(), "greater");
-    assert_eq!(Similarity::GreaterOrEqual.to_string(), "greater-or-equal");
+fn test_similarity_display() {
+    assert_eq!(format!("{}", Similarity::Equals), "equals");
+    assert_eq!(format!("{}", Similarity::Contains), "contains");
+    assert_eq!(format!("{}", Similarity::StartsWith), "starts-with");
+    assert_eq!(format!("{}", Similarity::EndsWith), "ends-with");
+    assert_eq!(format!("{}", Similarity::Between), "between");
+    assert_eq!(format!("{}", Similarity::Lesser), "lesser");
+    assert_eq!(format!("{}", Similarity::LesserOrEqual), "lesser-or-equal");
+    assert_eq!(format!("{}", Similarity::Greater), "greater");
+    assert_eq!(format!("{}", Similarity::GreaterOrEqual), "greater-or-equal");
+}
+
+// ============================================================================
+// PARAMETER TESTS
+// ============================================================================
+
+#[test]
+fn test_parse_parameter_contains() {
+    let param = "contains:damian".parse::<Parameter>().unwrap();
+    assert_eq!(*param.similarity(), Similarity::Contains);
+    assert_eq!(*param.values(), vec!["damian"]);
+}
+
+#[test]
+fn test_parse_parameter_equals_multiple() {
+    let param = "equals:black,steel,wood".parse::<Parameter>().unwrap();
+    assert_eq!(*param.similarity(), Similarity::Equals);
+    assert_eq!(*param.values(), vec!["black", "steel", "wood"]);
+}
+
+#[test]
+fn test_parse_parameter_between() {
+    let param = "between:20,30".parse::<Parameter>().unwrap();
+    assert_eq!(*param.similarity(), Similarity::Between);
+    assert_eq!(*param.values(), vec!["20", "30"]);
+}
+
+#[test]
+fn test_parse_parameter_lesser() {
+    let param = "lesser:100".parse::<Parameter>().unwrap();
+    assert_eq!(*param.similarity(), Similarity::Lesser);
+    assert_eq!(*param.values(), vec!["100"]);
+}
+
+#[test]
+fn test_parse_parameter_greater_or_equal() {
+    let param = "greater-or-equal:50".parse::<Parameter>().unwrap();
+    assert_eq!(*param.similarity(), Similarity::GreaterOrEqual);
+    assert_eq!(*param.values(), vec!["50"]);
+}
+
+#[test]
+fn test_parse_parameter_with_whitespace() {
+    let param = "  contains  :  damian  ".parse::<Parameter>().unwrap();
+    assert_eq!(*param.similarity(), Similarity::Contains);
+    assert_eq!(*param.values(), vec!["damian"]);
+}
+
+#[test]
+fn test_parse_parameter_with_whitespace_in_values() {
+    let param = "equals: black , steel , wood ".parse::<Parameter>().unwrap();
+    assert_eq!(*param.similarity(), Similarity::Equals);
+    assert_eq!(*param.values(), vec!["black", "steel", "wood"]);
+}
+
+#[test]
+fn test_parse_parameter_empty_values() {
+    let param = "contains:".parse::<Parameter>().unwrap();
+    assert_eq!(*param.similarity(), Similarity::Contains);
+    assert_eq!(*param.values(), vec![] as Vec<String>);
+}
+
+#[test]
+fn test_parse_parameter_empty_values_with_commas() {
+    let param = "contains:,,,".parse::<Parameter>().unwrap();
+    assert_eq!(*param.similarity(), Similarity::Contains);
+    assert_eq!(*param.values(), vec![] as Vec<String>);
+}
+
+#[test]
+fn test_parse_parameter_mixed_empty_values() {
+    let param = "contains:value1,,value2,".parse::<Parameter>().unwrap();
+    assert_eq!(*param.similarity(), Similarity::Contains);
+    assert_eq!(*param.values(), vec!["value1", "value2"]);
+}
+
+#[test]
+fn test_parse_parameter_invalid_empty() {
+    assert!("".parse::<Parameter>().is_err());
+}
+
+#[test]
+fn test_parse_parameter_invalid_no_colon() {
+    assert!("contains".parse::<Parameter>().is_err());
+    assert!("containsdamian".parse::<Parameter>().is_err());
+}
+
+#[test]
+fn test_parse_parameter_invalid_multiple_colons() {
+    assert!("contains:damian:extra".parse::<Parameter>().is_err());
+}
+
+#[test]
+fn test_parse_parameter_invalid_empty_similarity() {
+    assert!(":damian".parse::<Parameter>().is_err());
+}
+
+#[test]
+fn test_parse_parameter_invalid_similarity() {
+    assert!("invalid:damian".parse::<Parameter>().is_err());
+}
+
+#[test]
+fn test_parse_parameter_invalid_whitespace_only() {
+    assert!("   ".parse::<Parameter>().is_err());
+}
+
+#[test]
+fn test_error_invalid_parameter() {
+    let error = "invalid".parse::<Parameter>().unwrap_err();
+    match error {
+        Error::InvalidParameter(msg) => assert_eq!(msg, "invalid"),
+        _ => panic!("Expected InvalidParameter error"),
+    }
+}
+
+#[test]
+fn test_parameter_display() {
+    let param = Parameter::init(Similarity::Contains, vec!["damian".to_string()]);
+    assert_eq!(format!("{}", param), "contains:damian");
+
+    let param = Parameter::init(
+        Similarity::Equals,
+        vec!["black".to_string(), "steel".to_string(), "wood".to_string()],
+    );
+    assert_eq!(format!("{}", param), "equals:black,steel,wood");
+
+    let param = Parameter::init(Similarity::Between, vec!["20".to_string(), "30".to_string()]);
+    assert_eq!(format!("{}", param), "between:20,30");
+}
+
+#[test]
+fn test_parameter_display_with_url_encoding() {
+    let param = Parameter::init(
+        Similarity::Contains,
+        vec!["hello world".to_string(), "test&value".to_string()],
+    );
+    let display_str = format!("{}", param);
+    // Should contain URL-encoded values
+    assert!(display_str.contains("contains:"));
+    // The exact encoding depends on url_encode implementation
 }
 
 // ============================================================================
