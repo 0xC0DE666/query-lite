@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `sort_fields` → `order` (field name in `Query` struct)
   - Matches the HTTP parameter name (`order=...`) for better API consistency
   - Shorter, more intuitive naming that communicates intent clearly
+- **Encapsulation**: Made tuple struct fields private for better encapsulation
+  - `Order`, `Parameter`, and `Parameters` tuple struct fields are now private
+  - Added `Parameter::init()` constructor method for creating `Parameter` instances
+  - Improved API safety by preventing direct field access
+
+### Added
+- **Parameter Constructor**: Added `Parameter::init()` method for creating `Parameter` instances
+  - Use `Parameter::init(similarity, values)` instead of `Parameter(similarity, values)`
+  - Provides a clean API for parameter construction
 
 ### Breaking Changes
 - **Type Renaming**: `SortFields` struct renamed to `Order`
@@ -20,11 +29,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Update code from `query.sort_fields` to `query.order`
   - Update code from `Query::init(..., sort_fields, ...)` to `Query::init(..., order, ...)`
   - All method calls remain the same (e.g., `query.order.ascending(...)`)
+- **Encapsulation**: Tuple struct fields are now private
+  - **Direct field access removed**: Can no longer use `.0` or `.1` to access tuple struct fields
+  - **Parameter construction**: Use `Parameter::init(similarity, values)` instead of `Parameter(similarity, values)`
+  - **Collection access**: Use `.inner()` and `.inner_mut()` methods to access underlying collections
+  - **Migration guide**:
+    - `query.parameters.0.get("name")` → `query.parameters.inner().get("name")`
+    - `query.order.0.len()` → `query.order.inner().len()`
+    - `Parameter(similarity, values)` → `Parameter::init(similarity, values)`
+    - `param.0` → `*param.similarity()` or `param.similarity()`
+    - `param.1` → `*param.values()` or `param.values()`
 
 ### Technical Details
 - **API Consistency**: Type name now matches the HTTP query parameter name (`order`)
 - **Improved Readability**: `query.order.ascending(...)` reads more naturally than `query.sort_fields.ascending(...)`
 - **One-Word Naming**: Simpler, more concise type name following Rust naming conventions
+- **Better Encapsulation**: Private fields enforce use of accessor methods, improving API stability
 - **Version Bump**: Minor version bump reflects breaking API changes
 
 ## [0.8.0] - 2025-01-27

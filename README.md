@@ -22,10 +22,10 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-query-lite = "0.8.0"
+query-lite = "0.9.0"
 
 # Optional: Enable SQL generation (enabled by default)
-# query-lite = { version = "0.8.0", default-features = false }
+# query-lite = { version = "0.9.0", default-features = false }
 ```
 
 ## Basic Usage
@@ -39,7 +39,7 @@ use query_lite::Query;
 let query = Query::from_http("name=john&age=25&city=london".to_string())?;
 
 // Access parameters
-let name_param = query.parameters.0.get("name").unwrap();
+let name_param = query.parameters.inner().get("name").unwrap();
 assert_eq!(*name_param.similarity(), query_lite::Similarity::Equals);
 assert_eq!(name_param.values(), &vec!["john"]);
 
@@ -57,11 +57,11 @@ use query_lite::Query;
 let query = Query::from_http("name=contains:john&age=between:20,30&price=greater:100".to_string())?;
 
 // Access parameters with different similarity types
-let name_param = query.parameters.0.get("name").unwrap();
+let name_param = query.parameters.inner().get("name").unwrap();
 assert_eq!(*name_param.similarity(), query_lite::Similarity::Contains);
 assert_eq!(name_param.values(), &vec!["john"]);
 
-let age_param = query.parameters.0.get("age").unwrap();
+let age_param = query.parameters.inner().get("age").unwrap();
 assert_eq!(*age_param.similarity(), query_lite::Similarity::Between);
 assert_eq!(age_param.values(), &vec!["20", "30"]);
 ```
@@ -75,12 +75,12 @@ use query_lite::Query;
 let query = Query::from_http("name=john&name=jane&age=contains:25&status=active".to_string())?;
 
 // Traditional parameters (repeated values)
-let name_param = query.parameters.0.get("name").unwrap();
+let name_param = query.parameters.inner().get("name").unwrap();
 assert_eq!(*name_param.similarity(), query_lite::Similarity::Equals);
 assert_eq!(name_param.values(), &vec!["john", "jane"]);
 
 // Advanced parameters
-let age_param = query.parameters.0.get("age").unwrap();
+let age_param = query.parameters.inner().get("age").unwrap();
 assert_eq!(*age_param.similarity(), query_lite::Similarity::Contains);
 assert_eq!(age_param.values(), &vec!["25"]);
 ```
@@ -148,7 +148,7 @@ query.order.ascending("date_created".to_string());
 
 // Access the underlying IndexMap for complex operations
 let param_map = query.parameters.inner();
-let sort_map = query.order.inner();
+let order_map = query.order.inner();
 
 // Iterate over all parameters
 for (key, param) in param_map {
@@ -157,12 +157,12 @@ for (key, param) in param_map {
 
 // Perform bulk operations
 let param_map_mut = query.parameters.inner_mut();
-param_map_mut.insert("new_param".to_string(), Parameter(Similarity::Greater, vec!["100".to_string()]));
+param_map_mut.insert("new_param".to_string(), Parameter::init(Similarity::Greater, vec!["100".to_string()]));
 ```
 
-### Backward Compatibility
+### Parameter Access
 
-The library maintains full backward compatibility with tuple access:
+The library provides semantic access methods for parameter data:
 
 ```rust
 use query_lite::Query;
@@ -170,17 +170,12 @@ use query_lite::Query;
 let query = Query::from_http("name=contains:john".to_string())?;
 let param = query.parameters.inner().get("name").unwrap();
 
-// Old tuple access still works
-assert_eq!(param.0, Similarity::Contains);
-assert_eq!(param.1, vec!["john".to_string()]);
-
-// New semantic access also works
+// Use semantic access methods
 assert_eq!(*param.similarity(), Similarity::Contains);
 assert_eq!(param.values(), &vec!["john".to_string()]);
 
-// Both return the same data
-assert_eq!(param.0, *param.similarity());
-assert_eq!(param.1, *param.values());
+// Create parameters using the init method
+let new_param = Parameter::init(Similarity::Greater, vec!["100".to_string()]);
 ```
 
 ## Similarity Types
@@ -220,9 +215,9 @@ use query_lite::Query;
 let query = Query::from_http("name=john&order=date_created:desc,name:asc&limit=25&offset=10".to_string())?;
 
 // Access sorting
-assert_eq!(query.order.0.len(), 2);
-assert_eq!(query.order.0[0].name, "date_created");
-assert_eq!(query.order.0[0].order, query_lite::SortOrder::Descending);
+assert_eq!(query.order.inner().len(), 2);
+assert_eq!(query.order.inner().get("date_created"), Some(&query_lite::SortOrder::Descending));
+assert_eq!(query.order.inner().get("name"), Some(&query_lite::SortOrder::Ascending));
 
 // Access pagination
 assert_eq!(query.limit, 25);
@@ -346,10 +341,10 @@ use query_lite::Query;
 // URL encoded parameters
 let query = Query::from_http("name=john%20doe&email=test%40example.com".to_string())?;
 
-let name_param = query.parameters.0.get("name").unwrap();
+let name_param = query.parameters.inner().get("name").unwrap();
 assert_eq!(name_param.values(), &vec!["john doe"]); // Automatically decoded
 
-let email_param = query.parameters.0.get("email").unwrap();
+let email_param = query.parameters.inner().get("email").unwrap();
 assert_eq!(email_param.values(), &vec!["test@example.com"]); // Automatically decoded
 ```
 
@@ -450,13 +445,13 @@ The library supports feature flags for optional functionality:
 ```toml
 [dependencies]
 # Default: includes SQL generation
-query-lite = "0.8.0"
+query-lite = "0.9.0"
 
 # Without SQL generation (smaller binary)
-query-lite = { version = "0.8.0", default-features = false }
+query-lite = { version = "0.9.0", default-features = false }
 
 # With specific features
-query-lite = { version = "0.8.0", features = ["sql"] }
+query-lite = { version = "0.9.0", features = ["sql"] }
 ```
 
 ## API Reference
@@ -465,10 +460,9 @@ query-lite = { version = "0.8.0", features = ["sql"] }
 
 - `Query`: Main query structure containing parameters, sorting, and pagination
 - `Parameters`: Collection of query parameters with builder methods
-- `Order`: Collection of sort fields with builder methods
-- `Parameter`: Struct containing `(Similarity, Vec<String>)` with semantic access methods
-- `ParameterGet`: Trait providing semantic access to parameter data
+- `Parameter`: Struct containing similarity and values with semantic access methods (fields are private)
 - `Similarity`: Enum defining comparison types (equals, contains, between, etc.)
+- `Order`: Collection of sort fields with builder methods
 - `SortOrder`: Sort direction (ascending, descending)
 
 ### Key Methods
@@ -483,7 +477,7 @@ query-lite = { version = "0.8.0", features = ["sql"] }
 - `Query::parameter_values()`: Get SQL values for parameters only (feature-gated)
 - `Query::pagination_values()`: Get SQL values for pagination only (feature-gated)
 - `Query::total_parameters()`: Get total number of SQL parameter values (feature-gated)
-- `Query::init()`: Create Query with custom parameters, sort fields, limit, and offset
+- `Query::init()`: Create Query with custom parameters, order, limit, and offset
 
 #### Parameters Methods
 - `Parameters::new()`: Create new Parameters collection
@@ -501,9 +495,11 @@ query-lite = { version = "0.8.0", features = ["sql"] }
 - `Order::keep()`: Filter sort fields to keep only specified keys
 - `Order::remove()`: Remove specified sort fields
 
-#### Parameter Access Methods
+#### Parameter Methods
+- `Parameter::init()`: Create a new Parameter with similarity and values
 - `Parameter::similarity()`: Get reference to similarity type
 - `Parameter::values()`: Get reference to parameter values
+- `Parameter::values_mut()`: Get mutable reference to parameter values
 
 ## Contributing
 
