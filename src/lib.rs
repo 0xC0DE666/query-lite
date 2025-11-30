@@ -35,31 +35,19 @@ impl Query {
     }
 
     pub fn to_http(&self) -> String {
-        let mut params_str = self
-            .parameters
-            .inner()
-            .iter()
-            .filter(|(_, param)| param.values().len() > 0)
-            .map(|(key, param)| format!("{key}{EQUAL}{param}"))
-            .collect::<Vec<String>>()
-            .join("&");
+        let params_str = format!("{}", self.parameters);
+        let order_str = format!("{}", self.order);
 
-        let order_str = self
-            .order
-            .inner()
-            .iter()
-            .filter(|(name, _)| name.len() > 0)
-            .map(|(name, sort_order)| format!("{}", OrderField(name.clone(), sort_order.clone())))
-            .collect::<Vec<String>>()
-            .join(&format!("{COMMA}"));
+        let mut result = String::new();
 
-        if params_str.len() > 0 {
-            params_str.push_str(&format!("{AMPERSAND}"));
+        if !params_str.is_empty() {
+            result.push_str(&params_str);
+            result.push(AMPERSAND);
         }
 
-        if order_str.len() > 0 {
-            params_str.push_str(&format!("{}{EQUAL}{}", Parameters::ORDER, order_str));
-            params_str.push_str(&format!("{AMPERSAND}"));
+        if !order_str.is_empty() {
+            result.push_str(&format!("{}{EQUAL}{}", Parameters::ORDER, order_str));
+            result.push(AMPERSAND);
         }
 
         let pagination_str = format!(
@@ -70,7 +58,8 @@ impl Query {
             self.offset,
         );
 
-        format!("{params_str}{pagination_str}")
+        result.push_str(&pagination_str);
+        result
     }
 
     // name=contains:damian&surname=equals:black,steel,wood&order=date_created:desc&limit=40&offset=0
@@ -105,7 +94,7 @@ impl Query {
                             return Err(Error::InvalidOrderField(trimmed_value.into()));
                         }
 
-                        if let Ok(order) = Order::from_str(trimmed_value) {
+                        if let Ok(order) = trimmed_value.parse::<Order>() {
                             query.order = order;
                         }
                         // Skip malformed sort fields (like ":desc")
@@ -552,6 +541,19 @@ impl FromStr for Parameters {
     }
 }
 
+impl fmt::Display for Parameters {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let params_str = self
+            .inner()
+            .iter()
+            .filter(|(_, param)| param.values().len() > 0)
+            .map(|(key, param)| format!("{key}{EQUAL}{param}"))
+            .collect::<Vec<String>>()
+            .join(&format!("{AMPERSAND}"));
+        write!(f, "{}", params_str)
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Parameter(Similarity, Vec<String>);
 
@@ -704,6 +706,19 @@ impl FromStr for Order {
         }
 
         Ok(order)
+    }
+}
+
+impl fmt::Display for Order {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let order_str = self
+            .inner()
+            .iter()
+            .filter(|(name, _)| name.len() > 0)
+            .map(|(name, sort_order)| format!("{}", OrderField(name.clone(), sort_order.clone())))
+            .collect::<Vec<String>>()
+            .join(&format!("{COMMA}"));
+        write!(f, "{}", order_str)
     }
 }
 
@@ -911,4 +926,3 @@ pub(crate) fn url_decode(input: &str) -> String {
 pub(crate) fn url_encode(input: &str) -> String {
     form_urlencoded::byte_serialize(input.as_bytes()).collect()
 }
-

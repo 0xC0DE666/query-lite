@@ -123,6 +123,54 @@ fn test_order_field_display() {
     assert_eq!(format!("{}", order_field), "date_created:desc");
 }
 
+#[test]
+fn test_order_display() {
+    let mut order = Order::new();
+    order.ascending("name".to_string());
+    order.descending("date_created".to_string());
+
+    let display_str = format!("{}", order);
+    assert!(display_str.contains("name:asc"));
+    assert!(display_str.contains("date_created:desc"));
+    assert!(display_str.contains(","));
+}
+
+#[test]
+fn test_order_display_empty() {
+    let order = Order::new();
+    assert_eq!(format!("{}", order), "");
+}
+
+#[test]
+fn test_order_display_filters_empty_names() {
+    let mut order = Order::new();
+    order.ascending("name".to_string());
+    order.ascending("".to_string());
+    order.descending("date_created".to_string());
+
+    let display_str = format!("{}", order);
+    assert!(display_str.contains("name:asc"));
+    assert!(display_str.contains("date_created:desc"));
+    // Should not contain empty name
+    let parts: Vec<&str> = display_str.split(',').collect();
+    assert_eq!(parts.len(), 2);
+}
+
+#[test]
+fn test_order_display_multiple_fields() {
+    let mut order = Order::new();
+    order.ascending("name".to_string());
+    order.descending("date_created".to_string());
+    order.ascending("email".to_string());
+
+    let display_str = format!("{}", order);
+    let parts: Vec<&str> = display_str.split(',').collect();
+    assert_eq!(parts.len(), 3);
+    assert!(display_str.contains("name:asc"));
+    assert!(display_str.contains("date_created:desc"));
+    assert!(display_str.contains("email:asc"));
+}
+
 // ============================================================================
 // SORT FIELDS HELPER FUNCTIONS TESTS
 // ============================================================================
@@ -451,7 +499,10 @@ fn test_similarity_display() {
     assert_eq!(format!("{}", Similarity::Lesser), "lesser");
     assert_eq!(format!("{}", Similarity::LesserOrEqual), "lesser-or-equal");
     assert_eq!(format!("{}", Similarity::Greater), "greater");
-    assert_eq!(format!("{}", Similarity::GreaterOrEqual), "greater-or-equal");
+    assert_eq!(
+        format!("{}", Similarity::GreaterOrEqual),
+        "greater-or-equal"
+    );
 }
 
 // ============================================================================
@@ -502,7 +553,9 @@ fn test_parse_parameter_with_whitespace() {
 
 #[test]
 fn test_parse_parameter_with_whitespace_in_values() {
-    let param = "equals: black , steel , wood ".parse::<Parameter>().unwrap();
+    let param = "equals: black , steel , wood "
+        .parse::<Parameter>()
+        .unwrap();
     assert_eq!(*param.similarity(), Similarity::Equals);
     assert_eq!(*param.values(), vec!["black", "steel", "wood"]);
 }
@@ -579,7 +632,10 @@ fn test_parameter_display() {
     );
     assert_eq!(format!("{}", param), "equals:black,steel,wood");
 
-    let param = Parameter::init(Similarity::Between, vec!["20".to_string(), "30".to_string()]);
+    let param = Parameter::init(
+        Similarity::Between,
+        vec!["20".to_string(), "30".to_string()],
+    );
     assert_eq!(format!("{}", param), "between:20,30");
 }
 
@@ -593,6 +649,54 @@ fn test_parameter_display_with_url_encoding() {
     // Should contain URL-encoded values
     assert!(display_str.contains("contains:"));
     // The exact encoding depends on url_encode implementation
+}
+
+#[test]
+fn test_parameters_display() {
+    let mut params = Parameters::new();
+    params.contains("name".to_string(), vec!["damian".to_string()]);
+    params.equals(
+        "surname".to_string(),
+        vec!["black".to_string(), "steel".to_string()],
+    );
+
+    let display_str = format!("{}", params);
+    assert!(display_str.contains("name=contains:damian"));
+    assert!(display_str.contains("surname=equals:black,steel"));
+    assert!(display_str.contains("&"));
+}
+
+#[test]
+fn test_parameters_display_empty() {
+    let params = Parameters::new();
+    assert_eq!(format!("{}", params), "");
+}
+
+#[test]
+fn test_parameters_display_filters_empty_values() {
+    let mut params = Parameters::new();
+    params.contains("name".to_string(), vec!["damian".to_string()]);
+    params.equals("empty".to_string(), vec![]);
+
+    let display_str = format!("{}", params);
+    assert!(display_str.contains("name=contains:damian"));
+    assert!(!display_str.contains("empty"));
+}
+
+#[test]
+fn test_parameters_display_multiple_parameters() {
+    let mut params = Parameters::new();
+    params.contains("name".to_string(), vec!["john".to_string()]);
+    params.equals("status".to_string(), vec!["active".to_string()]);
+    params.between("age".to_string(), vec!["20".to_string(), "30".to_string()]);
+
+    let display_str = format!("{}", params);
+    // Should contain all three parameters joined by &
+    let parts: Vec<&str> = display_str.split('&').collect();
+    assert_eq!(parts.len(), 3);
+    assert!(display_str.contains("name=contains:john"));
+    assert!(display_str.contains("status=equals:active"));
+    assert!(display_str.contains("age=between:20,30"));
 }
 
 // ============================================================================
@@ -3802,10 +3906,10 @@ fn test_query_to_values_mixed_empty_and_null() {
         Parameter::init(
             Similarity::Equals,
             vec![
-                "".to_string(),       // empty string (should be ignored)
-                sql::NULL.to_string(),   // null string (should be converted to SQLValue::Null)
-                "   ".to_string(),    // whitespace only (should be ignored)
-                "active".to_string(), // normal value
+                "".to_string(),        // empty string (should be ignored)
+                sql::NULL.to_string(), // null string (should be converted to SQLValue::Null)
+                "   ".to_string(),     // whitespace only (should be ignored)
+                "active".to_string(),  // normal value
             ],
         ),
     );
