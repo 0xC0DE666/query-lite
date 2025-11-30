@@ -5,8 +5,8 @@ pub type Result<T> = StdResult<T, Error>;
 
 #[derive(Debug, Error, PartialEq)]
 pub enum Error {
-    #[error("Error: Invalid Sort Order '{0}'")]
-    InvalidSortOrder(String),
+    #[error("Error: Invalid Sort Direction '{0}'")]
+    InvalidSortDirection(String),
 
     #[error("Error: Invalid Order Field '{0}'")]
     InvalidOrderField(String),

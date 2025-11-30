@@ -297,11 +297,11 @@ impl Query {
     pub fn order_clause(&self) -> Option<String> {
         let mut order_parts = Vec::new();
 
-        for (name, sort_order) in &self.order.0 {
+        for (name, direction) in &self.order.0 {
             if !name.is_empty() {
-                let direction = match sort_order {
-                    SortOrder::Ascending => "ASC",
-                    SortOrder::Descending => "DESC",
+                let direction = match direction {
+                    SortDirection::Ascending => "ASC",
+                    SortDirection::Descending => "DESC",
                 };
                 order_parts.push(format!("{} {}", name, direction));
             }
@@ -631,28 +631,28 @@ impl fmt::Display for Parameter {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Order(IndexMap<String, SortOrder>);
+pub struct Order(IndexMap<String, SortDirection>);
 
 impl Order {
     pub fn new() -> Self {
         Self(IndexMap::new())
     }
 
-    pub fn inner(&self) -> &IndexMap<String, SortOrder> {
+    pub fn inner(&self) -> &IndexMap<String, SortDirection> {
         &self.0
     }
 
-    pub fn inner_mut(&mut self) -> &mut IndexMap<String, SortOrder> {
+    pub fn inner_mut(&mut self) -> &mut IndexMap<String, SortDirection> {
         &mut self.0
     }
 
     pub fn ascending(&mut self, name: String) -> &mut Self {
-        self.0.insert(name, SortOrder::Ascending);
+        self.0.insert(name, SortDirection::Ascending);
         self
     }
 
     pub fn descending(&mut self, name: String) -> &mut Self {
-        self.0.insert(name, SortOrder::Descending);
+        self.0.insert(name, SortDirection::Descending);
         self
     }
 
@@ -701,8 +701,8 @@ impl FromStr for Order {
                 continue;
             }
 
-            let OrderField(name, sort_order) = trimmed_field.parse::<OrderField>()?;
-            order.0.insert(name, sort_order);
+            let OrderField(name, direction) = trimmed_field.parse::<OrderField>()?;
+            order.0.insert(name, direction);
         }
 
         Ok(order)
@@ -715,21 +715,21 @@ impl fmt::Display for Order {
             .inner()
             .iter()
             .filter(|(name, _)| name.len() > 0)
-            .map(|(name, sort_order)| format!("{}", OrderField(name.clone(), sort_order.clone())))
+            .map(|(name, direction)| format!("{}", OrderField(name.clone(), direction.clone())))
             .collect::<Vec<String>>()
             .join(&format!("{COMMA}"));
         write!(f, "{}", order_str)
     }
 }
 
-pub struct OrderField(String, SortOrder);
+pub struct OrderField(String, SortDirection);
 
 impl OrderField {
     pub fn name(&self) -> &String {
         &self.0
     }
 
-    pub fn order(&self) -> &SortOrder {
+    pub fn sort_direction(&self) -> &SortDirection {
         &self.1
     }
 }
@@ -760,14 +760,14 @@ impl FromStr for OrderField {
             return Err(Error::InvalidOrderField(s.into()));
         }
 
-        let order = order.parse::<SortOrder>()?;
+        let order = order.parse::<SortDirection>()?;
         Ok(OrderField(name, order))
     }
 }
 
 impl fmt::Display for OrderField {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{COLON}{}", self.name(), self.order())
+        write!(f, "{}{COLON}{}", self.name(), self.sort_direction())
     }
 }
 
@@ -844,38 +844,38 @@ impl fmt::Display for Similarity {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum SortOrder {
+pub enum SortDirection {
     Ascending,
     Descending,
 }
 
-impl SortOrder {
+impl SortDirection {
     pub const ASCENDING: &str = "asc";
     pub const DESCENDING: &str = "desc";
 }
 
-impl Default for SortOrder {
+impl Default for SortDirection {
     fn default() -> Self {
         Self::Ascending
     }
 }
 
-impl FromStr for SortOrder {
+impl FromStr for SortDirection {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
         match s {
-            SortOrder::ASCENDING => Ok(SortOrder::Ascending),
-            SortOrder::DESCENDING => Ok(SortOrder::Descending),
-            val => Err(Error::InvalidSortOrder(val.into())),
+            SortDirection::ASCENDING => Ok(SortDirection::Ascending),
+            SortDirection::DESCENDING => Ok(SortDirection::Descending),
+            val => Err(Error::InvalidSortDirection(val.into())),
         }
     }
 }
 
-impl fmt::Display for SortOrder {
+impl fmt::Display for SortDirection {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
-            Self::Ascending => SortOrder::ASCENDING,
-            Self::Descending => SortOrder::DESCENDING,
+            Self::Ascending => SortDirection::ASCENDING,
+            Self::Descending => SortDirection::DESCENDING,
         };
         write!(f, "{}", s)
     }

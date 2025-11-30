@@ -8,42 +8,42 @@ use std::str::FromStr;
 
 #[test]
 fn test_sort_order_variants() {
-    assert_eq!(SortOrder::Ascending, SortOrder::Ascending);
-    assert_eq!(SortOrder::Descending, SortOrder::Descending);
-    assert_ne!(SortOrder::Ascending, SortOrder::Descending);
+    assert_eq!(SortDirection::Ascending, SortDirection::Ascending);
+    assert_eq!(SortDirection::Descending, SortDirection::Descending);
+    assert_ne!(SortDirection::Ascending, SortDirection::Descending);
 }
 
 #[test]
 fn test_sort_order_constants() {
-    assert_eq!(SortOrder::ASCENDING, "asc");
-    assert_eq!(SortOrder::DESCENDING, "desc");
+    assert_eq!(SortDirection::ASCENDING, "asc");
+    assert_eq!(SortDirection::DESCENDING, "desc");
 }
 
 #[test]
 fn test_sort_order_default() {
-    assert_eq!(SortOrder::default(), SortOrder::Ascending);
+    assert_eq!(SortDirection::default(), SortDirection::Ascending);
 }
 
 #[test]
 fn test_sort_order_from_str_valid() {
-    assert_eq!(SortOrder::from_str("asc").unwrap(), SortOrder::Ascending);
-    assert_eq!(SortOrder::from_str("desc").unwrap(), SortOrder::Descending);
+    assert_eq!(SortDirection::from_str("asc").unwrap(), SortDirection::Ascending);
+    assert_eq!(SortDirection::from_str("desc").unwrap(), SortDirection::Descending);
 }
 
 #[test]
 fn test_sort_order_from_str_invalid() {
-    assert!(SortOrder::from_str("invalid").is_err());
-    assert!(SortOrder::from_str("").is_err());
-    assert!(SortOrder::from_str("ASC").is_err());
-    assert!(SortOrder::from_str("DESC").is_err());
-    assert!(SortOrder::from_str("ascending").is_err());
-    assert!(SortOrder::from_str("descending").is_err());
+    assert!(SortDirection::from_str("invalid").is_err());
+    assert!(SortDirection::from_str("").is_err());
+    assert!(SortDirection::from_str("ASC").is_err());
+    assert!(SortDirection::from_str("DESC").is_err());
+    assert!(SortDirection::from_str("ascending").is_err());
+    assert!(SortDirection::from_str("descending").is_err());
 }
 
 #[test]
 fn test_sort_order_display() {
-    assert_eq!(format!("{}", SortOrder::Ascending), "asc");
-    assert_eq!(format!("{}", SortOrder::Descending), "desc");
+    assert_eq!(format!("{}", SortDirection::Ascending), "asc");
+    assert_eq!(format!("{}", SortDirection::Descending), "desc");
 }
 
 // ============================================================================
@@ -54,28 +54,28 @@ fn test_sort_order_display() {
 fn test_parse_order_field_asc() {
     let order_field = "name:asc".parse::<OrderField>().unwrap();
     assert_eq!(order_field.name(), "name");
-    assert_eq!(*order_field.order(), SortOrder::Ascending);
+    assert_eq!(*order_field.sort_direction(), SortDirection::Ascending);
 }
 
 #[test]
 fn test_parse_order_field_desc() {
     let order_field = "date_created:desc".parse::<OrderField>().unwrap();
     assert_eq!(order_field.name(), "date_created");
-    assert_eq!(*order_field.order(), SortOrder::Descending);
+    assert_eq!(*order_field.sort_direction(), SortDirection::Descending);
 }
 
 #[test]
 fn test_parse_order_field_with_whitespace() {
     let order_field = "  name  :  asc  ".parse::<OrderField>().unwrap();
     assert_eq!(order_field.name(), "name");
-    assert_eq!(*order_field.order(), SortOrder::Ascending);
+    assert_eq!(*order_field.sort_direction(), SortDirection::Ascending);
 }
 
 #[test]
 fn test_parse_order_field_with_special_characters() {
     let order_field = "user_name:desc".parse::<OrderField>().unwrap();
     assert_eq!(order_field.name(), "user_name");
-    assert_eq!(*order_field.order(), SortOrder::Descending);
+    assert_eq!(*order_field.sort_direction(), SortDirection::Descending);
 }
 
 #[test]
@@ -181,7 +181,7 @@ fn test_order_helper_functions_asc() {
     fields.ascending("name".to_string());
 
     assert_eq!(fields.inner().len(), 1);
-    assert_eq!(fields.inner().get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(fields.inner().get("name"), Some(&SortDirection::Ascending));
 }
 
 #[test]
@@ -192,7 +192,7 @@ fn test_order_helper_functions_desc() {
     assert_eq!(fields.inner().len(), 1);
     assert_eq!(
         fields.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
 }
 
@@ -205,12 +205,12 @@ fn test_order_helper_functions_fluent_api() {
         .ascending("email".to_string());
 
     assert_eq!(fields.inner().len(), 3);
-    assert_eq!(fields.inner().get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(fields.inner().get("name"), Some(&SortDirection::Ascending));
     assert_eq!(
         fields.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
-    assert_eq!(fields.inner().get("email"), Some(&SortOrder::Ascending));
+    assert_eq!(fields.inner().get("email"), Some(&SortDirection::Ascending));
 }
 
 #[test]
@@ -220,7 +220,7 @@ fn test_order_helper_functions_overwrite() {
     fields.descending("name".to_string()); // Should overwrite
 
     assert_eq!(fields.inner().len(), 1);
-    assert_eq!(fields.inner().get("name"), Some(&SortOrder::Descending));
+    assert_eq!(fields.inner().get("name"), Some(&SortDirection::Descending));
 }
 
 #[test]
@@ -229,7 +229,7 @@ fn test_order_helper_functions_empty_name() {
     fields.ascending("".to_string());
 
     assert_eq!(fields.inner().len(), 1);
-    assert_eq!(fields.inner().get(""), Some(&SortOrder::Ascending));
+    assert_eq!(fields.inner().get(""), Some(&SortDirection::Ascending));
 }
 
 #[test]
@@ -238,7 +238,7 @@ fn test_order_helper_functions_whitespace_name() {
     fields.ascending("  name  ".to_string());
 
     assert_eq!(fields.inner().len(), 1);
-    assert_eq!(fields.inner().get("  name  "), Some(&SortOrder::Ascending));
+    assert_eq!(fields.inner().get("  name  "), Some(&SortDirection::Ascending));
 }
 
 #[test]
@@ -249,7 +249,7 @@ fn test_order_helper_functions_special_characters() {
     assert_eq!(fields.inner().len(), 1);
     assert_eq!(
         fields.inner().get("user_name_123"),
-        Some(&SortOrder::Ascending)
+        Some(&SortDirection::Ascending)
     );
 }
 
@@ -259,7 +259,7 @@ fn test_order_helper_functions_unicode_name() {
     fields.ascending("用户_姓名".to_string());
 
     assert_eq!(fields.inner().len(), 1);
-    assert_eq!(fields.inner().get("用户_姓名"), Some(&SortOrder::Ascending));
+    assert_eq!(fields.inner().get("用户_姓名"), Some(&SortDirection::Ascending));
 }
 
 #[test]
@@ -272,9 +272,9 @@ fn test_order_keep() {
     let filtered = fields.keep(vec!["name".to_string(), "email".to_string()]);
 
     assert_eq!(filtered.inner().len(), 2);
-    assert_eq!(filtered.inner().get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(filtered.inner().get("name"), Some(&SortDirection::Ascending));
     assert_eq!(filtered.inner().get("date_created"), None);
-    assert_eq!(filtered.inner().get("email"), Some(&SortOrder::Ascending));
+    assert_eq!(filtered.inner().get("email"), Some(&SortDirection::Ascending));
 }
 
 #[test]
@@ -308,7 +308,7 @@ fn test_order_remove() {
     assert_eq!(filtered.inner().get("name"), None);
     assert_eq!(
         filtered.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
     assert_eq!(filtered.inner().get("email"), None);
 }
@@ -320,7 +320,7 @@ fn test_order_remove_nonexistent_keys() {
 
     let filtered = fields.remove(vec!["nonexistent".to_string()]);
     assert_eq!(filtered.inner().len(), 1);
-    assert_eq!(filtered.inner().get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(filtered.inner().get("name"), Some(&SortDirection::Ascending));
 }
 
 #[test]
@@ -330,7 +330,7 @@ fn test_order_remove_empty_keys() {
 
     let filtered = fields.remove(vec![]);
     assert_eq!(filtered.inner().len(), 1);
-    assert_eq!(filtered.inner().get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(filtered.inner().get("name"), Some(&SortDirection::Ascending));
 }
 
 // ============================================================================
@@ -362,7 +362,7 @@ fn test_order_from_str_empty() {
 fn test_order_from_str_single() {
     let fields = Order::from_str("name:asc").unwrap();
     assert_eq!(fields.inner().len(), 1);
-    assert_eq!(fields.inner().get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(fields.inner().get("name"), Some(&SortDirection::Ascending));
 }
 
 #[test]
@@ -372,10 +372,10 @@ fn test_order_from_str_multiple() {
 
     assert_eq!(
         fields.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
-    assert_eq!(fields.inner().get("name"), Some(&SortOrder::Ascending));
-    assert_eq!(fields.inner().get("surname"), Some(&SortOrder::Ascending));
+    assert_eq!(fields.inner().get("name"), Some(&SortDirection::Ascending));
+    assert_eq!(fields.inner().get("surname"), Some(&SortDirection::Ascending));
 }
 
 #[test]
@@ -384,18 +384,18 @@ fn test_order_from_str_with_whitespace() {
     assert_eq!(fields.inner().len(), 3);
     assert_eq!(
         fields.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
-    assert_eq!(fields.inner().get("name"), Some(&SortOrder::Ascending));
-    assert_eq!(fields.inner().get("surname"), Some(&SortOrder::Ascending));
+    assert_eq!(fields.inner().get("name"), Some(&SortDirection::Ascending));
+    assert_eq!(fields.inner().get("surname"), Some(&SortDirection::Ascending));
 }
 
 #[test]
 fn test_order_from_str_with_empty_fields() {
     let fields = Order::from_str("name:asc,,surname:asc").unwrap();
     assert_eq!(fields.inner().len(), 2);
-    assert_eq!(fields.inner().get("name"), Some(&SortOrder::Ascending));
-    assert_eq!(fields.inner().get("surname"), Some(&SortOrder::Ascending));
+    assert_eq!(fields.inner().get("name"), Some(&SortDirection::Ascending));
+    assert_eq!(fields.inner().get("surname"), Some(&SortDirection::Ascending));
 }
 
 #[test]
@@ -1160,9 +1160,9 @@ fn test_query_from_http_with_order() {
     assert_eq!(query.order.inner().len(), 2);
     assert_eq!(
         query.order.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
-    assert_eq!(query.order.inner().get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(query.order.inner().get("name"), Some(&SortDirection::Ascending));
 }
 
 #[test]
@@ -1200,7 +1200,7 @@ fn test_query_from_http_complete() {
     assert_eq!(query.order.inner().len(), 1);
     assert_eq!(
         query.order.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
 
     assert_eq!(query.limit, 40);
@@ -1218,7 +1218,7 @@ fn test_query_from_http_with_whitespace() {
     assert_eq!(query.order.inner().len(), 1);
     assert_eq!(
         query.order.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
 }
 
@@ -1365,7 +1365,7 @@ fn test_query_from_http_with_numeric_comparisons() {
     assert_eq!(query.order.inner().len(), 1);
     assert_eq!(
         query.order.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
 
     assert_eq!(query.limit, 25);
@@ -1399,7 +1399,7 @@ fn test_query_from_http_mixed_similarity_types() {
     assert_eq!(*param.values(), vec!["active"]);
 
     assert_eq!(query.order.inner().len(), 1);
-    assert_eq!(query.order.inner().get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(query.order.inner().get("name"), Some(&SortDirection::Ascending));
 
     assert_eq!(query.limit, 20);
 }
@@ -1509,9 +1509,9 @@ fn test_parameters_remove_with_numeric_comparisons() {
 
 #[test]
 fn test_error_invalid_sort_order() {
-    let error = SortOrder::from_str("invalid").unwrap_err();
+    let error = SortDirection::from_str("invalid").unwrap_err();
     match error {
-        Error::InvalidSortOrder(msg) => assert_eq!(msg, "invalid"),
+        Error::InvalidSortDirection(msg) => assert_eq!(msg, "invalid"),
         _ => panic!("Expected InvalidSortOrder error"),
     }
 }
@@ -1582,11 +1582,11 @@ fn test_complex_order_parsing() {
     assert_eq!(fields.inner().len(), 4);
     assert_eq!(
         fields.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
-    assert_eq!(fields.inner().get("name"), Some(&SortOrder::Ascending));
-    assert_eq!(fields.inner().get("surname"), Some(&SortOrder::Ascending));
-    assert_eq!(fields.inner().get("email"), Some(&SortOrder::Descending));
+    assert_eq!(fields.inner().get("name"), Some(&SortDirection::Ascending));
+    assert_eq!(fields.inner().get("surname"), Some(&SortDirection::Ascending));
+    assert_eq!(fields.inner().get("email"), Some(&SortDirection::Descending));
 }
 
 #[test]
@@ -1629,7 +1629,7 @@ fn test_edge_case_whitespace_handling() {
     assert_eq!(query.order.inner().len(), 1);
     assert_eq!(
         query.order.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
 }
 
@@ -1691,8 +1691,8 @@ fn test_edge_case_case_sensitivity() {
     assert!(Similarity::from_str("EQUALS").is_err());
     assert!(Similarity::from_str("Contains").is_err());
 
-    assert!(SortOrder::from_str("ASC").is_err());
-    assert!(SortOrder::from_str("DESC").is_err());
+    assert!(SortDirection::from_str("ASC").is_err());
+    assert!(SortDirection::from_str("DESC").is_err());
 
     // But parameter keys should be preserved as-is
     let query_str = "Name=contains:damian&NAME=equals:test";
@@ -2428,8 +2428,8 @@ fn test_order_inner_method() {
     assert!(inner_map.contains_key("date_created"));
 
     // Test that we can access the underlying data
-    assert_eq!(inner_map.get("name"), Some(&SortOrder::Ascending));
-    assert_eq!(inner_map.get("date_created"), Some(&SortOrder::Descending));
+    assert_eq!(inner_map.get("name"), Some(&SortDirection::Ascending));
+    assert_eq!(inner_map.get("date_created"), Some(&SortDirection::Descending));
 }
 
 #[test]
@@ -2442,12 +2442,12 @@ fn test_order_inner_mut_method() {
     assert_eq!(inner_map.len(), 1);
 
     // Test that we can modify the underlying data
-    inner_map.insert("new_field".to_string(), SortOrder::Descending);
+    inner_map.insert("new_field".to_string(), SortDirection::Descending);
 
     // Verify the change
     assert_eq!(inner_map.len(), 2);
     assert!(inner_map.contains_key("new_field"));
-    assert_eq!(inner_map.get("new_field"), Some(&SortOrder::Descending));
+    assert_eq!(inner_map.get("new_field"), Some(&SortDirection::Descending));
 }
 
 #[test]
@@ -2500,7 +2500,7 @@ fn test_order_ascending_method() {
     order.ascending("name".to_string());
 
     assert_eq!(order.inner().len(), 1);
-    assert_eq!(order.inner().get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(order.inner().get("name"), Some(&SortDirection::Ascending));
 }
 
 #[test]
@@ -2511,7 +2511,7 @@ fn test_order_descending_method() {
     assert_eq!(order.inner().len(), 1);
     assert_eq!(
         order.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
 }
 
@@ -2524,12 +2524,12 @@ fn test_order_ascending_descending_fluent_api() {
         .ascending("email".to_string());
 
     assert_eq!(order.inner().len(), 3);
-    assert_eq!(order.inner().get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(order.inner().get("name"), Some(&SortDirection::Ascending));
     assert_eq!(
         order.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
-    assert_eq!(order.inner().get("email"), Some(&SortOrder::Ascending));
+    assert_eq!(order.inner().get("email"), Some(&SortDirection::Ascending));
 }
 
 #[test]
@@ -2539,7 +2539,7 @@ fn test_order_ascending_descending_overwrite() {
     order.descending("name".to_string()); // Should overwrite
 
     assert_eq!(order.inner().len(), 1);
-    assert_eq!(order.inner().get("name"), Some(&SortOrder::Descending));
+    assert_eq!(order.inner().get("name"), Some(&SortDirection::Descending));
 }
 
 #[test]
@@ -2551,11 +2551,11 @@ fn test_order_ascending_descending_with_special_characters() {
     assert_eq!(order.inner().len(), 2);
     assert_eq!(
         order.inner().get("user_name_123"),
-        Some(&SortOrder::Ascending)
+        Some(&SortDirection::Ascending)
     );
     assert_eq!(
         order.inner().get("date_created_at"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
 }
 
@@ -2566,8 +2566,8 @@ fn test_order_ascending_descending_with_unicode() {
     order.descending("创建_日期".to_string());
 
     assert_eq!(order.inner().len(), 2);
-    assert_eq!(order.inner().get("用户_姓名"), Some(&SortOrder::Ascending));
-    assert_eq!(order.inner().get("创建_日期"), Some(&SortOrder::Descending));
+    assert_eq!(order.inner().get("用户_姓名"), Some(&SortDirection::Ascending));
+    assert_eq!(order.inner().get("创建_日期"), Some(&SortDirection::Descending));
 }
 
 #[test]
@@ -2577,8 +2577,8 @@ fn test_order_ascending_descending_empty_strings() {
     order.descending("  ".to_string());
 
     assert_eq!(order.inner().len(), 2);
-    assert_eq!(order.inner().get(""), Some(&SortOrder::Ascending));
-    assert_eq!(order.inner().get("  "), Some(&SortOrder::Descending));
+    assert_eq!(order.inner().get(""), Some(&SortDirection::Ascending));
+    assert_eq!(order.inner().get("  "), Some(&SortDirection::Descending));
 }
 
 // ============================================================================
@@ -2655,7 +2655,7 @@ fn test_inner_methods_with_query_manipulation() {
         "new_param".to_string(),
         Parameter::init(Similarity::Greater, vec!["100".to_string()]),
     );
-    sort_map_mut.insert("new_sort".to_string(), SortOrder::Ascending);
+    sort_map_mut.insert("new_sort".to_string(), SortDirection::Ascending);
 
     // Verify modifications
     assert_eq!(param_map_mut.len(), 3);
@@ -2692,10 +2692,10 @@ fn test_renamed_methods_with_query_building() {
     assert_eq!(name_param.values(), &vec!["john".to_string()]);
 
     // Verify sort field access
-    assert_eq!(query.order.inner().get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(query.order.inner().get("name"), Some(&SortDirection::Ascending));
     assert_eq!(
         query.order.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
 }
 
@@ -2751,11 +2751,11 @@ fn test_all_new_features_roundtrip() {
     // Verify sort fields
     assert_eq!(
         reconstructed.order.inner().get("name"),
-        Some(&SortOrder::Ascending)
+        Some(&SortDirection::Ascending)
     );
     assert_eq!(
         reconstructed.order.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
 }
 
@@ -2861,7 +2861,7 @@ fn test_query_from_http_normal_with_special_params() {
     assert_eq!(query.order.inner().len(), 1);
     assert_eq!(
         query.order.inner().get("date_created"),
-        Some(&SortOrder::Descending)
+        Some(&SortDirection::Descending)
     );
     assert_eq!(query.limit, 25);
     assert_eq!(query.offset, 10);
