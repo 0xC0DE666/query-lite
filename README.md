@@ -14,7 +14,7 @@ A powerful Rust library for parsing HTTP query parameters into structured querie
 - 🗄️ **SQL Generation**: Optional SQL query generation with parameter binding (feature-gated)
 - 🛡️ **Type Safety**: Full Rust type safety with comprehensive error handling
 - ⚡ **Zero Dependencies**: Minimal dependencies for core functionality
-- 🧪 **Well Tested**: Comprehensive test suite with 150+ tests
+- 🧪 **Well Tested**: Comprehensive test suite with 240+ tests
 
 ## Quick Start
 
@@ -468,6 +468,8 @@ query-lite = { version = "0.9.0", features = ["sql"] }
 ### Key Methods
 
 #### Query Methods
+- `Query::new()`: Create a new Query with default values (empty parameters, empty order, limit=50, offset=0)
+- `Query::init()`: Create Query with custom parameters, order, limit, and offset
 - `Query::from_http()`: Parse HTTP query string into Query struct
 - `Query::to_http()`: Convert Query struct back to HTTP query string
 - `Query::to_sql()`: Generate SQL query with parameter placeholders (feature-gated)
@@ -477,7 +479,6 @@ query-lite = { version = "0.9.0", features = ["sql"] }
 - `Query::parameter_values()`: Get SQL values for parameters only (feature-gated)
 - `Query::pagination_values()`: Get SQL values for pagination only (feature-gated)
 - `Query::total_parameters()`: Get total number of SQL parameter values (feature-gated)
-- `Query::init()`: Create Query with custom parameters, order, limit, and offset
 
 #### Parameters Methods
 - `Parameters::new()`: Create new Parameters collection
