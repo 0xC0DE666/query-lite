@@ -461,8 +461,8 @@ query-lite = { version = "0.9.0", features = ["sql"] }
 - `Query`: Main query structure containing parameters, sorting, and pagination
 - `Parameters`: Collection of query parameters with builder methods
 - `Parameter`: Struct containing similarity and values with semantic access methods (fields are private)
-- `Similarity`: Enum defining comparison types (equals, contains, between, etc.)
 - `Order`: Collection of sort fields with builder methods
+- `Similarity`: Enum defining comparison types (equals, contains, between, etc.)
 - `SortOrder`: Sort direction (ascending, descending)
 
 ### Key Methods
@@ -487,6 +487,12 @@ query-lite = { version = "0.9.0", features = ["sql"] }
 - `Parameters::keep()`: Filter parameters to keep only specified keys
 - `Parameters::remove()`: Remove specified parameters
 
+#### Parameter Methods
+- `Parameter::init()`: Create a new Parameter with similarity and values
+- `Parameter::similarity()`: Get reference to similarity type
+- `Parameter::values()`: Get reference to parameter values
+- `Parameter::values_mut()`: Get mutable reference to parameter values
+
 #### Order Methods
 - `Order::new()`: Create new Order collection
 - `Order::ascending()`, `Order::descending()`: Builder methods for adding sort fields
@@ -494,12 +500,6 @@ query-lite = { version = "0.9.0", features = ["sql"] }
 - `Order::inner_mut()`: Get mutable reference to underlying IndexMap
 - `Order::keep()`: Filter sort fields to keep only specified keys
 - `Order::remove()`: Remove specified sort fields
-
-#### Parameter Methods
-- `Parameter::init()`: Create a new Parameter with similarity and values
-- `Parameter::similarity()`: Get reference to similarity type
-- `Parameter::values()`: Get reference to parameter values
-- `Parameter::values_mut()`: Get mutable reference to parameter values
 
 ## Contributing
 

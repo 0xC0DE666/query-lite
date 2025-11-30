@@ -5,463 +5,7 @@ use indexmap::IndexMap;
 use std::str::FromStr;
 use url::form_urlencoded;
 
-pub const QUESTION: char = '?';
-pub const AMPERSAND: char = '&';
-pub const EQUAL: char = '=';
-pub const COLON: char = ':';
-pub const COMMA: char = ',';
-pub const PERCENT: char = '%';
-
-/// URL decode a string, handling percent-encoded characters
-pub fn url_decode(input: &str) -> String {
-    // Only decode if the string contains percent-encoded characters
-    if input.contains(PERCENT) {
-        // Use form_urlencoded to decode individual values by treating it as a query parameter
-        let query_str = format!("key={}", input);
-        form_urlencoded::parse(query_str.as_bytes())
-            .next()
-            .map(|(_, v)| v.to_string())
-            .unwrap_or_else(|| input.to_string())
-    } else {
-        input.to_string()
-    }
-}
-
-/// URL encode a string, converting special characters to percent-encoded format
-pub fn url_encode(input: &str) -> String {
-    form_urlencoded::byte_serialize(input.as_bytes()).collect()
-}
-
-/// Parse a parameter string into similarity and values
-///
-/// # Examples
-/// - "contains:damian" -> (Similarity::Contains, vec!["damian"])
-/// - "equals:black,steel,wood" -> (Similarity::Equals, vec!["black", "steel", "wood"])
-/// - "between:20,30" -> (Similarity::Between, vec!["20", "30"])
-pub fn parse_parameter(s: &str) -> Result<Parameter> {
-    let trimmed = s.trim();
-    if trimmed.is_empty() {
-        return Err(Error::InvalidParameter(s.into()));
-    }
-
-    let parts: Vec<&str> = trimmed.split(COLON).collect();
-    if parts.len() != 2 {
-        return Err(Error::InvalidParameter(s.into()));
-    }
-
-    let similarity_str = parts[0].trim();
-    let values_str = parts[1].trim();
-
-    if similarity_str.is_empty() {
-        return Err(Error::InvalidParameter(s.into()));
-    }
-
-    let values: Vec<String> = if values_str.is_empty() {
-        vec![]
-    } else {
-        values_str
-            .split(COMMA)
-            .map(|v| url_decode(v.trim()))
-            .filter(|v| !v.is_empty())
-            .collect()
-    };
-
-    let similarity = Similarity::from_str(similarity_str)?;
-    Ok(Parameter(similarity, values))
-}
-
-/// Parse a sort field string into name and order
-///
-/// # Examples
-/// - "name:asc" -> ("name", SortOrder::Ascending)
-/// - "date_created:desc" -> ("date_created", SortOrder::Descending)
-pub fn parse_sort_field(s: &str) -> Result<(String, SortOrder)> {
-    let trimmed = s.trim();
-    if trimmed.is_empty() {
-        return Err(Error::InvalidSortField(s.into()));
-    }
-
-    let parts: Vec<&str> = trimmed.split(COLON).collect();
-    if parts.len() != 2 {
-        return Err(Error::InvalidSortField(s.into()));
-    }
-
-    let name = url_decode(parts[0].trim());
-    let order_str = parts[1].trim();
-
-    if name.is_empty() || order_str.is_empty() {
-        return Err(Error::InvalidSortField(s.into()));
-    }
-
-    let order = SortOrder::from_str(order_str)?;
-    Ok((name, order))
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum SortOrder {
-    Ascending,
-    Descending,
-}
-
-impl SortOrder {
-    pub const ASCENDING: &str = "asc";
-    pub const DESCENDING: &str = "desc";
-}
-
-impl Default for SortOrder {
-    fn default() -> Self {
-        Self::Ascending
-    }
-}
-
-impl FromStr for SortOrder {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        match s {
-            SortOrder::ASCENDING => Ok(SortOrder::Ascending),
-            SortOrder::DESCENDING => Ok(SortOrder::Descending),
-            val => Err(Error::InvalidSortOrder(val.into())),
-        }
-    }
-}
-
-impl ToString for SortOrder {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Ascending => SortOrder::ASCENDING.to_string(),
-            Self::Descending => SortOrder::DESCENDING.to_string(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Order(IndexMap<String, SortOrder>);
-
-impl Order {
-    pub fn new() -> Self {
-        Self(IndexMap::new())
-    }
-
-    pub fn inner(&self) -> &IndexMap<String, SortOrder> {
-        &self.0
-    }
-
-    pub fn inner_mut(&mut self) -> &mut IndexMap<String, SortOrder> {
-        &mut self.0
-    }
-
-    pub fn ascending(&mut self, name: String) -> &mut Self {
-        self.0.insert(name, SortOrder::Ascending);
-        self
-    }
-
-    pub fn descending(&mut self, name: String) -> &mut Self {
-        self.0.insert(name, SortOrder::Descending);
-        self
-    }
-
-    pub fn keep(&self, keys: Vec<String>) -> Self {
-        let mut result = Self::new();
-        for key in keys {
-            if let Some(value) = self.0.get(&key) {
-                result.0.insert(key, value.clone());
-            }
-        }
-        result
-    }
-
-    pub fn remove(&self, keys: Vec<String>) -> Self {
-        let mut result = self.clone();
-        for key in keys {
-            result.0.shift_remove(&key);
-        }
-        result
-    }
-}
-
-impl Default for Order {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl FromStr for Order {
-    type Err = Error;
-
-    // EXAMPLE INPUT
-    // date_created:desc,name:asc,surname:asc
-    fn from_str(s: &str) -> Result<Self> {
-        let trimmed = s.trim();
-        if trimmed.is_empty() {
-            return Ok(Order::new());
-        }
-
-        let str_fields: Vec<&str> = trimmed.split(COMMA).collect();
-        let mut order: Self = Order(IndexMap::new());
-
-        for str_field in str_fields {
-            let trimmed_field = str_field.trim();
-            if trimmed_field.is_empty() {
-                continue;
-            }
-
-            let (name, sort_order) = parse_sort_field(trimmed_field)?;
-            order.0.insert(name, sort_order);
-        }
-
-        Ok(order)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum Similarity {
-    Equals,
-    Contains,
-    StartsWith,
-    EndsWith,
-
-    Between,
-    Lesser,
-    LesserOrEqual,
-    Greater,
-    GreaterOrEqual,
-}
-
-impl Similarity {
-    pub const EQUALS: &str = "equals";
-    pub const CONTAINS: &str = "contains";
-    pub const STARTS_WITH: &str = "starts-with";
-    pub const ENDS_WITH: &str = "ends-with";
-
-    pub const BETWEEN: &str = "between";
-    pub const LESSER: &str = "lesser";
-    pub const LESSER_OR_EQUAL: &str = "lesser-or-equal";
-    pub const GREATER: &str = "greater";
-    pub const GREATER_OR_EQUAL: &str = "greater-or-equal";
-}
-
-impl Default for Similarity {
-    fn default() -> Self {
-        Self::Equals
-    }
-}
-
-impl FromStr for Similarity {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        match s {
-            Similarity::EQUALS => Ok(Similarity::Equals),
-            Similarity::CONTAINS => Ok(Similarity::Contains),
-            Similarity::STARTS_WITH => Ok(Similarity::StartsWith),
-            Similarity::ENDS_WITH => Ok(Similarity::EndsWith),
-
-            Similarity::BETWEEN => Ok(Similarity::Between),
-            Similarity::LESSER => Ok(Similarity::Lesser),
-            Similarity::LESSER_OR_EQUAL => Ok(Similarity::LesserOrEqual),
-            Similarity::GREATER => Ok(Similarity::Greater),
-            Similarity::GREATER_OR_EQUAL => Ok(Similarity::GreaterOrEqual),
-
-            val => Err(Error::InvalidSimilarity(val.into())),
-        }
-    }
-}
-
-impl ToString for Similarity {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Equals => Self::EQUALS.to_string(),
-            Self::Contains => Self::CONTAINS.to_string(),
-            Self::StartsWith => Self::STARTS_WITH.to_string(),
-            Self::EndsWith => Self::ENDS_WITH.to_string(),
-
-            Self::Between => Self::BETWEEN.to_string(),
-            Self::Lesser => Self::LESSER.to_string(),
-            Self::LesserOrEqual => Self::LESSER_OR_EQUAL.to_string(),
-            Self::Greater => Self::GREATER.to_string(),
-            Self::GreaterOrEqual => Self::GREATER_OR_EQUAL.to_string(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Parameter(Similarity, Vec<String>);
-
-impl Parameter {
-    pub fn init(similarity: Similarity, values: Vec<String>) -> Self {
-        Self(similarity, values)
-    }
-
-    pub fn similarity(&self) -> &Similarity {
-        &self.0
-    }
-
-    pub fn values(&self) -> &Vec<String> {
-        &self.1
-    }
-
-    pub fn values_mut(&mut self) -> &mut Vec<String> {
-        &mut self.1
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Parameters(IndexMap<String, Parameter>);
-
-impl Parameters {
-    pub const ORDER: &str = "order";
-    pub const LIMIT: &str = "limit";
-    pub const OFFSET: &str = "offset";
-
-    pub const EXCLUDE: [&str; 3] = [Parameters::ORDER, Parameters::LIMIT, Parameters::OFFSET];
-
-    pub const DEFAULT_LIMIT: usize = 50;
-    pub const DEFAULT_OFFSET: usize = 0;
-
-    pub fn new() -> Self {
-        Self(IndexMap::new())
-    }
-
-    pub fn inner(&self) -> &IndexMap<String, Parameter> {
-        &self.0
-    }
-
-    pub fn inner_mut(&mut self) -> &mut IndexMap<String, Parameter> {
-        &mut self.0
-    }
-
-    pub fn equals(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0.insert(key, Parameter(Similarity::Equals, values));
-        self
-    }
-
-    pub fn contains(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0.insert(key, Parameter(Similarity::Contains, values));
-        self
-    }
-
-    pub fn starts_with(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0
-            .insert(key, Parameter(Similarity::StartsWith, values));
-        self
-    }
-
-    pub fn ends_with(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0.insert(key, Parameter(Similarity::EndsWith, values));
-        self
-    }
-
-    pub fn between(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0.insert(key, Parameter(Similarity::Between, values));
-        self
-    }
-
-    pub fn lesser(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0.insert(key, Parameter(Similarity::Lesser, values));
-        self
-    }
-
-    pub fn lesser_or_equal(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0
-            .insert(key, Parameter(Similarity::LesserOrEqual, values));
-        self
-    }
-
-    pub fn greater(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0.insert(key, Parameter(Similarity::Greater, values));
-        self
-    }
-
-    pub fn greater_or_equal(&mut self, key: String, values: Vec<String>) -> &mut Self {
-        self.0
-            .insert(key, Parameter(Similarity::GreaterOrEqual, values));
-        self
-    }
-
-    pub fn keep(&self, keys: Vec<String>) -> Self {
-        let mut result = Self::new();
-        for key in keys {
-            if let Some(value) = self.0.get(&key) {
-                result.0.insert(key, value.clone());
-            }
-        }
-        result
-    }
-
-    pub fn remove(&self, keys: Vec<String>) -> Self {
-        let mut result = self.clone();
-        for key in keys {
-            result.0.shift_remove(&key);
-        }
-        result
-    }
-}
-
-impl Default for Parameters {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl FromStr for Parameters {
-    type Err = Error;
-
-    // EXAMPLE INPUT
-    // name=contains:damian&surname=equals:black,steel,wood&order=date_created:desc&limit=40&offset=0
-    fn from_str(s: &str) -> Result<Self> {
-        let trimmed = s.trim();
-        if trimmed.is_empty() {
-            return Ok(Parameters::new());
-        }
-
-        let str_parameters: Vec<&str> = trimmed.split(AMPERSAND).collect();
-        let mut parameters: Self = Parameters(IndexMap::new());
-
-        for str_param in str_parameters {
-            let trimmed_param = str_param.trim();
-            if trimmed_param.is_empty() {
-                continue;
-            }
-
-            let mut parts = trimmed_param.splitn(2, EQUAL);
-            let (key, value) = match (parts.next(), parts.next()) {
-                (Some(k), Some(v)) => (k, v),
-                _ => return Err(Error::InvalidParameter(trimmed_param.into())),
-            };
-
-            let trimmed_key = key.trim();
-            if trimmed_key.is_empty() || Parameters::EXCLUDE.contains(&trimmed_key) {
-                continue;
-            }
-
-            let Parameter(similarity, values) = parse_parameter(value)?;
-            // Only add parameters that have values
-            if values.is_empty() {
-                continue;
-            }
-
-            parameters
-                .0
-                .insert(trimmed_key.to_string(), Parameter(similarity, values));
-        }
-
-        Ok(parameters)
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum SqlValue {
-    /// The value is a `NULL` value.
-    Null,
-    /// The value is a signed integer.
-    Integer(i64),
-    /// The value is a floating point number.
-    Real(f64),
-    /// The value is a text string.
-    Text(String),
-    /// The value is a blob of data
-    Blob(Vec<u8>),
-}
-
+// Main types
 #[derive(Clone, Debug, PartialEq)]
 pub struct Query {
     pub parameters: Parameters,
@@ -609,7 +153,7 @@ impl Query {
                                 // Create new parameter with equals similarity
                                 query.parameters.0.insert(
                                     trimmed_key.to_string(),
-                                    Parameter(Similarity::Equals, vec![decoded_value]),
+                                    Parameter::init(Similarity::Equals, vec![decoded_value]),
                                 );
                             }
                         }
@@ -868,3 +412,472 @@ impl Query {
         parameter_count + 2 // +2 for limit and offset
     }
 }
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Parameters(IndexMap<String, Parameter>);
+
+impl Parameters {
+    pub const ORDER: &str = "order";
+    pub const LIMIT: &str = "limit";
+    pub const OFFSET: &str = "offset";
+
+    pub const EXCLUDE: [&str; 3] = [Parameters::ORDER, Parameters::LIMIT, Parameters::OFFSET];
+
+    pub const DEFAULT_LIMIT: usize = 50;
+    pub const DEFAULT_OFFSET: usize = 0;
+
+    pub fn new() -> Self {
+        Self(IndexMap::new())
+    }
+
+    pub fn inner(&self) -> &IndexMap<String, Parameter> {
+        &self.0
+    }
+
+    pub fn inner_mut(&mut self) -> &mut IndexMap<String, Parameter> {
+        &mut self.0
+    }
+
+    pub fn equals(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0
+            .insert(key, Parameter::init(Similarity::Equals, values));
+        self
+    }
+
+    pub fn contains(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0
+            .insert(key, Parameter::init(Similarity::Contains, values));
+        self
+    }
+
+    pub fn starts_with(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0
+            .insert(key, Parameter::init(Similarity::StartsWith, values));
+        self
+    }
+
+    pub fn ends_with(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0
+            .insert(key, Parameter::init(Similarity::EndsWith, values));
+        self
+    }
+
+    pub fn between(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0
+            .insert(key, Parameter::init(Similarity::Between, values));
+        self
+    }
+
+    pub fn lesser(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0
+            .insert(key, Parameter::init(Similarity::Lesser, values));
+        self
+    }
+
+    pub fn lesser_or_equal(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0
+            .insert(key, Parameter::init(Similarity::LesserOrEqual, values));
+        self
+    }
+
+    pub fn greater(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0
+            .insert(key, Parameter::init(Similarity::Greater, values));
+        self
+    }
+
+    pub fn greater_or_equal(&mut self, key: String, values: Vec<String>) -> &mut Self {
+        self.0
+            .insert(key, Parameter::init(Similarity::GreaterOrEqual, values));
+        self
+    }
+
+    pub fn keep(&self, keys: Vec<String>) -> Self {
+        let mut result = Self::new();
+        for key in keys {
+            if let Some(value) = self.0.get(&key) {
+                result.0.insert(key, value.clone());
+            }
+        }
+        result
+    }
+
+    pub fn remove(&self, keys: Vec<String>) -> Self {
+        let mut result = self.clone();
+        for key in keys {
+            result.0.shift_remove(&key);
+        }
+        result
+    }
+}
+
+impl Default for Parameters {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl FromStr for Parameters {
+    type Err = Error;
+
+    // EXAMPLE INPUT
+    // name=contains:damian&surname=equals:black,steel,wood&order=date_created:desc&limit=40&offset=0
+    fn from_str(s: &str) -> Result<Self> {
+        let trimmed = s.trim();
+        if trimmed.is_empty() {
+            return Ok(Parameters::new());
+        }
+
+        let str_parameters: Vec<&str> = trimmed.split(AMPERSAND).collect();
+        let mut parameters: Self = Parameters(IndexMap::new());
+
+        for str_param in str_parameters {
+            let trimmed_param = str_param.trim();
+            if trimmed_param.is_empty() {
+                continue;
+            }
+
+            let mut parts = trimmed_param.splitn(2, EQUAL);
+            let (key, value) = match (parts.next(), parts.next()) {
+                (Some(k), Some(v)) => (k, v),
+                _ => return Err(Error::InvalidParameter(trimmed_param.into())),
+            };
+
+            let trimmed_key = key.trim();
+            if trimmed_key.is_empty() || Parameters::EXCLUDE.contains(&trimmed_key) {
+                continue;
+            }
+
+            let Parameter(similarity, values) = parse_parameter(value)?;
+            // Only add parameters that have values
+            if values.is_empty() {
+                continue;
+            }
+
+            parameters
+                .0
+                .insert(trimmed_key.to_string(), Parameter(similarity, values));
+        }
+
+        Ok(parameters)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Parameter(Similarity, Vec<String>);
+
+impl Parameter {
+    pub fn init(similarity: Similarity, values: Vec<String>) -> Self {
+        Self(similarity, values)
+    }
+
+    pub fn similarity(&self) -> &Similarity {
+        &self.0
+    }
+
+    pub fn values(&self) -> &Vec<String> {
+        &self.1
+    }
+
+    pub fn values_mut(&mut self) -> &mut Vec<String> {
+        &mut self.1
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Order(IndexMap<String, SortOrder>);
+
+impl Order {
+    pub fn new() -> Self {
+        Self(IndexMap::new())
+    }
+
+    pub fn inner(&self) -> &IndexMap<String, SortOrder> {
+        &self.0
+    }
+
+    pub fn inner_mut(&mut self) -> &mut IndexMap<String, SortOrder> {
+        &mut self.0
+    }
+
+    pub fn ascending(&mut self, name: String) -> &mut Self {
+        self.0.insert(name, SortOrder::Ascending);
+        self
+    }
+
+    pub fn descending(&mut self, name: String) -> &mut Self {
+        self.0.insert(name, SortOrder::Descending);
+        self
+    }
+
+    pub fn keep(&self, keys: Vec<String>) -> Self {
+        let mut result = Self::new();
+        for key in keys {
+            if let Some(value) = self.0.get(&key) {
+                result.0.insert(key, value.clone());
+            }
+        }
+        result
+    }
+
+    pub fn remove(&self, keys: Vec<String>) -> Self {
+        let mut result = self.clone();
+        for key in keys {
+            result.0.shift_remove(&key);
+        }
+        result
+    }
+}
+
+impl Default for Order {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl FromStr for Order {
+    type Err = Error;
+
+    // EXAMPLE INPUT
+    // date_created:desc,name:asc,surname:asc
+    fn from_str(s: &str) -> Result<Self> {
+        let trimmed = s.trim();
+        if trimmed.is_empty() {
+            return Ok(Order::new());
+        }
+
+        let str_fields: Vec<&str> = trimmed.split(COMMA).collect();
+        let mut order: Self = Order(IndexMap::new());
+
+        for str_field in str_fields {
+            let trimmed_field = str_field.trim();
+            if trimmed_field.is_empty() {
+                continue;
+            }
+
+            let (name, sort_order) = parse_sort_field(trimmed_field)?;
+            order.0.insert(name, sort_order);
+        }
+
+        Ok(order)
+    }
+}
+
+// Utility enums (needed by main types)
+#[derive(Clone, Debug, PartialEq)]
+pub enum Similarity {
+    Equals,
+    Contains,
+    StartsWith,
+    EndsWith,
+
+    Between,
+    Lesser,
+    LesserOrEqual,
+    Greater,
+    GreaterOrEqual,
+}
+
+impl Similarity {
+    pub const EQUALS: &str = "equals";
+    pub const CONTAINS: &str = "contains";
+    pub const STARTS_WITH: &str = "starts-with";
+    pub const ENDS_WITH: &str = "ends-with";
+
+    pub const BETWEEN: &str = "between";
+    pub const LESSER: &str = "lesser";
+    pub const LESSER_OR_EQUAL: &str = "lesser-or-equal";
+    pub const GREATER: &str = "greater";
+    pub const GREATER_OR_EQUAL: &str = "greater-or-equal";
+}
+
+impl Default for Similarity {
+    fn default() -> Self {
+        Self::Equals
+    }
+}
+
+impl FromStr for Similarity {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            Similarity::EQUALS => Ok(Similarity::Equals),
+            Similarity::CONTAINS => Ok(Similarity::Contains),
+            Similarity::STARTS_WITH => Ok(Similarity::StartsWith),
+            Similarity::ENDS_WITH => Ok(Similarity::EndsWith),
+
+            Similarity::BETWEEN => Ok(Similarity::Between),
+            Similarity::LESSER => Ok(Similarity::Lesser),
+            Similarity::LESSER_OR_EQUAL => Ok(Similarity::LesserOrEqual),
+            Similarity::GREATER => Ok(Similarity::Greater),
+            Similarity::GREATER_OR_EQUAL => Ok(Similarity::GreaterOrEqual),
+
+            val => Err(Error::InvalidSimilarity(val.into())),
+        }
+    }
+}
+
+impl ToString for Similarity {
+    fn to_string(&self) -> String {
+        match self {
+            Self::Equals => Self::EQUALS.to_string(),
+            Self::Contains => Self::CONTAINS.to_string(),
+            Self::StartsWith => Self::STARTS_WITH.to_string(),
+            Self::EndsWith => Self::ENDS_WITH.to_string(),
+
+            Self::Between => Self::BETWEEN.to_string(),
+            Self::Lesser => Self::LESSER.to_string(),
+            Self::LesserOrEqual => Self::LESSER_OR_EQUAL.to_string(),
+            Self::Greater => Self::GREATER.to_string(),
+            Self::GreaterOrEqual => Self::GREATER_OR_EQUAL.to_string(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum SortOrder {
+    Ascending,
+    Descending,
+}
+
+impl SortOrder {
+    pub const ASCENDING: &str = "asc";
+    pub const DESCENDING: &str = "desc";
+}
+
+impl Default for SortOrder {
+    fn default() -> Self {
+        Self::Ascending
+    }
+}
+
+impl FromStr for SortOrder {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            SortOrder::ASCENDING => Ok(SortOrder::Ascending),
+            SortOrder::DESCENDING => Ok(SortOrder::Descending),
+            val => Err(Error::InvalidSortOrder(val.into())),
+        }
+    }
+}
+
+impl ToString for SortOrder {
+    fn to_string(&self) -> String {
+        match self {
+            Self::Ascending => SortOrder::ASCENDING.to_string(),
+            Self::Descending => SortOrder::DESCENDING.to_string(),
+        }
+    }
+}
+
+// Utility types
+#[derive(Clone, Debug, PartialEq)]
+pub enum SqlValue {
+    /// The value is a `NULL` value.
+    Null,
+    /// The value is a signed integer.
+    Integer(i64),
+    /// The value is a floating point number.
+    Real(f64),
+    /// The value is a text string.
+    Text(String),
+    /// The value is a blob of data
+    Blob(Vec<u8>),
+}
+
+// Utility functions
+/// Parse a parameter string into similarity and values
+///
+/// # Examples
+/// - "contains:damian" -> (Similarity::Contains, vec!["damian"])
+/// - "equals:black,steel,wood" -> (Similarity::Equals, vec!["black", "steel", "wood"])
+/// - "between:20,30" -> (Similarity::Between, vec!["20", "30"])
+pub(crate) fn parse_parameter(s: &str) -> Result<Parameter> {
+    let trimmed = s.trim();
+    if trimmed.is_empty() {
+        return Err(Error::InvalidParameter(s.into()));
+    }
+
+    let parts: Vec<&str> = trimmed.split(COLON).collect();
+    if parts.len() != 2 {
+        return Err(Error::InvalidParameter(s.into()));
+    }
+
+    let similarity_str = parts[0].trim();
+    let values_str = parts[1].trim();
+
+    if similarity_str.is_empty() {
+        return Err(Error::InvalidParameter(s.into()));
+    }
+
+    let values: Vec<String> = if values_str.is_empty() {
+        vec![]
+    } else {
+        values_str
+            .split(COMMA)
+            .map(|v| url_decode(v.trim()))
+            .filter(|v| !v.is_empty())
+            .collect()
+    };
+
+    let similarity = Similarity::from_str(similarity_str)?;
+    Ok(Parameter(similarity, values))
+}
+
+/// Parse a sort field string into name and order
+///
+/// # Examples
+/// - "name:asc" -> ("name", SortOrder::Ascending)
+/// - "date_created:desc" -> ("date_created", SortOrder::Descending)
+pub(crate) fn parse_sort_field(s: &str) -> Result<(String, SortOrder)> {
+    let trimmed = s.trim();
+    if trimmed.is_empty() {
+        return Err(Error::InvalidSortField(s.into()));
+    }
+
+    let parts: Vec<&str> = trimmed.split(COLON).collect();
+    if parts.len() != 2 {
+        return Err(Error::InvalidSortField(s.into()));
+    }
+
+    let name = url_decode(parts[0].trim());
+    let order_str = parts[1].trim();
+
+    if name.is_empty() || order_str.is_empty() {
+        return Err(Error::InvalidSortField(s.into()));
+    }
+
+    let order = SortOrder::from_str(order_str)?;
+    Ok((name, order))
+}
+
+pub(crate) const QUESTION: char = '?';
+pub(crate) const AMPERSAND: char = '&';
+pub(crate) const EQUAL: char = '=';
+pub(crate) const COLON: char = ':';
+pub(crate) const COMMA: char = ',';
+pub(crate) const PERCENT: char = '%';
+
+/// URL decode a string, handling percent-encoded characters
+pub(crate) fn url_decode(input: &str) -> String {
+    // Only decode if the string contains percent-encoded characters
+    if input.contains(PERCENT) {
+        // Use form_urlencoded to decode individual values by treating it as a query parameter
+        let query_str = format!("key={}", input);
+        form_urlencoded::parse(query_str.as_bytes())
+            .next()
+            .map(|(_, v)| v.to_string())
+            .unwrap_or_else(|| input.to_string())
+    } else {
+        input.to_string()
+    }
+}
+
+/// URL encode a string, converting special characters to percent-encoded format
+pub(crate) fn url_encode(input: &str) -> String {
+    form_urlencoded::byte_serialize(input.as_bytes()).collect()
+}
+
+#[cfg(test)]
+mod parse_tests;
