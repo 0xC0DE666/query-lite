@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `url_decode()` and `url_encode()` are now `pub(crate)` (internal-only)
   - These were never part of the documented public API and are now properly encapsulated
   - Tests for these internal functions have been moved to a separate test module within the crate
+- **SQL Feature**: Made SQL generation opt-in instead of enabled by default
+  - The `sql` feature is no longer included in default features
+  - Users must explicitly enable SQL generation with `features = ["sql"]`
+  - Reduces binary size for users who don't need SQL functionality
+  - Core query parsing functionality remains available without the feature
 
 ### Added
 - **Parameter Constructor**: Added `Parameter::init()` method for creating `Parameter` instances
@@ -45,6 +50,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `Parameter(similarity, values)` → `Parameter::init(similarity, values)`
     - `param.0` → `*param.similarity()` or `param.similarity()`
     - `param.1` → `*param.values()` or `param.values()`
+- **SQL Feature**: SQL generation is now opt-in
+  - **Default behavior changed**: SQL generation methods are no longer available by default
+  - **Migration**: Add `features = ["sql"]` to your `Cargo.toml` dependency if you use SQL generation
+  - **Before**: `query-lite = "0.9.0"` (SQL enabled by default)
+  - **After**: `query-lite = { version = "0.9.0", features = ["sql"] }` (SQL must be explicitly enabled)
+  - **Affected methods**: `to_sql()`, `where_clause()`, `order_clause()`, `to_values()`, `parameter_values()`, `pagination_values()`, `total_parameters()`
 
 ### Technical Details
 - **API Consistency**: Type name now matches the HTTP query parameter name (`order`)
@@ -53,6 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Better Encapsulation**: Private fields enforce use of accessor methods, improving API stability
 - **Reduced API Surface**: Internal utilities are no longer exposed, reducing maintenance burden and preventing accidental usage
 - **Test Organization**: Internal function tests moved to `src/parse_tests.rs` for better organization
+- **Smaller Binary Size**: SQL feature being opt-in reduces default binary size for users who don't need SQL generation
+- **Feature Flexibility**: Users can now choose to include only the functionality they need
 - **Version Bump**: Minor version bump reflects breaking API changes
 
 ## [0.8.0] - 2025-01-27
