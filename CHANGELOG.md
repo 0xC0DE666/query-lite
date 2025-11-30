@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `sort_fields` → `order` (field name in `Query` struct)
   - Matches the HTTP parameter name (`order=...`) for better API consistency
   - Shorter, more intuitive naming that communicates intent clearly
+- **Error Type Renaming**: Renamed error variant to match `Order` naming
+  - `Error::InvalidSortField` → `Error::InvalidOrderField`
+  - Updated error message from "Invalid Sort Field" to "Invalid Order Field"
+  - Maintains consistency with the `Order` type refactoring
 - **Encapsulation**: Made tuple struct fields private for better encapsulation
   - `Order`, `Parameter`, and `Parameters` tuple struct fields are now private
   - Added `Parameter::init()` constructor method for creating `Parameter` instances
@@ -40,6 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Update code from `query.sort_fields` to `query.order`
   - Update code from `Query::init(..., sort_fields, ...)` to `Query::init(..., order, ...)`
   - All method calls remain the same (e.g., `query.order.ascending(...)`)
+- **Error Type Renaming**: `Error::InvalidSortField` renamed to `Error::InvalidOrderField`
+  - Update error handling from `Error::InvalidSortField(msg)` to `Error::InvalidOrderField(msg)`
+  - Error message format changed from "Invalid Sort Field" to "Invalid Order Field"
+  - Migration: Update all error pattern matches and error handling code
 - **Encapsulation**: Tuple struct fields are now private
   - **Direct field access removed**: Can no longer use `.0` or `.1` to access tuple struct fields
   - **Parameter construction**: Use `Parameter::init(similarity, values)` instead of `Parameter(similarity, values)`
