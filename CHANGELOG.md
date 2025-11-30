@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2025-11-30
+
+### Changed
+- **Type Renaming**: Renamed `SortFields` struct to `Order` for better consistency and clarity
+  - `SortFields` → `Order` (struct name)
+  - `sort_fields` → `order` (field name in `Query` struct)
+  - Matches the HTTP parameter name (`order=...`) for better API consistency
+  - Shorter, more intuitive naming that communicates intent clearly
+
+### Breaking Changes
+- **Type Renaming**: `SortFields` struct renamed to `Order`
+  - Update code from `SortFields::new()` to `Order::new()`
+  - Update code from `query.sort_fields` to `query.order`
+  - Update code from `Query::init(..., sort_fields, ...)` to `Query::init(..., order, ...)`
+  - All method calls remain the same (e.g., `query.order.ascending(...)`)
+
+### Technical Details
+- **API Consistency**: Type name now matches the HTTP query parameter name (`order`)
+- **Improved Readability**: `query.order.ascending(...)` reads more naturally than `query.sort_fields.ascending(...)`
+- **One-Word Naming**: Simpler, more concise type name following Rust naming conventions
+- **Version Bump**: Minor version bump reflects breaking API changes
+
 ## [0.8.0] - 2025-01-27
 
 ### Changed

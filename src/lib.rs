@@ -135,9 +135,9 @@ impl ToString for SortOrder {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct SortFields(pub IndexMap<String, SortOrder>);
+pub struct Order(pub IndexMap<String, SortOrder>);
 
-impl SortFields {
+impl Order {
     pub fn new() -> Self {
         Self(IndexMap::new())
     }
@@ -179,13 +179,13 @@ impl SortFields {
     }
 }
 
-impl Default for SortFields {
+impl Default for Order {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl FromStr for SortFields {
+impl FromStr for Order {
     type Err = Error;
 
     // EXAMPLE INPUT
@@ -193,11 +193,11 @@ impl FromStr for SortFields {
     fn from_str(s: &str) -> Result<Self> {
         let trimmed = s.trim();
         if trimmed.is_empty() {
-            return Ok(SortFields::new());
+            return Ok(Order::new());
         }
 
         let str_fields: Vec<&str> = trimmed.split(COMMA).collect();
-        let mut sort_fields: Self = SortFields(IndexMap::new());
+        let mut order: Self = Order(IndexMap::new());
 
         for str_field in str_fields {
             let trimmed_field = str_field.trim();
@@ -205,11 +205,11 @@ impl FromStr for SortFields {
                 continue;
             }
 
-            let (name, order) = parse_sort_field(trimmed_field)?;
-            sort_fields.0.insert(name, order);
+            let (name, sort_order) = parse_sort_field(trimmed_field)?;
+            order.0.insert(name, sort_order);
         }
 
-        Ok(sort_fields)
+        Ok(order)
     }
 }
 
@@ -461,7 +461,7 @@ pub enum SqlValue {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Query {
     pub parameters: Parameters,
-    pub sort_fields: SortFields,
+    pub order: Order,
     pub limit: usize,
     pub offset: usize,
 }
@@ -470,21 +470,16 @@ impl Query {
     pub fn new() -> Self {
         Self {
             parameters: Parameters::new(),
-            sort_fields: SortFields::new(),
+            order: Order::new(),
             limit: Parameters::DEFAULT_LIMIT,
             offset: Parameters::DEFAULT_OFFSET,
         }
     }
 
-    pub fn init(
-        parameters: Parameters,
-        sort_fields: SortFields,
-        limit: usize,
-        offset: usize,
-    ) -> Self {
+    pub fn init(parameters: Parameters, order: Order, limit: usize, offset: usize) -> Self {
         Self {
             parameters,
-            sort_fields,
+            order,
             limit,
             offset,
         }
@@ -493,7 +488,7 @@ impl Query {
     pub fn to_http(&self) -> String {
         let mut params = self
             .parameters
-            .0
+            .inner()
             .iter()
             .filter(|(_, param)| param.values().len() > 0)
             .map(|(key, param)| {
@@ -509,12 +504,12 @@ impl Query {
             .collect::<Vec<String>>()
             .join("&");
 
-        let order = self
-            .sort_fields
-            .0
+        let order_str = self
+            .order
+            .inner()
             .iter()
             .filter(|(name, _)| name.len() > 0)
-            .map(|(name, order)| format!("{name}{COLON}{}", order.to_string()))
+            .map(|(name, sort_order)| format!("{name}{COLON}{}", sort_order.to_string()))
             .collect::<Vec<String>>()
             .join(&format!("{COMMA}"));
 
@@ -522,8 +517,8 @@ impl Query {
             params.push_str(&format!("{AMPERSAND}"));
         }
 
-        if order.len() > 0 {
-            params.push_str(&format!("{}{EQUAL}{}", Parameters::ORDER, order));
+        if order_str.len() > 0 {
+            params.push_str(&format!("{}{EQUAL}{}", Parameters::ORDER, order_str));
             params.push_str(&format!("{AMPERSAND}"));
         }
 
@@ -568,8 +563,8 @@ impl Query {
                             return Err(Error::InvalidSortField(trimmed_value.into()));
                         }
 
-                        if let Ok(sort_fields) = SortFields::from_str(trimmed_value) {
-                            query.sort_fields = sort_fields;
+                        if let Ok(order) = Order::from_str(trimmed_value) {
+                            query.order = order;
                         }
                         // Skip malformed sort fields (like ":desc")
                     }
@@ -633,7 +628,7 @@ impl Query {
             sql_parts.push(format!("WHERE {}", where_clause));
         }
 
-        // Build ORDER BY clause from sort fields
+        // Build ORDER BY clause from order
         if let Some(order_clause) = self.order_clause() {
             sql_parts.push(format!("ORDER BY {}", order_clause));
         }
@@ -774,9 +769,9 @@ impl Query {
     pub fn order_clause(&self) -> Option<String> {
         let mut order_parts = Vec::new();
 
-        for (name, order) in &self.sort_fields.0 {
+        for (name, sort_order) in &self.order.0 {
             if !name.is_empty() {
-                let direction = match order {
+                let direction = match sort_order {
                     SortOrder::Ascending => "ASC",
                     SortOrder::Descending => "DESC",
                 };

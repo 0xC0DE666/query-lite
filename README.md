@@ -90,7 +90,7 @@ assert_eq!(age_param.values(), &vec!["25"]);
 You can also build queries programmatically using the builder pattern:
 
 ```rust
-use query_lite::{Query, Parameters, SortFields};
+use query_lite::{Query, Parameters, Order};
 
 // Build parameters using the builder pattern
 let mut parameters = Parameters::new();
@@ -101,13 +101,13 @@ parameters
     .greater("price".to_string(), vec!["100".to_string()]);
 
 // Build sort fields using the builder pattern
-let mut sort_fields = SortFields::new();
-sort_fields
+let mut order = Order::new();
+order
     .descending("date_created".to_string())
     .ascending("name".to_string());
 
 // Create the query
-let query = Query::init(parameters, sort_fields, 25, 0);
+let query = Query::init(parameters, order, 25, 0);
 
 // Convert to HTTP string
 let http_string = query.to_http();
@@ -144,11 +144,11 @@ use query_lite::Query;
 
 let mut query = Query::new();
 query.parameters.equals("name".to_string(), vec!["john".to_string()]);
-query.sort_fields.ascending("date_created".to_string());
+query.order.ascending("date_created".to_string());
 
 // Access the underlying IndexMap for complex operations
 let param_map = query.parameters.inner();
-let sort_map = query.sort_fields.inner();
+let sort_map = query.order.inner();
 
 // Iterate over all parameters
 for (key, param) in param_map {
@@ -220,9 +220,9 @@ use query_lite::Query;
 let query = Query::from_http("name=john&order=date_created:desc,name:asc&limit=25&offset=10".to_string())?;
 
 // Access sorting
-assert_eq!(query.sort_fields.0.len(), 2);
-assert_eq!(query.sort_fields.0[0].name, "date_created");
-assert_eq!(query.sort_fields.0[0].order, query_lite::SortOrder::Descending);
+assert_eq!(query.order.0.len(), 2);
+assert_eq!(query.order.0[0].name, "date_created");
+assert_eq!(query.order.0[0].order, query_lite::SortOrder::Descending);
 
 // Access pagination
 assert_eq!(query.limit, 25);
@@ -362,12 +362,12 @@ let query = Query::from_http("name=john&age=25&email=john@example.com".to_string
 
 // Keep only specific parameters
 let filtered_params = query.parameters.keep(vec!["name".to_string(), "age".to_string()]);
-let filtered_query = Query::init(filtered_params, query.sort_fields, query.limit, query.offset);
+let filtered_query = Query::init(filtered_params, query.order, query.limit, query.offset);
 // Result: Only name and age parameters remain
 
 // Remove specific parameters
 let filtered_params = query.parameters.remove(vec!["email".to_string()]);
-let filtered_query = Query::init(filtered_params, query.sort_fields, query.limit, query.offset);
+let filtered_query = Query::init(filtered_params, query.order, query.limit, query.offset);
 // Result: email parameter is removed, name and age remain
 ```
 
@@ -465,7 +465,7 @@ query-lite = { version = "0.8.0", features = ["sql"] }
 
 - `Query`: Main query structure containing parameters, sorting, and pagination
 - `Parameters`: Collection of query parameters with builder methods
-- `SortFields`: Collection of sort fields with builder methods
+- `Order`: Collection of sort fields with builder methods
 - `Parameter`: Struct containing `(Similarity, Vec<String>)` with semantic access methods
 - `ParameterGet`: Trait providing semantic access to parameter data
 - `Similarity`: Enum defining comparison types (equals, contains, between, etc.)
@@ -493,13 +493,13 @@ query-lite = { version = "0.8.0", features = ["sql"] }
 - `Parameters::keep()`: Filter parameters to keep only specified keys
 - `Parameters::remove()`: Remove specified parameters
 
-#### SortFields Methods
-- `SortFields::new()`: Create new SortFields collection
-- `SortFields::ascending()`, `SortFields::descending()`: Builder methods for adding sort fields
-- `SortFields::inner()`: Get immutable reference to underlying IndexMap
-- `SortFields::inner_mut()`: Get mutable reference to underlying IndexMap
-- `SortFields::keep()`: Filter sort fields to keep only specified keys
-- `SortFields::remove()`: Remove specified sort fields
+#### Order Methods
+- `Order::new()`: Create new Order collection
+- `Order::ascending()`, `Order::descending()`: Builder methods for adding sort fields
+- `Order::inner()`: Get immutable reference to underlying IndexMap
+- `Order::inner_mut()`: Get mutable reference to underlying IndexMap
+- `Order::keep()`: Filter sort fields to keep only specified keys
+- `Order::remove()`: Remove specified sort fields
 
 #### Parameter Access Methods
 - `Parameter::similarity()`: Get reference to similarity type

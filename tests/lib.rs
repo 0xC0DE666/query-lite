@@ -235,8 +235,8 @@ fn test_sort_order_to_string() {
 // ============================================================================
 
 #[test]
-fn test_sort_fields_helper_functions_asc() {
-    let mut fields = SortFields::new();
+fn test_order_helper_functions_asc() {
+    let mut fields = Order::new();
     fields.ascending("name".to_string());
 
     assert_eq!(fields.0.len(), 1);
@@ -244,8 +244,8 @@ fn test_sort_fields_helper_functions_asc() {
 }
 
 #[test]
-fn test_sort_fields_helper_functions_desc() {
-    let mut fields = SortFields::new();
+fn test_order_helper_functions_desc() {
+    let mut fields = Order::new();
     fields.descending("date_created".to_string());
 
     assert_eq!(fields.0.len(), 1);
@@ -253,8 +253,8 @@ fn test_sort_fields_helper_functions_desc() {
 }
 
 #[test]
-fn test_sort_fields_helper_functions_fluent_api() {
-    let mut fields = SortFields::new();
+fn test_order_helper_functions_fluent_api() {
+    let mut fields = Order::new();
     fields
         .ascending("name".to_string())
         .descending("date_created".to_string())
@@ -267,8 +267,8 @@ fn test_sort_fields_helper_functions_fluent_api() {
 }
 
 #[test]
-fn test_sort_fields_helper_functions_overwrite() {
-    let mut fields = SortFields::new();
+fn test_order_helper_functions_overwrite() {
+    let mut fields = Order::new();
     fields.ascending("name".to_string());
     fields.descending("name".to_string()); // Should overwrite
 
@@ -277,8 +277,8 @@ fn test_sort_fields_helper_functions_overwrite() {
 }
 
 #[test]
-fn test_sort_fields_helper_functions_empty_name() {
-    let mut fields = SortFields::new();
+fn test_order_helper_functions_empty_name() {
+    let mut fields = Order::new();
     fields.ascending("".to_string());
 
     assert_eq!(fields.0.len(), 1);
@@ -286,8 +286,8 @@ fn test_sort_fields_helper_functions_empty_name() {
 }
 
 #[test]
-fn test_sort_fields_helper_functions_whitespace_name() {
-    let mut fields = SortFields::new();
+fn test_order_helper_functions_whitespace_name() {
+    let mut fields = Order::new();
     fields.ascending("  name  ".to_string());
 
     assert_eq!(fields.0.len(), 1);
@@ -295,8 +295,8 @@ fn test_sort_fields_helper_functions_whitespace_name() {
 }
 
 #[test]
-fn test_sort_fields_helper_functions_special_characters() {
-    let mut fields = SortFields::new();
+fn test_order_helper_functions_special_characters() {
+    let mut fields = Order::new();
     fields.ascending("user_name_123".to_string());
 
     assert_eq!(fields.0.len(), 1);
@@ -304,8 +304,8 @@ fn test_sort_fields_helper_functions_special_characters() {
 }
 
 #[test]
-fn test_sort_fields_helper_functions_unicode_name() {
-    let mut fields = SortFields::new();
+fn test_order_helper_functions_unicode_name() {
+    let mut fields = Order::new();
     fields.ascending("用户_姓名".to_string());
 
     assert_eq!(fields.0.len(), 1);
@@ -313,8 +313,8 @@ fn test_sort_fields_helper_functions_unicode_name() {
 }
 
 #[test]
-fn test_sort_fields_keep() {
-    let mut fields = SortFields::new();
+fn test_order_keep() {
+    let mut fields = Order::new();
     fields.ascending("name".to_string());
     fields.descending("date_created".to_string());
     fields.ascending("email".to_string());
@@ -328,8 +328,8 @@ fn test_sort_fields_keep() {
 }
 
 #[test]
-fn test_sort_fields_keep_nonexistent_keys() {
-    let mut fields = SortFields::new();
+fn test_order_keep_nonexistent_keys() {
+    let mut fields = Order::new();
     fields.ascending("name".to_string());
 
     let filtered = fields.keep(vec!["nonexistent".to_string()]);
@@ -337,8 +337,8 @@ fn test_sort_fields_keep_nonexistent_keys() {
 }
 
 #[test]
-fn test_sort_fields_keep_empty_keys() {
-    let mut fields = SortFields::new();
+fn test_order_keep_empty_keys() {
+    let mut fields = Order::new();
     fields.ascending("name".to_string());
 
     let filtered = fields.keep(vec![]);
@@ -346,8 +346,8 @@ fn test_sort_fields_keep_empty_keys() {
 }
 
 #[test]
-fn test_sort_fields_remove() {
-    let mut fields = SortFields::new();
+fn test_order_remove() {
+    let mut fields = Order::new();
     fields.ascending("name".to_string());
     fields.descending("date_created".to_string());
     fields.ascending("email".to_string());
@@ -361,8 +361,8 @@ fn test_sort_fields_remove() {
 }
 
 #[test]
-fn test_sort_fields_remove_nonexistent_keys() {
-    let mut fields = SortFields::new();
+fn test_order_remove_nonexistent_keys() {
+    let mut fields = Order::new();
     fields.ascending("name".to_string());
 
     let filtered = fields.remove(vec!["nonexistent".to_string()]);
@@ -371,8 +371,8 @@ fn test_sort_fields_remove_nonexistent_keys() {
 }
 
 #[test]
-fn test_sort_fields_remove_empty_keys() {
-    let mut fields = SortFields::new();
+fn test_order_remove_empty_keys() {
+    let mut fields = Order::new();
     fields.ascending("name".to_string());
 
     let filtered = fields.remove(vec![]);
@@ -385,36 +385,36 @@ fn test_sort_fields_remove_empty_keys() {
 // ============================================================================
 
 #[test]
-fn test_sort_fields_new() {
-    let fields = SortFields::new();
+fn test_order_new() {
+    let fields = Order::new();
     assert_eq!(fields.0.len(), 0);
 }
 
 #[test]
-fn test_sort_fields_default() {
-    let fields = SortFields::default();
+fn test_order_default() {
+    let fields = Order::default();
     assert_eq!(fields.0.len(), 0);
 }
 
 #[test]
-fn test_sort_fields_from_str_empty() {
-    let fields = SortFields::from_str("").unwrap();
+fn test_order_from_str_empty() {
+    let fields = Order::from_str("").unwrap();
     assert_eq!(fields.0.len(), 0);
 
-    let fields = SortFields::from_str("   ").unwrap();
+    let fields = Order::from_str("   ").unwrap();
     assert_eq!(fields.0.len(), 0);
 }
 
 #[test]
-fn test_sort_fields_from_str_single() {
-    let fields = SortFields::from_str("name:asc").unwrap();
+fn test_order_from_str_single() {
+    let fields = Order::from_str("name:asc").unwrap();
     assert_eq!(fields.0.len(), 1);
     assert_eq!(fields.0.get("name"), Some(&SortOrder::Ascending));
 }
 
 #[test]
-fn test_sort_fields_from_str_multiple() {
-    let fields = SortFields::from_str("date_created:desc,name:asc,surname:asc").unwrap();
+fn test_order_from_str_multiple() {
+    let fields = Order::from_str("date_created:desc,name:asc,surname:asc").unwrap();
     assert_eq!(fields.0.len(), 3);
 
     assert_eq!(fields.0.get("date_created"), Some(&SortOrder::Descending));
@@ -423,9 +423,9 @@ fn test_sort_fields_from_str_multiple() {
 }
 
 #[test]
-fn test_sort_fields_from_str_with_whitespace() {
+fn test_order_from_str_with_whitespace() {
     let fields =
-        SortFields::from_str("  date_created:desc  ,  name:asc  ,  surname:asc  ").unwrap();
+        Order::from_str("  date_created:desc  ,  name:asc  ,  surname:asc  ").unwrap();
     assert_eq!(fields.0.len(), 3);
     assert_eq!(fields.0.get("date_created"), Some(&SortOrder::Descending));
     assert_eq!(fields.0.get("name"), Some(&SortOrder::Ascending));
@@ -433,19 +433,19 @@ fn test_sort_fields_from_str_with_whitespace() {
 }
 
 #[test]
-fn test_sort_fields_from_str_with_empty_fields() {
-    let fields = SortFields::from_str("name:asc,,surname:asc").unwrap();
+fn test_order_from_str_with_empty_fields() {
+    let fields = Order::from_str("name:asc,,surname:asc").unwrap();
     assert_eq!(fields.0.len(), 2);
     assert_eq!(fields.0.get("name"), Some(&SortOrder::Ascending));
     assert_eq!(fields.0.get("surname"), Some(&SortOrder::Ascending));
 }
 
 #[test]
-fn test_sort_fields_from_str_invalid() {
+fn test_order_from_str_invalid() {
     // Invalid field format
-    assert!(SortFields::from_str("name").is_err());
-    assert!(SortFields::from_str("name:invalid").is_err());
-    assert!(SortFields::from_str("name:asc,surname").is_err());
+    assert!(Order::from_str("name").is_err());
+    assert!(Order::from_str("name:invalid").is_err());
+    assert!(Order::from_str("name:asc,surname").is_err());
 }
 
 // ============================================================================
@@ -887,7 +887,7 @@ fn test_parameters_from_str_numeric_with_whitespace() {
 fn test_query_new() {
     let query = Query::new();
     assert_eq!(query.parameters.0.len(), 0);
-    assert_eq!(query.sort_fields.0.len(), 0);
+    assert_eq!(query.order.0.len(), 0);
     assert_eq!(query.limit, Parameters::DEFAULT_LIMIT);
     assert_eq!(query.offset, Parameters::DEFAULT_OFFSET);
 }
@@ -895,10 +895,10 @@ fn test_query_new() {
 #[test]
 fn test_query_init() {
     let params = Parameters::new();
-    let sort_fields = SortFields::new();
-    let query = Query::init(params, sort_fields, 100, 10);
+    let order = Order::new();
+    let query = Query::init(params, order, 100, 10);
     assert_eq!(query.parameters.0.len(), 0);
-    assert_eq!(query.sort_fields.0.len(), 0);
+    assert_eq!(query.order.0.len(), 0);
     assert_eq!(query.limit, 100);
     assert_eq!(query.offset, 10);
 }
@@ -927,7 +927,7 @@ fn test_query_to_http_with_params() {
 #[test]
 fn test_query_to_http_with_sort() {
     let mut query = Query::new();
-    query.sort_fields.descending("date_created".to_string());
+    query.order.descending("date_created".to_string());
 
     let http = query.to_http();
     assert!(http.contains("date_created:desc"));
@@ -943,7 +943,7 @@ fn test_query_to_http_with_params_and_sort() {
         Parameter(Similarity::Contains, vec!["damian".to_string()]),
     );
 
-    query.sort_fields.descending("date_created".to_string());
+    query.order.descending("date_created".to_string());
 
     let http = query.to_http();
     assert!(http.contains("name=contains:damian"));
@@ -953,7 +953,7 @@ fn test_query_to_http_with_params_and_sort() {
 }
 
 #[test]
-fn test_query_to_http_sort_fields_empty_values() {
+fn test_query_to_http_order_empty_values() {
     let mut query = Query::new();
     query
         .parameters
@@ -966,9 +966,9 @@ fn test_query_to_http_sort_fields_empty_values() {
 }
 
 #[test]
-fn test_query_to_http_empty_sort_fields() {
+fn test_query_to_http_empty_order() {
     let mut query = Query::new();
-    query.sort_fields.ascending("".to_string());
+    query.order.ascending("".to_string());
 
     let http = query.to_http();
     assert!(!http.contains(":asc"));
@@ -979,7 +979,7 @@ fn test_query_to_http_empty_sort_fields() {
 fn test_query_from_http_empty() {
     let query = Query::from_http("".to_string()).unwrap();
     assert_eq!(query.parameters.0.len(), 0);
-    assert_eq!(query.sort_fields.0.len(), 0);
+    assert_eq!(query.order.0.len(), 0);
     assert_eq!(query.limit, Parameters::DEFAULT_LIMIT);
     assert_eq!(query.offset, Parameters::DEFAULT_OFFSET);
 }
@@ -1002,12 +1002,12 @@ fn test_query_from_http_with_params() {
 #[test]
 fn test_query_from_http_with_order() {
     let query = Query::from_http("order=date_created:desc,name:asc".to_string()).unwrap();
-    assert_eq!(query.sort_fields.0.len(), 2);
+    assert_eq!(query.order.0.len(), 2);
     assert_eq!(
-        query.sort_fields.0.get("date_created"),
+        query.order.0.get("date_created"),
         Some(&SortOrder::Descending)
     );
-    assert_eq!(query.sort_fields.0.get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(query.order.0.get("name"), Some(&SortOrder::Ascending));
 }
 
 #[test]
@@ -1042,9 +1042,9 @@ fn test_query_from_http_complete() {
     assert!(query.parameters.0.contains_key("name"));
     assert!(query.parameters.0.contains_key("surname"));
 
-    assert_eq!(query.sort_fields.0.len(), 1);
+    assert_eq!(query.order.0.len(), 1);
     assert_eq!(
-        query.sort_fields.0.get("date_created"),
+        query.order.0.get("date_created"),
         Some(&SortOrder::Descending)
     );
 
@@ -1060,9 +1060,9 @@ fn test_query_from_http_with_whitespace() {
     .unwrap();
     assert_eq!(query.parameters.0.len(), 1);
     assert!(query.parameters.0.contains_key("name"));
-    assert_eq!(query.sort_fields.0.len(), 1);
+    assert_eq!(query.order.0.len(), 1);
     assert_eq!(
-        query.sort_fields.0.get("date_created"),
+        query.order.0.get("date_created"),
         Some(&SortOrder::Descending)
     );
 }
@@ -1071,7 +1071,7 @@ fn test_query_from_http_with_whitespace() {
 fn test_query_from_http_empty_values() {
     let query = Query::from_http("name=&order=&limit=&offset=".to_string()).unwrap();
     assert_eq!(query.parameters.0.len(), 0);
-    assert_eq!(query.sort_fields.0.len(), 0);
+    assert_eq!(query.order.0.len(), 0);
     assert_eq!(query.limit, Parameters::DEFAULT_LIMIT);
     assert_eq!(query.offset, Parameters::DEFAULT_OFFSET);
 }
@@ -1207,9 +1207,9 @@ fn test_query_from_http_with_numeric_comparisons() {
     assert_eq!(*similarity, Similarity::LesserOrEqual);
     assert_eq!(*values, vec!["85"]);
 
-    assert_eq!(query.sort_fields.0.len(), 1);
+    assert_eq!(query.order.0.len(), 1);
     assert_eq!(
-        query.sort_fields.0.get("date_created"),
+        query.order.0.get("date_created"),
         Some(&SortOrder::Descending)
     );
 
@@ -1243,8 +1243,8 @@ fn test_query_from_http_mixed_similarity_types() {
     assert_eq!(*similarity, Similarity::Equals);
     assert_eq!(*values, vec!["active"]);
 
-    assert_eq!(query.sort_fields.0.len(), 1);
-    assert_eq!(query.sort_fields.0.get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(query.order.0.len(), 1);
+    assert_eq!(query.order.0.get("name"), Some(&SortOrder::Ascending));
 
     assert_eq!(query.limit, 20);
 }
@@ -1269,7 +1269,7 @@ fn test_query_to_http_with_numeric_comparisons() {
         Parameter(Similarity::LesserOrEqual, vec!["85".to_string()]),
     );
 
-    query.sort_fields.descending("date_created".to_string());
+    query.order.descending("date_created".to_string());
 
     query.limit = 25;
     query.offset = 10;
@@ -1363,7 +1363,7 @@ fn test_error_invalid_sort_order() {
 
 #[test]
 fn test_error_invalid_sort_field() {
-    let error = SortFields::from_str("invalid").unwrap_err();
+    let error = Order::from_str("invalid").unwrap_err();
     match error {
         Error::InvalidSortField(msg) => assert_eq!(msg, "invalid"),
         _ => panic!("Expected InvalidSortField error"),
@@ -1429,9 +1429,9 @@ fn test_roundtrip_complex_query() {
 }
 
 #[test]
-fn test_complex_sort_fields_parsing() {
+fn test_complex_order_parsing() {
     let sort_str = "date_created:desc,name:asc,surname:asc,email:desc";
-    let fields = SortFields::from_str(sort_str).unwrap();
+    let fields = Order::from_str(sort_str).unwrap();
 
     assert_eq!(fields.0.len(), 4);
     assert_eq!(fields.0.get("date_created"), Some(&SortOrder::Descending));
@@ -1477,9 +1477,9 @@ fn test_edge_case_whitespace_handling() {
     assert_eq!(*similarity, Similarity::Contains);
     assert_eq!(*values, vec!["damian"]);
 
-    assert_eq!(query.sort_fields.0.len(), 1);
+    assert_eq!(query.order.0.len(), 1);
     assert_eq!(
-        query.sort_fields.0.get("date_created"),
+        query.order.0.get("date_created"),
         Some(&SortOrder::Descending)
     );
 }
@@ -1491,7 +1491,7 @@ fn test_edge_case_empty_and_whitespace_values() {
 
     // Empty values should be filtered out
     assert_eq!(query.parameters.0.len(), 0);
-    assert_eq!(query.sort_fields.0.len(), 0);
+    assert_eq!(query.order.0.len(), 0);
     assert_eq!(query.limit, Parameters::DEFAULT_LIMIT);
     assert_eq!(query.offset, Parameters::DEFAULT_OFFSET);
 }
@@ -1520,7 +1520,7 @@ fn test_edge_case_very_long_query() {
 
     let query = Query::from_http(query_str).unwrap();
     assert_eq!(query.parameters.0.len(), 100);
-    assert_eq!(query.sort_fields.0.len(), 1);
+    assert_eq!(query.order.0.len(), 1);
     assert_eq!(query.limit, 50);
     assert_eq!(query.offset, 0);
 }
@@ -1855,7 +1855,7 @@ fn test_query_to_sql_with_greater_or_equal() {
 #[test]
 fn test_query_to_sql_with_order_by() {
     let mut query = Query::new();
-    query.sort_fields.descending("date_created".to_string());
+    query.order.descending("date_created".to_string());
 
     let sql = query.to_sql();
     assert_eq!(sql, "ORDER BY date_created DESC LIMIT ? OFFSET ?");
@@ -1865,8 +1865,8 @@ fn test_query_to_sql_with_order_by() {
 #[test]
 fn test_query_to_sql_with_multiple_order_by() {
     let mut query = Query::new();
-    query.sort_fields.descending("date_created".to_string());
-    query.sort_fields.ascending("name".to_string());
+    query.order.descending("date_created".to_string());
+    query.order.ascending("name".to_string());
 
     let sql = query.to_sql();
     assert_eq!(sql, "ORDER BY date_created DESC, name ASC LIMIT ? OFFSET ?");
@@ -1895,7 +1895,7 @@ fn test_query_to_sql_complex() {
     );
 
     // Add sorting
-    query.sort_fields.descending("date_created".to_string());
+    query.order.descending("date_created".to_string());
 
     let sql = query.to_sql();
     assert_eq!(
@@ -1919,9 +1919,9 @@ fn test_query_to_sql_with_empty_parameters() {
 
 #[cfg(feature = "sql")]
 #[test]
-fn test_query_to_sql_with_empty_sort_fields() {
+fn test_query_to_sql_with_empty_order() {
     let mut query = Query::new();
-    query.sort_fields.ascending("".to_string());
+    query.order.ascending("".to_string());
 
     let sql = query.to_sql();
     assert_eq!(sql, "LIMIT ? OFFSET ?");
@@ -2267,13 +2267,13 @@ fn test_parameters_inner_mut_method() {
 }
 
 #[test]
-fn test_sort_fields_inner_method() {
-    let mut sort_fields = SortFields::new();
-    sort_fields.ascending("name".to_string());
-    sort_fields.descending("date_created".to_string());
+fn test_order_inner_method() {
+    let mut order = Order::new();
+    order.ascending("name".to_string());
+    order.descending("date_created".to_string());
 
     // Test inner() method returns reference to IndexMap
-    let inner_map = sort_fields.inner();
+    let inner_map = order.inner();
     assert_eq!(inner_map.len(), 2);
     assert!(inner_map.contains_key("name"));
     assert!(inner_map.contains_key("date_created"));
@@ -2284,12 +2284,12 @@ fn test_sort_fields_inner_method() {
 }
 
 #[test]
-fn test_sort_fields_inner_mut_method() {
-    let mut sort_fields = SortFields::new();
-    sort_fields.ascending("name".to_string());
+fn test_order_inner_mut_method() {
+    let mut order = Order::new();
+    order.ascending("name".to_string());
 
     // Test inner_mut() method returns mutable reference
-    let inner_map = sort_fields.inner_mut();
+    let inner_map = order.inner_mut();
     assert_eq!(inner_map.len(), 1);
 
     // Test that we can modify the underlying data
@@ -2327,18 +2327,18 @@ fn test_inner_methods_preserve_order() {
 #[test]
 fn test_inner_methods_with_empty_collections() {
     let params = Parameters::new();
-    let sort_fields = SortFields::new();
+    let order = Order::new();
 
     // Test inner() with empty collections
     assert_eq!(params.inner().len(), 0);
-    assert_eq!(sort_fields.inner().len(), 0);
+    assert_eq!(order.inner().len(), 0);
 
     // Test inner_mut() with empty collections
     let mut params_mut = Parameters::new();
-    let mut sort_fields_mut = SortFields::new();
+    let mut order_mut = Order::new();
 
     assert_eq!(params_mut.inner_mut().len(), 0);
-    assert_eq!(sort_fields_mut.inner_mut().len(), 0);
+    assert_eq!(order_mut.inner_mut().len(), 0);
 }
 
 // ============================================================================
@@ -2346,90 +2346,90 @@ fn test_inner_methods_with_empty_collections() {
 // ============================================================================
 
 #[test]
-fn test_sort_fields_ascending_method() {
-    let mut sort_fields = SortFields::new();
-    sort_fields.ascending("name".to_string());
+fn test_order_ascending_method() {
+    let mut order = Order::new();
+    order.ascending("name".to_string());
 
-    assert_eq!(sort_fields.0.len(), 1);
-    assert_eq!(sort_fields.0.get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(order.0.len(), 1);
+    assert_eq!(order.0.get("name"), Some(&SortOrder::Ascending));
 }
 
 #[test]
-fn test_sort_fields_descending_method() {
-    let mut sort_fields = SortFields::new();
-    sort_fields.descending("date_created".to_string());
+fn test_order_descending_method() {
+    let mut order = Order::new();
+    order.descending("date_created".to_string());
 
-    assert_eq!(sort_fields.0.len(), 1);
+    assert_eq!(order.0.len(), 1);
     assert_eq!(
-        sort_fields.0.get("date_created"),
+        order.0.get("date_created"),
         Some(&SortOrder::Descending)
     );
 }
 
 #[test]
-fn test_sort_fields_ascending_descending_fluent_api() {
-    let mut sort_fields = SortFields::new();
-    sort_fields
+fn test_order_ascending_descending_fluent_api() {
+    let mut order = Order::new();
+    order
         .ascending("name".to_string())
         .descending("date_created".to_string())
         .ascending("email".to_string());
 
-    assert_eq!(sort_fields.0.len(), 3);
-    assert_eq!(sort_fields.0.get("name"), Some(&SortOrder::Ascending));
+    assert_eq!(order.0.len(), 3);
+    assert_eq!(order.0.get("name"), Some(&SortOrder::Ascending));
     assert_eq!(
-        sort_fields.0.get("date_created"),
+        order.0.get("date_created"),
         Some(&SortOrder::Descending)
     );
-    assert_eq!(sort_fields.0.get("email"), Some(&SortOrder::Ascending));
+    assert_eq!(order.0.get("email"), Some(&SortOrder::Ascending));
 }
 
 #[test]
-fn test_sort_fields_ascending_descending_overwrite() {
-    let mut sort_fields = SortFields::new();
-    sort_fields.ascending("name".to_string());
-    sort_fields.descending("name".to_string()); // Should overwrite
+fn test_order_ascending_descending_overwrite() {
+    let mut order = Order::new();
+    order.ascending("name".to_string());
+    order.descending("name".to_string()); // Should overwrite
 
-    assert_eq!(sort_fields.0.len(), 1);
-    assert_eq!(sort_fields.0.get("name"), Some(&SortOrder::Descending));
+    assert_eq!(order.0.len(), 1);
+    assert_eq!(order.0.get("name"), Some(&SortOrder::Descending));
 }
 
 #[test]
-fn test_sort_fields_ascending_descending_with_special_characters() {
-    let mut sort_fields = SortFields::new();
-    sort_fields.ascending("user_name_123".to_string());
-    sort_fields.descending("date_created_at".to_string());
+fn test_order_ascending_descending_with_special_characters() {
+    let mut order = Order::new();
+    order.ascending("user_name_123".to_string());
+    order.descending("date_created_at".to_string());
 
-    assert_eq!(sort_fields.0.len(), 2);
+    assert_eq!(order.0.len(), 2);
     assert_eq!(
-        sort_fields.0.get("user_name_123"),
+        order.0.get("user_name_123"),
         Some(&SortOrder::Ascending)
     );
     assert_eq!(
-        sort_fields.0.get("date_created_at"),
+        order.0.get("date_created_at"),
         Some(&SortOrder::Descending)
     );
 }
 
 #[test]
-fn test_sort_fields_ascending_descending_with_unicode() {
-    let mut sort_fields = SortFields::new();
-    sort_fields.ascending("用户_姓名".to_string());
-    sort_fields.descending("创建_日期".to_string());
+fn test_order_ascending_descending_with_unicode() {
+    let mut order = Order::new();
+    order.ascending("用户_姓名".to_string());
+    order.descending("创建_日期".to_string());
 
-    assert_eq!(sort_fields.0.len(), 2);
-    assert_eq!(sort_fields.0.get("用户_姓名"), Some(&SortOrder::Ascending));
-    assert_eq!(sort_fields.0.get("创建_日期"), Some(&SortOrder::Descending));
+    assert_eq!(order.0.len(), 2);
+    assert_eq!(order.0.get("用户_姓名"), Some(&SortOrder::Ascending));
+    assert_eq!(order.0.get("创建_日期"), Some(&SortOrder::Descending));
 }
 
 #[test]
-fn test_sort_fields_ascending_descending_empty_strings() {
-    let mut sort_fields = SortFields::new();
-    sort_fields.ascending("".to_string());
-    sort_fields.descending("  ".to_string());
+fn test_order_ascending_descending_empty_strings() {
+    let mut order = Order::new();
+    order.ascending("".to_string());
+    order.descending("  ".to_string());
 
-    assert_eq!(sort_fields.0.len(), 2);
-    assert_eq!(sort_fields.0.get(""), Some(&SortOrder::Ascending));
-    assert_eq!(sort_fields.0.get("  "), Some(&SortOrder::Descending));
+    assert_eq!(order.0.len(), 2);
+    assert_eq!(order.0.get(""), Some(&SortOrder::Ascending));
+    assert_eq!(order.0.get("  "), Some(&SortOrder::Descending));
 }
 
 // ============================================================================
@@ -2484,12 +2484,12 @@ fn test_inner_methods_with_query_manipulation() {
     query
         .parameters
         .contains("description".to_string(), vec!["rust".to_string()]);
-    query.sort_fields.ascending("name".to_string());
-    query.sort_fields.descending("date_created".to_string());
+    query.order.ascending("name".to_string());
+    query.order.descending("date_created".to_string());
 
     // Test using inner() for complex operations
     let param_map = query.parameters.inner();
-    let sort_map = query.sort_fields.inner();
+    let sort_map = query.order.inner();
 
     // Verify we can iterate and access data
     let param_keys: Vec<&String> = param_map.keys().collect();
@@ -2500,7 +2500,7 @@ fn test_inner_methods_with_query_manipulation() {
 
     // Test using inner_mut() for modifications
     let param_map_mut = query.parameters.inner_mut();
-    let sort_map_mut = query.sort_fields.inner_mut();
+    let sort_map_mut = query.order.inner_mut();
 
     param_map_mut.insert(
         "new_param".to_string(),
@@ -2518,22 +2518,22 @@ fn test_inner_methods_with_query_manipulation() {
 #[test]
 fn test_renamed_methods_with_query_building() {
     let mut params = Parameters::new();
-    let mut sort_fields = SortFields::new();
+    let mut order = Order::new();
 
     // Build using new method names
     params
         .equals("name".to_string(), vec!["john".to_string()])
         .contains("description".to_string(), vec!["rust".to_string()]);
 
-    sort_fields
+    order
         .ascending("name".to_string())
         .descending("date_created".to_string());
 
-    let query = Query::init(params, sort_fields, 25, 10);
+    let query = Query::init(params, order, 25, 10);
 
     // Verify the query was built correctly
     assert_eq!(query.parameters.inner().len(), 2);
-    assert_eq!(query.sort_fields.inner().len(), 2);
+    assert_eq!(query.order.inner().len(), 2);
     assert_eq!(query.limit, 25);
     assert_eq!(query.offset, 10);
 
@@ -2544,11 +2544,11 @@ fn test_renamed_methods_with_query_building() {
 
     // Verify sort field access
     assert_eq!(
-        query.sort_fields.inner().get("name"),
+        query.order.inner().get("name"),
         Some(&SortOrder::Ascending)
     );
     assert_eq!(
-        query.sort_fields.inner().get("date_created"),
+        query.order.inner().get("date_created"),
         Some(&SortOrder::Descending)
     );
 }
@@ -2557,7 +2557,7 @@ fn test_renamed_methods_with_query_building() {
 fn test_all_new_features_roundtrip() {
     // Build query using all new features
     let mut params = Parameters::new();
-    let mut sort_fields = SortFields::new();
+    let mut order = Order::new();
 
     params
         .equals(
@@ -2567,11 +2567,11 @@ fn test_all_new_features_roundtrip() {
         .contains("description".to_string(), vec!["rust".to_string()])
         .between("age".to_string(), vec!["20".to_string(), "30".to_string()]);
 
-    sort_fields
+    order
         .ascending("name".to_string())
         .descending("date_created".to_string());
 
-    let query = Query::init(params, sort_fields, 25, 10);
+    let query = Query::init(params, order, 25, 10);
 
     // Convert to HTTP and back
     let http_string = query.to_http();
@@ -2579,7 +2579,7 @@ fn test_all_new_features_roundtrip() {
 
     // Verify all features are preserved
     assert_eq!(reconstructed.parameters.inner().len(), 3);
-    assert_eq!(reconstructed.sort_fields.inner().len(), 2);
+    assert_eq!(reconstructed.order.inner().len(), 2);
     assert_eq!(reconstructed.limit, 25);
     assert_eq!(reconstructed.offset, 10);
 
@@ -2604,11 +2604,11 @@ fn test_all_new_features_roundtrip() {
 
     // Verify sort fields
     assert_eq!(
-        reconstructed.sort_fields.inner().get("name"),
+        reconstructed.order.inner().get("name"),
         Some(&SortOrder::Ascending)
     );
     assert_eq!(
-        reconstructed.sort_fields.inner().get("date_created"),
+        reconstructed.order.inner().get("date_created"),
         Some(&SortOrder::Descending)
     );
 }
@@ -2712,9 +2712,9 @@ fn test_query_from_http_normal_with_special_params() {
     assert_eq!(*values, vec!["20"]);
 
     // Check special parameters are handled correctly
-    assert_eq!(query.sort_fields.0.len(), 1);
+    assert_eq!(query.order.0.len(), 1);
     assert_eq!(
-        query.sort_fields.0.get("date_created"),
+        query.order.0.get("date_created"),
         Some(&SortOrder::Descending)
     );
     assert_eq!(query.limit, 25);
