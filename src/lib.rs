@@ -39,16 +39,7 @@ impl Query {
             .inner()
             .iter()
             .filter(|(_, param)| param.values().len() > 0)
-            .map(|(key, param)| {
-                let similarity_str = param.similarity().to_string();
-                let values_str = param
-                    .values()
-                    .iter()
-                    .map(|v| url_encode(v))
-                    .collect::<Vec<String>>()
-                    .join(&format!("{COMMA}"));
-                format!("{key}{EQUAL}{similarity_str}{COLON}{values_str}")
-            })
+            .map(|(key, param)| format!("{key}{EQUAL}{}", param.to_string()))
             .collect::<Vec<String>>()
             .join("&");
 
@@ -57,7 +48,7 @@ impl Query {
             .inner()
             .iter()
             .filter(|(name, _)| name.len() > 0)
-            .map(|(name, sort_order)| format!("{name}{COLON}{}", sort_order.to_string()))
+            .map(|(name, sort_order)| OrderField(name.clone(), sort_order.clone()).to_string())
             .collect::<Vec<String>>()
             .join(&format!("{COMMA}"));
 
@@ -70,13 +61,15 @@ impl Query {
             params_str.push_str(&format!("{AMPERSAND}"));
         }
 
-        format!(
-            "{params_str}{}{EQUAL}{}{AMPERSAND}{}{EQUAL}{}",
+        let pagination_str = format!(
+            "{}{EQUAL}{}{AMPERSAND}{}{EQUAL}{}",
             Parameters::LIMIT,
             self.limit,
             Parameters::OFFSET,
             self.offset,
-        )
+        );
+
+        format!("{params_str}{pagination_str}")
     }
 
     // name=contains:damian&surname=equals:black,steel,wood&order=date_created:desc&limit=40&offset=0
@@ -621,6 +614,19 @@ impl FromStr for Parameter {
     }
 }
 
+impl ToString for Parameter {
+    fn to_string(&self) -> String {
+        let similarity_str = self.similarity().to_string();
+        let values_str = self
+            .values()
+            .iter()
+            .map(|v| url_encode(v))
+            .collect::<Vec<String>>()
+            .join(&format!("{COMMA}"));
+        format!("{similarity_str}{COLON}{values_str}")
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Order(IndexMap<String, SortOrder>);
 
@@ -740,6 +746,12 @@ impl FromStr for OrderField {
 
         let order = order.parse::<SortOrder>()?;
         Ok(OrderField(name, order))
+    }
+}
+
+impl ToString for OrderField {
+    fn to_string(&self) -> String {
+        format!("{}{COLON}{}", self.name(), self.order().to_string())
     }
 }
 
