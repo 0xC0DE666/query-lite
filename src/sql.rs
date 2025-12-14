@@ -17,6 +17,7 @@ pub enum Value {
 }
 
 // RUSQLITE
+#[cfg(feature = "rusqlite")]
 impl rusqlite::types::ToSql for Value {
     fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
         let val = match self {
@@ -31,6 +32,7 @@ impl rusqlite::types::ToSql for Value {
     }
 }
 
+#[cfg(feature = "rusqlite")]
 impl rusqlite::types::FromSql for Value {
     fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
         let val = match value {
@@ -50,6 +52,7 @@ impl rusqlite::types::FromSql for Value {
 }
 
 // SQLX
+#[cfg(feature = "sqlx")]
 impl<'q> sqlx::Encode<'q, sqlx::Sqlite> for Value {
     fn encode_by_ref(
         &self,
@@ -74,6 +77,7 @@ impl<'q> sqlx::Encode<'q, sqlx::Sqlite> for Value {
     }
 }
 
+#[cfg(feature = "sqlx")]
 impl<'r> sqlx::Decode<'r, sqlx::Sqlite> for Value {
     fn decode(
         value: <sqlx::Sqlite as sqlx::Database>::ValueRef<'r>,
@@ -90,10 +94,16 @@ impl<'r> sqlx::Decode<'r, sqlx::Sqlite> for Value {
         } else if type_name.contains("Integer") || type_name.contains("INTEGER") {
             let i = i64::decode(value)?;
             Ok(Value::Integer(i))
-        } else if type_name.contains("Real") || type_name.contains("REAL") || type_name.contains("Float") {
+        } else if type_name.contains("Real")
+            || type_name.contains("REAL")
+            || type_name.contains("Float")
+        {
             let r = f64::decode(value)?;
             Ok(Value::Real(r))
-        } else if type_name.contains("Text") || type_name.contains("TEXT") || type_name.contains("String") {
+        } else if type_name.contains("Text")
+            || type_name.contains("TEXT")
+            || type_name.contains("String")
+        {
             let t = String::decode(value)?;
             Ok(Value::Text(t))
         } else if type_name.contains("Blob") || type_name.contains("BLOB") {
