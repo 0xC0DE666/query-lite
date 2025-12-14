@@ -24,7 +24,9 @@ sqlx = { version = "^0.8", default-features = false, optional = true }
 default = []
 sql = []
 rusqlite = ["dep:rusqlite"]
-sqlx = ["dep:sqlx", "sqlx/sqlite", "sqlx/runtime-tokio"]
+sqlx = ["dep:sqlx", "sqlx/sqlite"]
+# Internal test feature - enables runtime for tests only
+__test = ["sqlx/runtime-tokio"]
 
 [dev-dependencies]
 tokio = { version = "^1", features = ["rt", "macros"] }
