@@ -12,7 +12,7 @@ use rusqlite::types::ToSql;
 fn test_value_tosql_null() {
     let value = sql::Value::Null;
     let to_sql_output = value.to_sql().unwrap();
-    
+
     match to_sql_output {
         rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Null) => {}
         _ => panic!("Expected Null ValueRef"),
@@ -24,7 +24,7 @@ fn test_value_tosql_null() {
 fn test_value_tosql_integer() {
     let value = sql::Value::Integer(42);
     let to_sql_output = value.to_sql().unwrap();
-    
+
     match to_sql_output {
         rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Integer(i)) => {
             assert_eq!(i, 42);
@@ -38,7 +38,7 @@ fn test_value_tosql_integer() {
 fn test_value_tosql_integer_negative() {
     let value = sql::Value::Integer(-123);
     let to_sql_output = value.to_sql().unwrap();
-    
+
     match to_sql_output {
         rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Integer(i)) => {
             assert_eq!(i, -123);
@@ -52,7 +52,7 @@ fn test_value_tosql_integer_negative() {
 fn test_value_tosql_integer_large() {
     let value = sql::Value::Integer(9223372036854775807i64);
     let to_sql_output = value.to_sql().unwrap();
-    
+
     match to_sql_output {
         rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Integer(i)) => {
             assert_eq!(i, 9223372036854775807i64);
@@ -66,7 +66,7 @@ fn test_value_tosql_integer_large() {
 fn test_value_tosql_real() {
     let value = sql::Value::Real(3.14);
     let to_sql_output = value.to_sql().unwrap();
-    
+
     match to_sql_output {
         rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Real(r)) => {
             assert_eq!(r, 3.14);
@@ -80,7 +80,7 @@ fn test_value_tosql_real() {
 fn test_value_tosql_real_negative() {
     let value = sql::Value::Real(-123.456);
     let to_sql_output = value.to_sql().unwrap();
-    
+
     match to_sql_output {
         rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Real(r)) => {
             assert_eq!(r, -123.456);
@@ -94,7 +94,7 @@ fn test_value_tosql_real_negative() {
 fn test_value_tosql_text() {
     let value = sql::Value::Text("hello world".to_string());
     let to_sql_output = value.to_sql().unwrap();
-    
+
     match to_sql_output {
         rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Text(bytes)) => {
             assert_eq!(bytes, b"hello world");
@@ -108,7 +108,7 @@ fn test_value_tosql_text() {
 fn test_value_tosql_text_empty() {
     let value = sql::Value::Text("".to_string());
     let to_sql_output = value.to_sql().unwrap();
-    
+
     match to_sql_output {
         rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Text(bytes)) => {
             assert_eq!(bytes, b"");
@@ -122,7 +122,7 @@ fn test_value_tosql_text_empty() {
 fn test_value_tosql_text_unicode() {
     let value = sql::Value::Text("测试".to_string());
     let to_sql_output = value.to_sql().unwrap();
-    
+
     match to_sql_output {
         rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Text(bytes)) => {
             assert_eq!(std::str::from_utf8(bytes).unwrap(), "测试");
@@ -136,7 +136,7 @@ fn test_value_tosql_text_unicode() {
 fn test_value_tosql_blob() {
     let value = sql::Value::Blob(vec![1, 2, 3, 4, 5]);
     let to_sql_output = value.to_sql().unwrap();
-    
+
     match to_sql_output {
         rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Blob(bytes)) => {
             assert_eq!(bytes, &[1, 2, 3, 4, 5]);
@@ -150,7 +150,7 @@ fn test_value_tosql_blob() {
 fn test_value_tosql_blob_empty() {
     let value = sql::Value::Blob(vec![]);
     let to_sql_output = value.to_sql().unwrap();
-    
+
     match to_sql_output {
         rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Blob(bytes)) => {
             assert_eq!(bytes, &[]);
@@ -158,5 +158,3 @@ fn test_value_tosql_blob_empty() {
         _ => panic!("Expected Blob ValueRef"),
     }
 }
-
-
