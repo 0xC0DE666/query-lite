@@ -23,10 +23,10 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 # Basic usage (without SQL generation)
-query-lite = "0.10.0"
+query-lite = "0.11.0"
 
 # With SQL generation (opt-in)
-query-lite = { version = "0.10.0", features = ["sql"] }
+query-lite = { version = "0.11.0", features = ["sql"] }
 ```
 
 ## Basic Usage
@@ -338,6 +338,65 @@ The generated SQL uses SQLite syntax with `?` parameter placeholders:
 // → "WHERE name IN (?, ?) AND age LIKE ? AND price > ? ORDER BY date_created DESC LIMIT ? OFFSET ?"
 ```
 
+### Database Integration
+
+#### rusqlite Integration
+
+With the `rusqlite` feature enabled, `sql::Value` implements `rusqlite::types::ToSql`, allowing direct parameter binding:
+
+```rust
+use query_lite::Query;
+use rusqlite::Connection;
+
+#[cfg(feature = "rusqlite")]
+fn example() -> Result<(), Box<dyn std::error::Error>> {
+    let query = Query::from_http("name=contains:john&age=between:20,30".to_string())?;
+    let sql = format!("SELECT * FROM users {}", query.to_sql());
+    
+    let conn = Connection::open_in_memory()?;
+    
+    // sql::Value implements ToSql, so you can bind directly
+    let params: Vec<&dyn rusqlite::types::ToSql> = query.parameter_values()
+        .iter()
+        .map(|v| v as &dyn rusqlite::types::ToSql)
+        .collect();
+    
+    let mut stmt = conn.prepare(&sql)?;
+    let rows = stmt.query(params.as_slice())?;
+    // Process rows...
+    Ok(())
+}
+```
+
+#### sqlx Integration
+
+With the `sqlx` feature enabled, `sql::Value` implements `sqlx::Encode` for `sqlx::Sqlite`, allowing direct parameter binding:
+
+```rust
+use query_lite::Query;
+use sqlx::SqlitePool;
+
+#[cfg(feature = "sqlx")]
+async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    let query = Query::from_http("name=contains:john&age=between:20,30".to_string())?;
+    let sql = format!("SELECT * FROM users {}", query.to_sql());
+    
+    let pool = SqlitePool::connect(":memory:").await?;
+    
+    // Build query and bind parameters
+    let mut sqlx_query = sqlx::query(&sql);
+    for param in query.parameter_values() {
+        sqlx_query = sqlx_query.bind(param);
+    }
+    
+    let rows = sqlx_query.fetch_all(&pool).await?;
+    // Process rows...
+    Ok(())
+}
+```
+
+**Note**: The `rusqlite` and `sqlx` features are mutually exclusive. Choose the one that matches your database driver.
+
 ## URL Encoding Support
 
 The library automatically handles URL encoding and decoding:
@@ -452,11 +511,27 @@ The library supports feature flags for optional functionality:
 ```toml
 [dependencies]
 # Default: core functionality only (no SQLite query generation)
-query-lite = "0.10.0"
+query-lite = "0.11.0"
 
-# Enable SQLite query generation
-query-lite = { version = "0.10.0", features = ["sql"] }
+# Enable SQLite query generation (required for rusqlite/sqlx features)
+query-lite = { version = "0.11.0", features = ["sql"] }
+
+# Enable rusqlite integration (sql::Value implements rusqlite::types::ToSql)
+# Note: rusqlite and sqlx features are mutually exclusive
+query-lite = { version = "0.11.0", features = ["sql", "rusqlite"] }
+
+# Enable sqlx integration (sql::Value implements sqlx::Encode for sqlx::Sqlite)
+# Note: rusqlite and sqlx features are mutually exclusive
+query-lite = { version = "0.11.0", features = ["sql", "sqlx"] }
 ```
+
+### Feature Details
+
+- **`sql`**: Enables SQL query generation methods (`to_sql()`, `where_clause()`, `order_clause()`, etc.) and the `sql::Value` enum
+- **`rusqlite`**: Enables `rusqlite::types::ToSql` trait implementation for `sql::Value`, allowing direct binding to rusqlite queries
+- **`sqlx`**: Enables `sqlx::Encode` trait implementation for `sql::Value` with `sqlx::Sqlite`, allowing direct binding to sqlx queries
+
+**Important**: The `rusqlite` and `sqlx` features are mutually exclusive due to dependency conflicts. You can only enable one at a time.
 
 ## API Reference
 

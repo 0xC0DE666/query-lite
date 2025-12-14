@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2025-12-14
+
+### Changed
+- **SQL Value Trait Implementations**: Simplified SQL value trait implementations to encoding-only
+  - Removed `rusqlite::types::FromSql` implementation for `sql::Value`
+  - Removed `sqlx::Decode` implementation for `sql::Value`
+  - Removed `sqlx::Type` implementation for `sql::Value` (only needed for Decode)
+  - Kept `rusqlite::types::ToSql` implementation for encoding to rusqlite
+  - Kept `sqlx::Encode` implementation for encoding to sqlx
+  - `sql::Value` is now focused solely on encoding query parameters into SQL, not decoding results
+  - Results from database queries should be decoded into domain types, not back into `sql::Value`
+
+### Removed
+- **Decode Functionality**: Removed ability to decode database values back into `sql::Value` enum
+  - `rusqlite::types::FromSql` trait implementation removed
+  - `sqlx::Decode` trait implementation removed
+  - `sqlx::Type` trait implementation removed
+  - All decode-related tests removed from `tests/rusqlite.rs` and `tests/sqlx.rs`
+  - Encoding tests remain comprehensive and fully functional
+
+### Technical Details
+- **Simplified API**: `sql::Value` now has a single, clear purpose: encoding query parameters
+- **Better Performance**: Removed unnecessary decode logic and edge case handling
+- **Clearer Intent**: The enum's purpose is now unambiguous - it's for encoding, not storage
+- **Reduced Complexity**: Eliminated complex type detection and multi-type decoding logic
+- **Maintained Functionality**: All encoding functionality remains intact and fully tested
+- **Version Bump**: Minor version bump reflects API simplification and removal of decode functionality
+
 ## [0.10.0] - 2025-11-30
 
 ### Changed
