@@ -24,4 +24,7 @@ sqlx = { version = "^0.8", default-features = false, optional = true }
 default = ["sql", "rusqlite", "sqlx"]
 sql = []
 rusqlite = ["dep:rusqlite"]
-sqlx = ["dep:sqlx", "sqlx/sqlite"]
+sqlx = ["dep:sqlx", "sqlx/sqlite", "sqlx/runtime-tokio"]
+
+[dev-dependencies]
+tokio = { version = "^1", features = ["rt", "macros"] }
