@@ -65,7 +65,7 @@ impl<'q> sqlx::Encode<'q, sqlx::Sqlite> for Value {
     ) -> Result<sqlx::encode::IsNull, sqlx::error::BoxDynError> {
         match self {
             Value::Null => {
-                buf.push(sqlx::sqlite::SqliteArgumentValue::Null);
+                // buf.push(sqlx::sqlite::SqliteArgumentValue::Null);
                 Ok(sqlx::encode::IsNull::Yes)
             }
             Value::Integer(i) => {
