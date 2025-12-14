@@ -2,6 +2,13 @@ use std::borrow::Cow;
 
 pub const NULL: &str = "null";
 
+// Re-export database traits for convenience
+#[cfg(feature = "rusqlite")]
+pub use rusqlite::types::ToSql;
+
+#[cfg(feature = "sqlx")]
+pub use sqlx::Encode;
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
     /// The value is a `NULL` value.
