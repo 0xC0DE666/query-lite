@@ -40,20 +40,30 @@ impl<'q> sqlx::Encode<'q, sqlx::Sqlite> for Value {
         buf: &mut <sqlx::Sqlite as sqlx::Database>::ArgumentBuffer<'q>,
     ) -> Result<sqlx::encode::IsNull, sqlx::error::BoxDynError> {
         match self {
-            Value::Null => {}
-            Value::Integer(i) => buf.push(sqlx::sqlite::SqliteArgumentValue::Int64(*i)),
-            Value::Real(r) => buf.push(sqlx::sqlite::SqliteArgumentValue::Double(*r)),
-            Value::Text(t) => buf.push(sqlx::sqlite::SqliteArgumentValue::Text(Cow::Owned(
-                t.clone(),
-            ))),
-            Value::Blob(b) => buf.push(sqlx::sqlite::SqliteArgumentValue::Blob(Cow::Owned(
-                b.clone(),
-            ))),
-        };
-        if *self == Value::Null {
-            Ok(sqlx::encode::IsNull::Yes)
-        } else {
-            Ok(sqlx::encode::IsNull::No)
+            Value::Null => {
+                buf.push(sqlx::sqlite::SqliteArgumentValue::Null);
+                Ok(sqlx::encode::IsNull::Yes)
+            }
+            Value::Integer(i) => {
+                buf.push(sqlx::sqlite::SqliteArgumentValue::Int64(*i));
+                Ok(sqlx::encode::IsNull::No)
+            }
+            Value::Real(r) => {
+                buf.push(sqlx::sqlite::SqliteArgumentValue::Double(*r));
+                Ok(sqlx::encode::IsNull::No)
+            }
+            Value::Text(t) => {
+                buf.push(sqlx::sqlite::SqliteArgumentValue::Text(Cow::Owned(
+                    t.clone(),
+                )));
+                Ok(sqlx::encode::IsNull::No)
+            }
+            Value::Blob(b) => {
+                buf.push(sqlx::sqlite::SqliteArgumentValue::Blob(Cow::Owned(
+                    b.clone(),
+                )));
+                Ok(sqlx::encode::IsNull::No)
+            }
         }
     }
 }

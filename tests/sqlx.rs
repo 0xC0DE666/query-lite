@@ -19,7 +19,12 @@ fn test_value_encode_null() {
         sqlx::encode::IsNull::Yes => {}
         sqlx::encode::IsNull::No => panic!("Expected IsNull::Yes"),
     }
-    assert!(buf.is_empty());
+    assert_eq!(buf.len(), 1);
+
+    match &buf[0] {
+        sqlx::sqlite::SqliteArgumentValue::Null => assert!(true),
+        _ => panic!("Expected Null"),
+    }
 }
 
 #[cfg(feature = "sqlx")]
