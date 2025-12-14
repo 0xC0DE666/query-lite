@@ -1,4 +1,5 @@
 use crate::error::{Error, Result};
+#[cfg(feature = "sql")]
 use crate::sql;
 use indexmap::IndexMap;
 use std::fmt;
