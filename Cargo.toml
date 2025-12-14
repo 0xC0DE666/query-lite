@@ -21,7 +21,7 @@ rusqlite = { version = "^0.37", default-features = false, optional = true }
 sqlx = { version = "^0.8", default-features = false, optional = true }
 
 [features]
-default = []
+default = ["sql", "rusqlite", "sqlx"]
 sql = []
 rusqlite = ["dep:rusqlite"]
 sqlx = ["dep:sqlx"]
