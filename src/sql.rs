@@ -7,7 +7,7 @@ pub const NULL: &str = "null";
 pub use rusqlite::types::ToSql;
 
 #[cfg(feature = "sqlx")]
-pub use sqlx::Encode;
+pub use sqlx::{Encode, Type};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
@@ -40,6 +40,23 @@ impl rusqlite::types::ToSql for Value {
 }
 
 // SQLX
+#[cfg(feature = "sqlx")]
+impl sqlx::Type<sqlx::Sqlite> for Value {
+    fn type_info() -> <sqlx::Sqlite as sqlx::Database>::TypeInfo {
+        // Value can represent any SQLite type, so we return TEXT as a common denominator.
+        // The actual type will be determined at runtime during encoding.
+        <String as sqlx::Type<sqlx::Sqlite>>::type_info()
+    }
+
+    fn compatible(ty: &<sqlx::Sqlite as sqlx::Database>::TypeInfo) -> bool {
+        // Value is compatible with all SQLite types
+        <i64 as sqlx::Type<sqlx::Sqlite>>::compatible(ty)
+            || <f64 as sqlx::Type<sqlx::Sqlite>>::compatible(ty)
+            || <String as sqlx::Type<sqlx::Sqlite>>::compatible(ty)
+            || <Vec<u8> as sqlx::Type<sqlx::Sqlite>>::compatible(ty)
+    }
+}
+
 #[cfg(feature = "sqlx")]
 impl<'q> sqlx::Encode<'q, sqlx::Sqlite> for Value {
     fn encode_by_ref(
