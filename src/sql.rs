@@ -74,8 +74,36 @@ impl<'q> sqlx::Encode<'q, sqlx::Sqlite> for Value {
     }
 }
 
-// impl sqlx::Decode for Value {
-//    fn decode(value: <DB as sqlx::Database>::ValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
-//
-//     }
-// }
+impl<'r> sqlx::Decode<'r, sqlx::Sqlite> for Value {
+    fn decode(
+        value: <sqlx::Sqlite as sqlx::Database>::ValueRef<'r>,
+    ) -> Result<Self, sqlx::error::BoxDynError> {
+        use sqlx::ValueRef;
+
+        // Get the type info to determine what type to decode as
+        let type_info = value.type_info();
+        let type_name = format!("{:?}", type_info);
+
+        // Decode based on type name - only decode once
+        if type_name.contains("Null") {
+            Ok(Value::Null)
+        } else if type_name.contains("Integer") || type_name.contains("INTEGER") {
+            let i = i64::decode(value)?;
+            Ok(Value::Integer(i))
+        } else if type_name.contains("Real") || type_name.contains("REAL") || type_name.contains("Float") {
+            let r = f64::decode(value)?;
+            Ok(Value::Real(r))
+        } else if type_name.contains("Text") || type_name.contains("TEXT") || type_name.contains("String") {
+            let t = String::decode(value)?;
+            Ok(Value::Text(t))
+        } else if type_name.contains("Blob") || type_name.contains("BLOB") {
+            let b = Vec::<u8>::decode(value)?;
+            Ok(Value::Blob(b))
+        } else {
+            // Unknown type - try to decode as integer first (most common)
+            // If that fails, the error will propagate
+            let i = i64::decode(value)?;
+            Ok(Value::Integer(i))
+        }
+    }
+}
