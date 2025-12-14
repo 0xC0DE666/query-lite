@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::borrow::Cow;
 
 pub const NULL: &str = "null";
 
@@ -50,12 +50,32 @@ impl rusqlite::types::FromSql for Value {
 }
 
 // SQLX
-// impl<'q> sqlx::Encode<'q, sqlx::Sqlite> for Value {
-//     fn encode_by_ref(
-//         &self,
-//         args: &mut Vec<sqlx::sqlite::SqliteArgumentValue<'q>>,
-//     ) -> Result<sqlx::encode::IsNull, Box<dyn Error>> {
-//         args.push(sqlx::sqlite::SqliteArgumentValue::Int64(self.epoch));
-//         Ok(sqlx::encode::IsNull::No)
+impl<'q> sqlx::Encode<'q, sqlx::Sqlite> for Value {
+    fn encode_by_ref(
+        &self,
+        buf: &mut <sqlx::Sqlite as sqlx::Database>::ArgumentBuffer<'q>,
+    ) -> Result<sqlx::encode::IsNull, sqlx::error::BoxDynError> {
+        match self {
+            Value::Null => {}
+            Value::Integer(i) => buf.push(sqlx::sqlite::SqliteArgumentValue::Int64(*i)),
+            Value::Real(r) => buf.push(sqlx::sqlite::SqliteArgumentValue::Double(*r)),
+            Value::Text(t) => buf.push(sqlx::sqlite::SqliteArgumentValue::Text(Cow::Owned(
+                t.clone(),
+            ))),
+            Value::Blob(b) => buf.push(sqlx::sqlite::SqliteArgumentValue::Blob(Cow::Owned(
+                b.clone(),
+            ))),
+        };
+        if *self == Value::Null {
+            Ok(sqlx::encode::IsNull::Yes)
+        } else {
+            Ok(sqlx::encode::IsNull::No)
+        }
+    }
+}
+
+// impl sqlx::Decode for Value {
+//    fn decode(value: <DB as sqlx::Database>::ValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+//
 //     }
 // }
