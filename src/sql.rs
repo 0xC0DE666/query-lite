@@ -38,7 +38,8 @@ impl rusqlite::types::FromSql for Value {
             rusqlite::types::ValueRef::Integer(i) => Value::Integer(i),
             rusqlite::types::ValueRef::Real(r) => Value::Real(r),
             rusqlite::types::ValueRef::Text(t) => Value::Text(
-                String::from_utf8(t.into())
+                std::str::from_utf8(t)
+                    .map(|s| s.to_string())
                     .map_err(|_| rusqlite::types::FromSqlError::InvalidType)?,
             ),
             rusqlite::types::ValueRef::Blob(b) => Value::Blob(b.into()),
