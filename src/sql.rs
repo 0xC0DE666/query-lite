@@ -1,3 +1,4 @@
+#[cfg(feature = "sqlx")]
 use std::borrow::Cow;
 
 pub const NULL: &str = "null";

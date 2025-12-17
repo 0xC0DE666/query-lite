@@ -21,10 +21,11 @@ rusqlite = { version = "^0.32", default-features = false, optional = true }
 sqlx = { version = "^0.8", default-features = false, optional = true }
 
 [features]
-default = []
+default = ["http", "sql"]
+http = []
 sql = []
-rusqlite = ["dep:rusqlite"]
-sqlx = ["dep:sqlx", "sqlx/sqlite"]
+rusqlite = ["sql", "dep:rusqlite"]
+sqlx = ["sql", "dep:sqlx", "sqlx/sqlite"]
 # Internal test feature - enables runtime for tests only
 __test = ["sqlx/runtime-tokio"]
 

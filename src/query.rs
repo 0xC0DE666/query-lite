@@ -34,6 +34,7 @@ impl Query {
         }
     }
 
+    #[cfg(feature = "http")]
     pub fn to_http(&self) -> String {
         let params_str = format!("{}", self.parameters);
         let order_str = format!("{}", self.order);
@@ -63,6 +64,7 @@ impl Query {
     }
 
     // name=contains:damian&surname=equals:black,steel,wood&order=date_created:desc&limit=40&offset=0
+    #[cfg(feature = "http")]
     pub fn from_http(search: String) -> Result<Self> {
         let mut query = Self::new();
         let trimmed_search = search.trim_start_matches(QUESTION).trim();
