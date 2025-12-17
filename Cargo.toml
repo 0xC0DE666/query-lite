@@ -6,7 +6,7 @@ authors = ["D4EM0N"]
 categories = ["web-programming", "database"]
 description = "Convert HTTP query parameters to SQLite queries"
 documentation = "https://docs.rs/query-lite"
-keywords = ["http", "sql", "sqlite", "query"]
+keywords = ["query", "sql", "sqlite", "http"]
 license = "MIT"
 repository = "https://github.com/0xC0DE666/query-lite"
 rust-version = "1.88"
@@ -17,17 +17,9 @@ indexmap = { version = "^2" }
 thiserror = { version = "^2", default-features = false }
 
 # sqlite support
-rusqlite = { version = "^0.32", default-features = false, optional = true }
-sqlx = { version = "^0.8", default-features = false, optional = true }
+rusqlite = { version = "^0.37", default-features = false, optional = true }
 
 [features]
-default = ["http", "sql"]
+default = ["sql"]
+sql = ["dep:rusqlite"]
 http = []
-sql = []
-rusqlite = ["sql", "dep:rusqlite"]
-sqlx = ["sql", "dep:sqlx", "sqlx/sqlite"]
-# Internal test feature - enables runtime for tests only
-__test = ["sqlx/runtime-tokio"]
-
-[dev-dependencies]
-tokio = { version = "^1", features = ["rt", "macros"] }

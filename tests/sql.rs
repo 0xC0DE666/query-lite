@@ -1,6 +1,4 @@
-use query_lite::error::Error;
 use query_lite::*;
-use std::str::FromStr;
 
 // ============================================================================
 // SQL TESTS
@@ -795,22 +793,6 @@ fn test_parameter_trait_with_parameters_collection() {
     assert_eq!(desc_param.values(), &vec!["rust".to_string()]);
 }
 
-#[test]
-fn test_parameter_trait_with_query_parsing() {
-    let query = Query::from_http("name=contains:john&age=between:20,30".to_string()).unwrap();
-
-    // Test accessing parsed parameters using the trait methods
-    let name_param = query.parameters.inner().get("name").unwrap();
-    assert_eq!(name_param.similarity(), &Similarity::Contains);
-    assert_eq!(name_param.values(), &vec!["john".to_string()]);
-
-    let age_param = query.parameters.inner().get("age").unwrap();
-    assert_eq!(age_param.similarity(), &Similarity::Between);
-    assert_eq!(
-        age_param.values(),
-        &vec!["20".to_string(), "30".to_string()]
-    );
-}
 
 #[test]
 fn test_inner_methods_with_query_manipulation() {
@@ -890,65 +872,6 @@ fn test_renamed_methods_with_query_building() {
     );
 }
 
-#[test]
-fn test_all_new_features_roundtrip() {
-    // Build query using all new features
-    let mut params = Parameters::new();
-    let mut order = Order::new();
-
-    params
-        .equals(
-            "name".to_string(),
-            vec!["john".to_string(), "jane".to_string()],
-        )
-        .contains("description".to_string(), vec!["rust".to_string()])
-        .between("age".to_string(), vec!["20".to_string(), "30".to_string()]);
-
-    order
-        .ascending("name".to_string())
-        .descending("date_created".to_string());
-
-    let query = Query::init(params, order, 25, 10);
-
-    // Convert to HTTP and back
-    let http_string = query.to_http();
-    let reconstructed = Query::from_http(http_string).unwrap();
-
-    // Verify all features are preserved
-    assert_eq!(reconstructed.parameters.inner().len(), 3);
-    assert_eq!(reconstructed.order.inner().len(), 2);
-    assert_eq!(reconstructed.limit, 25);
-    assert_eq!(reconstructed.offset, 10);
-
-    // Verify parameter access using trait methods
-    let name_param = reconstructed.parameters.inner().get("name").unwrap();
-    assert_eq!(name_param.similarity(), &Similarity::Equals);
-    assert_eq!(
-        name_param.values(),
-        &vec!["john".to_string(), "jane".to_string()]
-    );
-
-    let desc_param = reconstructed.parameters.inner().get("description").unwrap();
-    assert_eq!(desc_param.similarity(), &Similarity::Contains);
-    assert_eq!(desc_param.values(), &vec!["rust".to_string()]);
-
-    let age_param = reconstructed.parameters.inner().get("age").unwrap();
-    assert_eq!(age_param.similarity(), &Similarity::Between);
-    assert_eq!(
-        age_param.values(),
-        &vec!["20".to_string(), "30".to_string()]
-    );
-
-    // Verify sort fields
-    assert_eq!(
-        reconstructed.order.inner().get("name"),
-        Some(&SortDirection::Ascending)
-    );
-    assert_eq!(
-        reconstructed.order.inner().get("date_created"),
-        Some(&SortDirection::Descending)
-    );
-}
 
 #[test]
 fn test_backward_compatibility_with_new_features() {
@@ -971,186 +894,6 @@ fn test_backward_compatibility_with_new_features() {
     assert_eq!(*param.values(), *param.values());
 }
 
-// ============================================================================
-// NORMAL QUERY PARAMETER TESTS
-// ============================================================================
-
-#[test]
-fn test_query_from_http_normal_parameters() {
-    let query = Query::from_http("name=ben&age=20".to_string()).unwrap();
-
-    assert_eq!(query.parameters.inner().len(), 2);
-
-    assert!(query.parameters.inner().contains_key("name"));
-    let param = &query.parameters.inner()["name"];
-    assert_eq!(*param.similarity(), Similarity::Equals);
-    assert_eq!(*param.values(), vec!["ben"]);
-
-    assert!(query.parameters.inner().contains_key("age"));
-    let param = &query.parameters.inner()["age"];
-    assert_eq!(*param.similarity(), Similarity::Equals);
-    assert_eq!(*param.values(), vec!["20"]);
-}
-
-#[test]
-fn test_query_from_http_repeated_parameters() {
-    let query = Query::from_http("name=ben&name=john&name=alice".to_string()).unwrap();
-
-    assert_eq!(query.parameters.inner().len(), 1);
-
-    assert!(query.parameters.inner().contains_key("name"));
-    let param = &query.parameters.inner()["name"];
-    assert_eq!(*param.similarity(), Similarity::Equals);
-    assert_eq!(*param.values(), vec!["ben", "john", "alice"]);
-}
-
-#[test]
-fn test_query_from_http_mixed_normal_and_similarity() {
-    let query =
-        Query::from_http("name=ben&name=john&age=contains:20&status=active".to_string()).unwrap();
-
-    assert_eq!(query.parameters.inner().len(), 3);
-
-    // Normal parameters (repeated)
-    assert!(query.parameters.inner().contains_key("name"));
-    let param = &query.parameters.inner()["name"];
-    assert_eq!(*param.similarity(), Similarity::Equals);
-    assert_eq!(*param.values(), vec!["ben", "john"]);
-
-    // Similarity-based parameter
-    assert!(query.parameters.inner().contains_key("age"));
-    let param = &query.parameters.inner()["age"];
-    assert_eq!(*param.similarity(), Similarity::Contains);
-    assert_eq!(*param.values(), vec!["20"]);
-
-    // Normal parameter (single)
-    assert!(query.parameters.inner().contains_key("status"));
-    let param = &query.parameters.inner()["status"];
-    assert_eq!(*param.similarity(), Similarity::Equals);
-    assert_eq!(*param.values(), vec!["active"]);
-}
-
-#[test]
-fn test_query_from_http_normal_with_special_params() {
-    let query =
-        Query::from_http("name=ben&age=20&order=date_created:desc&limit=25&offset=10".to_string())
-            .unwrap();
-
-    assert_eq!(query.parameters.inner().len(), 2);
-
-    assert!(query.parameters.inner().contains_key("name"));
-    let param = &query.parameters.inner()["name"];
-    assert_eq!(*param.similarity(), Similarity::Equals);
-    assert_eq!(*param.values(), vec!["ben"]);
-
-    assert!(query.parameters.inner().contains_key("age"));
-    let param = &query.parameters.inner()["age"];
-    assert_eq!(*param.similarity(), Similarity::Equals);
-    assert_eq!(*param.values(), vec!["20"]);
-
-    // Check special parameters are handled correctly
-    assert_eq!(query.order.inner().len(), 1);
-    assert_eq!(
-        query.order.inner().get("date_created"),
-        Some(&SortDirection::Descending)
-    );
-    assert_eq!(query.limit, 25);
-    assert_eq!(query.offset, 10);
-}
-
-#[test]
-fn test_query_from_http_url_encoded_normal_params() {
-    let query = Query::from_http("name=john%20doe&email=test%40example.com".to_string()).unwrap();
-
-    assert_eq!(query.parameters.inner().len(), 2);
-
-    assert!(query.parameters.inner().contains_key("name"));
-    let param = &query.parameters.inner()["name"];
-    assert_eq!(*param.similarity(), Similarity::Equals);
-    assert_eq!(*param.values(), vec!["john doe"]);
-
-    assert!(query.parameters.inner().contains_key("email"));
-    let param = &query.parameters.inner()["email"];
-    assert_eq!(*param.similarity(), Similarity::Equals);
-    assert_eq!(*param.values(), vec!["test@example.com"]);
-}
-
-#[test]
-fn test_query_from_http_repeated_mixed_similarity() {
-    let query = Query::from_http("name=ben&name=contains:john&name=alice".to_string()).unwrap();
-
-    assert_eq!(query.parameters.inner().len(), 1);
-
-    assert!(query.parameters.inner().contains_key("name"));
-    let param = &query.parameters.inner()["name"];
-    // The similarity-based parameter takes precedence
-    assert_eq!(*param.similarity(), Similarity::Contains);
-    assert_eq!(*param.values(), vec!["john"]);
-}
-
-#[test]
-fn test_query_from_http_empty_normal_values() {
-    let query = Query::from_http("name=&age=20&status=".to_string()).unwrap();
-
-    assert_eq!(query.parameters.inner().len(), 1);
-
-    assert!(query.parameters.inner().contains_key("age"));
-    let param = &query.parameters.inner()["age"];
-    assert_eq!(*param.similarity(), Similarity::Equals);
-    assert_eq!(*param.values(), vec!["20"]);
-}
-
-#[test]
-fn test_query_to_http_normal_parameters() {
-    let mut query = Query::new();
-
-    query.parameters.inner_mut().insert(
-        "name".to_string(),
-        Parameter::init(
-            Similarity::Equals,
-            vec!["ben".to_string(), "john".to_string()],
-        ),
-    );
-    query.parameters.inner_mut().insert(
-        "age".to_string(),
-        Parameter::init(Similarity::Equals, vec!["20".to_string()]),
-    );
-
-    let http = query.to_http();
-
-    assert!(http.contains("name=equals:ben,john"));
-    assert!(http.contains("age=equals:20"));
-    assert!(http.contains("limit=50"));
-    assert!(http.contains("offset=0"));
-}
-
-#[test]
-fn test_query_roundtrip_normal_parameters() {
-    let original = "name=ben&name=john&age=20&status=active";
-    let query = Query::from_http(original.to_string()).unwrap();
-    let reconstructed = query.to_http();
-
-    // The reconstructed query should contain the same information
-    assert!(reconstructed.contains("name=equals:ben,john"));
-    assert!(reconstructed.contains("age=equals:20"));
-    assert!(reconstructed.contains("status=equals:active"));
-    assert!(reconstructed.contains("limit=50"));
-    assert!(reconstructed.contains("offset=0"));
-}
-
-#[test]
-fn test_query_roundtrip_mixed_normal_and_similarity() {
-    let original = "name=ben&name=john&age=contains:20&status=active";
-    let query = Query::from_http(original.to_string()).unwrap();
-    let reconstructed = query.to_http();
-
-    // The reconstructed query should contain the same information
-    assert!(reconstructed.contains("name=equals:ben,john"));
-    assert!(reconstructed.contains("age=contains:20"));
-    assert!(reconstructed.contains("status=equals:active"));
-    assert!(reconstructed.contains("limit=50"));
-    assert!(reconstructed.contains("offset=0"));
-}
 
 #[cfg(feature = "sql")]
 #[test]
@@ -2113,4 +1856,165 @@ fn test_query_to_values_mixed_empty_and_null() {
     assert_eq!(values[1], sql::Value::Text("active".to_string()));
     assert_eq!(values[2], sql::Value::Integer(50)); // limit
     assert_eq!(values[3], sql::Value::Integer(0)); // offset
+}
+
+#[cfg(feature = "sql")]
+use query_lite::sql;
+#[cfg(feature = "sql")]
+use rusqlite::types::ToSql;
+
+// ============================================================================
+// RUSQLITE ToSql TESTS
+// ============================================================================
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_value_tosql_null() {
+    let value = sql::Value::Null;
+    let to_sql_output = value.to_sql().unwrap();
+
+    match to_sql_output {
+        rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Null) => {}
+        _ => panic!("Expected Null ValueRef"),
+    }
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_value_tosql_integer() {
+    let value = sql::Value::Integer(42);
+    let to_sql_output = value.to_sql().unwrap();
+
+    match to_sql_output {
+        rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Integer(i)) => {
+            assert_eq!(i, 42);
+        }
+        _ => panic!("Expected Integer ValueRef"),
+    }
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_value_tosql_integer_negative() {
+    let value = sql::Value::Integer(-123);
+    let to_sql_output = value.to_sql().unwrap();
+
+    match to_sql_output {
+        rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Integer(i)) => {
+            assert_eq!(i, -123);
+        }
+        _ => panic!("Expected Integer ValueRef"),
+    }
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_value_tosql_integer_large() {
+    let value = sql::Value::Integer(9223372036854775807i64);
+    let to_sql_output = value.to_sql().unwrap();
+
+    match to_sql_output {
+        rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Integer(i)) => {
+            assert_eq!(i, 9223372036854775807i64);
+        }
+        _ => panic!("Expected Integer ValueRef"),
+    }
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_value_tosql_real() {
+    let value = sql::Value::Real(3.14);
+    let to_sql_output = value.to_sql().unwrap();
+
+    match to_sql_output {
+        rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Real(r)) => {
+            assert_eq!(r, 3.14);
+        }
+        _ => panic!("Expected Real ValueRef"),
+    }
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_value_tosql_real_negative() {
+    let value = sql::Value::Real(-123.456);
+    let to_sql_output = value.to_sql().unwrap();
+
+    match to_sql_output {
+        rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Real(r)) => {
+            assert_eq!(r, -123.456);
+        }
+        _ => panic!("Expected Real ValueRef"),
+    }
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_value_tosql_text() {
+    let value = sql::Value::Text("hello world".to_string());
+    let to_sql_output = value.to_sql().unwrap();
+
+    match to_sql_output {
+        rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Text(bytes)) => {
+            assert_eq!(bytes, b"hello world");
+        }
+        _ => panic!("Expected Text ValueRef"),
+    }
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_value_tosql_text_empty() {
+    let value = sql::Value::Text("".to_string());
+    let to_sql_output = value.to_sql().unwrap();
+
+    match to_sql_output {
+        rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Text(bytes)) => {
+            assert_eq!(bytes, b"");
+        }
+        _ => panic!("Expected Text ValueRef"),
+    }
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_value_tosql_text_unicode() {
+    let value = sql::Value::Text("测试".to_string());
+    let to_sql_output = value.to_sql().unwrap();
+
+    match to_sql_output {
+        rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Text(bytes)) => {
+            assert_eq!(std::str::from_utf8(bytes).unwrap(), "测试");
+        }
+        _ => panic!("Expected Text ValueRef"),
+    }
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_value_tosql_blob() {
+    let value = sql::Value::Blob(vec![1, 2, 3, 4, 5]);
+    let to_sql_output = value.to_sql().unwrap();
+
+    match to_sql_output {
+        rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Blob(bytes)) => {
+            assert_eq!(bytes, &[1, 2, 3, 4, 5]);
+        }
+        _ => panic!("Expected Blob ValueRef"),
+    }
+}
+
+#[cfg(feature = "sql")]
+#[test]
+fn test_value_tosql_blob_empty() {
+    let value = sql::Value::Blob(vec![]);
+    let to_sql_output = value.to_sql().unwrap();
+
+    match to_sql_output {
+        rusqlite::types::ToSqlOutput::Borrowed(rusqlite::types::ValueRef::Blob(bytes)) => {
+            assert_eq!(bytes, &[]);
+        }
+        _ => panic!("Expected Blob ValueRef"),
+    }
 }

@@ -342,13 +342,13 @@ The generated SQL uses SQLite syntax with `?` parameter placeholders:
 
 #### rusqlite Integration
 
-With the `rusqlite` feature enabled, `sql::Value` implements `rusqlite::types::ToSql`, allowing direct parameter binding:
+With the `sql` feature enabled, `sql::Value` (which is `rusqlite::types::Value`) implements `rusqlite::types::ToSql`, allowing direct parameter binding:
 
 ```rust
 use query_lite::Query;
 use rusqlite::Connection;
 
-#[cfg(feature = "rusqlite")]
+#[cfg(feature = "sql")]
 fn example() -> Result<(), Box<dyn std::error::Error>> {
     let query = Query::from_http("name=contains:john&age=between:20,30".to_string())?;
     let sql = format!("SELECT * FROM users {}", query.to_sql());
@@ -367,35 +367,6 @@ fn example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
-
-#### sqlx Integration
-
-With the `sqlx` feature enabled, `sql::Value` implements `sqlx::Encode` for `sqlx::Sqlite`, allowing direct parameter binding:
-
-```rust
-use query_lite::Query;
-use sqlx::SqlitePool;
-
-#[cfg(feature = "sqlx")]
-async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    let query = Query::from_http("name=contains:john&age=between:20,30".to_string())?;
-    let sql = format!("SELECT * FROM users {}", query.to_sql());
-    
-    let pool = SqlitePool::connect(":memory:").await?;
-    
-    // Build query and bind parameters
-    let mut sqlx_query = sqlx::query(&sql);
-    for param in query.parameter_values() {
-        sqlx_query = sqlx_query.bind(param);
-    }
-    
-    let rows = sqlx_query.fetch_all(&pool).await?;
-    // Process rows...
-    Ok(())
-}
-```
-
-**Note**: The `rusqlite` and `sqlx` features are mutually exclusive. Choose the one that matches your database driver.
 
 ## URL Encoding Support
 
@@ -513,25 +484,14 @@ The library supports feature flags for optional functionality:
 # Default: core functionality only (no SQLite query generation)
 query-lite = "0.11.0"
 
-# Enable SQLite query generation (required for rusqlite/sqlx features)
+# Enable SQLite query generation and rusqlite integration
 query-lite = { version = "0.11.0", features = ["sql"] }
-
-# Enable rusqlite integration (sql::Value implements rusqlite::types::ToSql)
-# Note: rusqlite and sqlx features are mutually exclusive
-query-lite = { version = "0.11.0", features = ["sql", "rusqlite"] }
-
-# Enable sqlx integration (sql::Value implements sqlx::Encode for sqlx::Sqlite)
-# Note: rusqlite and sqlx features are mutually exclusive
-query-lite = { version = "0.11.0", features = ["sql", "sqlx"] }
 ```
 
 ### Feature Details
 
-- **`sql`**: Enables SQL query generation methods (`to_sql()`, `where_clause()`, `order_clause()`, etc.) and the `sql::Value` enum
-- **`rusqlite`**: Enables `rusqlite::types::ToSql` trait implementation for `sql::Value`, allowing direct binding to rusqlite queries
-- **`sqlx`**: Enables `sqlx::Encode` trait implementation for `sql::Value` with `sqlx::Sqlite`, allowing direct binding to sqlx queries
-
-**Important**: The `rusqlite` and `sqlx` features are mutually exclusive due to dependency conflicts. You can only enable one at a time.
+- **`sql`**: Enables SQL query generation methods (`to_sql()`, `where_clause()`, `order_clause()`, etc.) and re-exports `rusqlite::types::Value` as `sql::Value`. The `sql::Value` type implements `rusqlite::types::ToSql`, allowing direct parameter binding to rusqlite queries.
+- **`http`**: Enables HTTP query string parsing and generation methods (`from_http()`, `to_http()`).
 
 ## API Reference
 
