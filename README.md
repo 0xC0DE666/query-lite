@@ -4,16 +4,62 @@
 [![Documentation](https://docs.rs/query-lite/badge.svg)](https://docs.rs/query-lite)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/0xC0DE666/query-lite#license)
 
-A powerful Rust library for parsing HTTP query parameters into structured queries with support for both traditional and advanced similarity-based filtering, plus optional SQLite query generation.
+A convenient SQL query builder for rusqlite that makes it easy to build type-safe SQLite queries with parameter binding. Parse HTTP query parameters, build queries programmatically, or combine both approaches to create secure, parameterized SQL queries.
+
+## Why query-lite?
+
+Building SQL queries manually is error-prone and tedious. query-lite provides a type-safe, builder-pattern API that:
+
+- ✅ **Prevents SQL Injection**: All queries use parameterized placeholders
+- ✅ **Type-Safe**: Compile-time guarantees for query structure
+- ✅ **Easy to Use**: Builder pattern with fluent API
+- ✅ **rusqlite Ready**: Direct integration with rusqlite's `ToSql` trait
+- ✅ **Flexible**: Build queries programmatically or parse from HTTP
+
+### Example
+
+```rust
+use query_lite::{Query, Parameters, Order};
+use rusqlite::Connection;
+
+// Build a query
+let mut params = Parameters::new();
+params
+    .contains("name".to_string(), vec!["john".to_string()])
+    .between("age".to_string(), vec!["20".to_string(), "30".to_string()])
+    .greater("price".to_string(), vec!["100".to_string()]);
+
+let mut order = Order::new();
+order.descending("date_created".to_string());
+
+let query = Query::init(params, order, 25, 0);
+
+// Generate SQL
+let sql = query.to_sql();
+// "WHERE name LIKE ? AND age BETWEEN ? AND ? AND price > ? ORDER BY date_created DESC LIMIT ? OFFSET ?"
+
+// Get values for rusqlite
+let values = query.to_values();
+
+// Use with rusqlite
+let conn = Connection::open("database.db")?;
+let mut stmt = conn.prepare(&format!("SELECT * FROM users {}", sql))?;
+let params: Vec<&dyn rusqlite::types::ToSql> = values
+    .iter()
+    .map(|v| v as &dyn rusqlite::types::ToSql)
+    .collect();
+let rows = stmt.query(params.as_slice())?;
+```
 
 ## Features
 
-- 🔍 **Dual URL Support**: Handle both traditional (`?name=john`) and advanced (`?name=contains:john`) query parameters
-- 🎯 **Advanced Filtering**: Support for contains, starts-with, ends-with, between, greater, lesser, and more
-- 🔄 **Roundtrip Conversion**: Convert between HTTP queries and structured objects seamlessly
-- 🗄️ **SQLite Query Generation**: Optional SQLite query generation with parameter binding (opt-in feature)
+- 🗄️ **SQL Query Builder**: Build type-safe SQLite queries with automatic parameter binding for rusqlite
+- 🔒 **SQL Injection Safe**: All queries use parameterized placeholders - never string concatenation
+- 🎯 **Rich Filtering**: Support for equals, contains, starts-with, ends-with, between, greater, lesser, and more
+- 📊 **Sorting & Pagination**: Built-in support for ORDER BY, LIMIT, and OFFSET clauses
+- 🔍 **HTTP Query Parsing**: Optional support for parsing HTTP query parameters into SQL queries
 - 🛡️ **Type Safety**: Full Rust type safety with comprehensive error handling
-- ⚡ **Zero Dependencies**: Minimal dependencies for core functionality
+- ⚡ **Zero-Copy Values**: Direct integration with rusqlite's `ToSql` trait for efficient parameter binding
 - 🧪 **Well Tested**: Comprehensive test suite with 240+ tests
 
 ## Quick Start
@@ -22,14 +68,95 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-# Basic usage (without SQL generation)
+# SQL query builder (default - includes SQL generation)
 query-lite = "0.11.0"
 
-# With SQL generation (opt-in)
-query-lite = { version = "0.11.0", features = ["sql"] }
+# With HTTP query parameter parsing (optional)
+query-lite = { version = "0.11.0", features = ["http"] }
 ```
 
 ## Basic Usage
+
+### Building SQL Queries Programmatically
+
+The primary use case is building SQL queries for rusqlite:
+
+```rust
+use query_lite::{Query, Parameters, Order};
+use rusqlite::Connection;
+
+#[cfg(feature = "sql")]
+fn example() -> Result<(), Box<dyn std::error::Error>> {
+    // Build query programmatically
+    let mut params = Parameters::new();
+    params
+        .contains("name".to_string(), vec!["john".to_string()])
+        .between("age".to_string(), vec!["20".to_string(), "30".to_string()])
+        .greater("price".to_string(), vec!["100".to_string()]);
+
+    let mut order = Order::new();
+    order.descending("date_created".to_string());
+
+    let query = Query::init(params, order, 25, 0);
+
+    // Generate SQL with parameter placeholders
+    let sql = query.to_sql();
+    // Result: "WHERE name LIKE ? AND age BETWEEN ? AND ? AND price > ? ORDER BY date_created DESC LIMIT ? OFFSET ?"
+
+    // Get parameter values for rusqlite
+    let values = query.to_values();
+    // Result: [sql::Value::Text("%john%"), sql::Value::Integer(20), sql::Value::Integer(30), 
+    //          sql::Value::Integer(100), sql::Value::Integer(25), sql::Value::Integer(0)]
+
+    // Use with rusqlite
+    let conn = Connection::open("database.db")?;
+    let mut stmt = conn.prepare(&format!("SELECT * FROM users {}", sql))?;
+    
+    // sql::Value implements ToSql, so we can bind directly
+    let params: Vec<&dyn rusqlite::types::ToSql> = values
+        .iter()
+        .map(|v| v as &dyn rusqlite::types::ToSql)
+        .collect();
+    
+    let rows = stmt.query(params.as_slice())?;
+    // Process rows...
+    
+    Ok(())
+}
+```
+
+### Parsing HTTP Query Parameters (Optional)
+
+If you enable the `http` feature, you can also parse HTTP query strings:
+
+```rust
+use query_lite::Query;
+use rusqlite::Connection;
+
+#[cfg(all(feature = "sql", feature = "http"))]
+fn example() -> Result<(), Box<dyn std::error::Error>> {
+    // Parse HTTP query parameters
+    let query = Query::from_http("name=contains:john&age=between:20,30&order=date_created:desc&limit=25".to_string())?;
+
+    // Generate SQL
+    let sql = query.to_sql();
+    let values = query.to_values();
+
+    // Use with rusqlite
+    let conn = Connection::open("database.db")?;
+    let mut stmt = conn.prepare(&format!("SELECT * FROM users {}", sql))?;
+    
+    let params: Vec<&dyn rusqlite::types::ToSql> = values
+        .iter()
+        .map(|v| v as &dyn rusqlite::types::ToSql)
+        .collect();
+    
+    let rows = stmt.query(params.as_slice())?;
+    // Process rows...
+    
+    Ok(())
+}
+```
 
 ### Traditional Query Parameters
 
@@ -225,9 +352,9 @@ assert_eq!(query.limit, 25);
 assert_eq!(query.offset, 10);
 ```
 
-## SQLite Query Generation (Optional)
+## SQL Query Building
 
-Enable the `sql` feature to generate SQLite-compatible queries:
+The core feature of query-lite is building SQL queries for rusqlite. All queries use parameterized placeholders to prevent SQL injection:
 
 ```rust
 use query_lite::Query;
@@ -338,11 +465,9 @@ The generated SQL uses SQLite syntax with `?` parameter placeholders:
 // → "WHERE name IN (?, ?) AND age LIKE ? AND price > ? ORDER BY date_created DESC LIMIT ? OFFSET ?"
 ```
 
-### Database Integration
+### rusqlite Integration
 
-#### rusqlite Integration
-
-With the `sql` feature enabled, `sql::Value` (which is `rusqlite::types::Value`) implements `rusqlite::types::ToSql`, allowing direct parameter binding:
+The `sql::Value` type (which is `rusqlite::types::Value`) implements `rusqlite::types::ToSql`, allowing direct parameter binding to rusqlite queries:
 
 ```rust
 use query_lite::Query;
@@ -481,17 +606,17 @@ The library supports feature flags for optional functionality:
 
 ```toml
 [dependencies]
-# Default: core functionality only (no SQLite query generation)
+# Default: SQL query builder (includes SQL generation)
 query-lite = "0.11.0"
 
-# Enable SQLite query generation and rusqlite integration
-query-lite = { version = "0.11.0", features = ["sql"] }
+# With HTTP query parameter parsing (optional)
+query-lite = { version = "0.11.0", features = ["http"] }
 ```
 
 ### Feature Details
 
-- **`sql`**: Enables SQL query generation methods (`to_sql()`, `where_clause()`, `order_clause()`, etc.) and re-exports `rusqlite::types::Value` as `sql::Value`. The `sql::Value` type implements `rusqlite::types::ToSql`, allowing direct parameter binding to rusqlite queries.
-- **`http`**: Enables HTTP query string parsing and generation methods (`from_http()`, `to_http()`).
+- **`sql`** (default): Enables SQL query generation methods (`to_sql()`, `where_clause()`, `order_clause()`, etc.) and re-exports `rusqlite::types::Value` as `sql::Value`. The `sql::Value` type implements `rusqlite::types::ToSql`, allowing direct parameter binding to rusqlite queries.
+- **`http`** (optional): Enables HTTP query string parsing and generation methods (`from_http()`, `to_http()`).
 
 ## API Reference
 
@@ -509,9 +634,9 @@ query-lite = { version = "0.11.0", features = ["sql"] }
 #### Query Methods
 - `Query::new()`: Create a new Query with default values (empty parameters, empty order, limit=50, offset=0)
 - `Query::init()`: Create Query with custom parameters, order, limit, and offset
-- `Query::from_http()`: Parse HTTP query string into Query struct
-- `Query::to_http()`: Convert Query struct back to HTTP query string
-- `Query::to_sql()`: Generate SQLite-compatible query with parameter placeholders (feature-gated)
+- `Query::to_sql()`: Generate SQLite-compatible query with parameter placeholders (default feature)
+- `Query::from_http()`: Parse HTTP query string into Query struct (requires `http` feature)
+- `Query::to_http()`: Convert Query struct back to HTTP query string (requires `http` feature)
 - `Query::where_clause()`: Get WHERE clause as Option<String> (feature-gated)
 - `Query::order_clause()`: Get ORDER BY clause as Option<String> (feature-gated)
 - `Query::to_values()`: Get all SQLite values (parameters + pagination) (feature-gated)
