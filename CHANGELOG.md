@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2025-12-14
+
+### Changed
+- **Documentation Reframing**: Updated documentation to position the library as a SQL query builder for rusqlite
+  - Reframed primary use case from HTTP query parameter parsing to SQL query building
+  - Updated Cargo.toml description to emphasize SQL query building for rusqlite
+  - Reorganized README.md to showcase SQL query building as the primary feature
+  - HTTP query parameter parsing is now presented as an optional convenience feature
+  - Updated keywords and categories to better reflect the library's purpose
+  - Added prominent "Why query-lite?" section with SQL query building example
+  - Reordered features list to emphasize SQL query building first
+  - Updated Quick Start to show SQL query builder as default, HTTP as optional
+
+### Technical Details
+- **Better Positioning**: Library is now clearly positioned as a SQL query builder tool
+- **Improved Discoverability**: Updated keywords help users find the library when searching for SQL query builders
+- **Clearer Value Proposition**: Documentation now clearly communicates the primary use case
+- **No API Changes**: All functionality remains the same, only documentation and positioning changed
+- **Backward Compatible**: All existing code continues to work without any changes
+
 ## [0.11.0] - 2025-12-14
 
 ### Changed

@@ -1,6 +1,6 @@
 [package]
 name = "query-lite"
-version = "0.11.0"
+version = "0.12.0"
 edition = "2024"
 authors = ["D4EM0N"]
 categories = ["database", "web-programming"]
@@ -15,8 +15,6 @@ rust-version = "1.88"
 url = { version = "^2" }
 indexmap = { version = "^2" }
 thiserror = { version = "^2", default-features = false }
-
-# sqlite support
 rusqlite = { version = "^0.37", default-features = false, optional = true }
 
 [features]
